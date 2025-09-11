@@ -5,7 +5,7 @@
     <!-- Header Section -->
     <div class="dashboard-header">
         <div class="header-left">
-            <h1 class="dashboard-title">CONNECT</h1>
+            <h1 class="dashboard-title">INA</h1>
             <nav class="main-nav">
                 <a href="#" class="nav-link active">Home</a>
                 <a href="#" class="nav-link">Profiles</a>
@@ -16,14 +16,17 @@
                 <div class="nav-dropdown">
                     <a href="#" class="nav-link">Fresh Data ▼</a>
                 </div>
-                <a href="#" class="nav-link">PUYYAPLA</a>
+                <a href="#" class="nav-link">abc</a>
                 <div class="nav-dropdown">
                     <a href="#" class="nav-link">Services ▼</a>
                 </div>
             </nav>
         </div>
         <div class="header-right">
-            <span class="user-greeting">Hello greeshmaradesh1989@gmail.com</span>
+            <!-- Removed user greeting -->
+            @if(isset($profileId) && $profileId)
+                <span class="profile-id">Profile ID: {{ $profileId }}</span>
+            @endif
             <a href="#" class="logout-btn">Logout</a>
         </div>
     </div>
@@ -136,9 +139,10 @@
                 </tr>
             </thead>
             <tbody>
+                @foreach($users as $user)
                 <tr>
-                    <td>51052</td>
-                    <td>9745240761</td>
+                    <td>{{ $user->code }}</td>
+                    <td>{{ $user->phone }}</td>
                     <td>09-09-2025</td>
                     <td>13-09-2025</td>
                     <td><span class="status-badge postpone">Postpone Payment</span></td>
@@ -148,30 +152,25 @@
                         <button class="action-btn history">History</button>
                     </td>
                 </tr>
-                <tr>
-                    <td>50924</td>
-                    <td>9947874007</td>
-                    <td>09-09-2025</td>
-                    <td>13-09-2025</td>
-                    <td><span class="status-badge postpone">Postpone Payment</span></td>
-                    <td><span class="count-badge">1/3</span></td>
-                    <td>
-                        <button class="action-btn update">Update</button>
-                        <button class="action-btn history">History</button>
-                    </td>
-                </tr>
-                <tr>
-                    <td>50881</td>
-                    <td>971507079176</td>
-                    <td>09-09-2025</td>
-                    <td>13-09-2025</td>
-                    <td><span class="status-badge postpone">Postpone Payment</span></td>
-                    <td><span class="count-badge">1/3</span></td>
-                    <td>
-                        <button class="action-btn update">Update</button>
-                        <button class="action-btn history">History</button>
-                    </td>
-                </tr>
+                @endforeach
+            </tbody>
+        </table>
+    <div style="display: flex; justify-content: space-between; align-items: center; padding: 20px 16px 10px 16px;">
+            <div style="color: #333; font-size: 14px;">
+                Showing {{ ($users->currentPage() - 1) * $users->perPage() + 1 }}
+                -
+                {{ min($users->currentPage() * $users->perPage(), $users->total()) }}
+                of {{ $users->total() }} entries
+            </div>
+            <div style="display: flex; gap: 8px;">
+                @if(!$users->onFirstPage())
+                    <a href="{{ $users->previousPageUrl() }}" class="apply-btn" style="text-decoration: none;">Previous</a>
+                @endif
+                @if($users->hasMorePages())
+                    <a href="{{ $users->nextPageUrl() }}" class="apply-btn" style="text-decoration: none;">Next</a>
+                @endif
+            </div>
+        </div>
             </tbody>
         </table>
     </div>
@@ -434,10 +433,15 @@ body {
 .apply-btn {
     background: #4CAF50;
     color: white;
+    text-decoration: none !important;
+    box-shadow: none;
 }
 
-.apply-btn:hover {
+.apply-btn:hover, .apply-btn:focus, .apply-btn:active {
     background: #45a049;
+    text-decoration: none !important;
+    box-shadow: none;
+    outline: none;
 }
 
 /* Data Table */
