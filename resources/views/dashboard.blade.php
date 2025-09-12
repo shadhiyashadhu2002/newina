@@ -126,7 +126,33 @@
 
     <!-- Data Table Section -->
     <div class="data-table-section">
-        <table class="data-table">
+        <!-- ONLY Previous/Next buttons at TOP of table -->
+        <div style="display: flex; justify-content: flex-end; align-items: center; padding: 20px 16px 10px 16px;">
+            @if(is_a($users, 'Illuminate\\Pagination\\LengthAwarePaginator'))
+                <div style="display: flex; gap: 8px;">
+                    @if(!$users->onFirstPage())
+                        <a href="{{ $users->previousPageUrl() }}" class="apply-btn" style="text-decoration: none;">Previous</a>
+                    @endif
+                    @if($users->hasMorePages())
+                        <a href="{{ $users->nextPageUrl() }}" class="apply-btn" style="text-decoration: none;">Next</a>
+                    @endif
+                </div>
+            @else
+                <!-- No pagination controls when showing all -->
+            @endif
+        </div>
+        
+            <div style="display: flex; align-items: center; justify-content: flex-start; padding: 0 16px 10px 16px;">
+                <form method="get" style="margin: 0; display: flex; align-items: center;">
+                    <label for="per_page" style="font-size: 14px; color: #333; margin-right: 8px;">Show</label>
+                    <select name="per_page" id="per_page" onchange="this.form.submit()" style="padding: 6px 12px; border-radius: 6px; border: 1px solid #e0e0e0; font-size: 14px;">
+                        <option value="10" {{ request('per_page', 10) == 10 ? 'selected' : '' }}>10 entries</option>
+                        <option value="50" {{ request('per_page') == 50 ? 'selected' : '' }}>50 entries</option>
+                        <option value="100" {{ request('per_page') == 100 ? 'selected' : '' }}>100 entries</option>
+                    </select>
+                </form>
+            </div>
+            <table class="data-table">
             <thead>
                 <tr>
                     <th>Profile ID</th>
@@ -155,24 +181,16 @@
                 @endforeach
             </tbody>
         </table>
-    <div style="display: flex; justify-content: space-between; align-items: center; padding: 20px 16px 10px 16px;">
+        
+        <!-- Entries count ONLY at BOTTOM of table -->
+        <div style="display: flex; justify-content: flex-start; align-items: center; padding: 10px 16px 20px 16px;">
             <div style="color: #333; font-size: 14px;">
                 Showing {{ ($users->currentPage() - 1) * $users->perPage() + 1 }}
                 -
                 {{ min($users->currentPage() * $users->perPage(), $users->total()) }}
                 of {{ $users->total() }} entries
             </div>
-            <div style="display: flex; gap: 8px;">
-                @if(!$users->onFirstPage())
-                    <a href="{{ $users->previousPageUrl() }}" class="apply-btn" style="text-decoration: none;">Previous</a>
-                @endif
-                @if($users->hasMorePages())
-                    <a href="{{ $users->nextPageUrl() }}" class="apply-btn" style="text-decoration: none;">Next</a>
-                @endif
-            </div>
         </div>
-            </tbody>
-        </table>
     </div>
 </div>
 

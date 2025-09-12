@@ -1,32 +1,61 @@
-// Route to handle profile code link
-Route::get('/profile/{code}', function ($code) {
-    return view('profile', ['code' => $code]);
-});
-
 <?php
-use Illuminate\Support\Facades\Auth;
 
+use App\Http\Controllers\AdminController;
+use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\AdminMemberController;
+use App\Http\Controllers\UserController;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 
-use App\Http\Controllers\AdminMemberController;
-use App\Http\Controllers\DashboardController;
-// Resource route for admin members
-Route::resource('admin/members', AdminMemberController::class);
+// Admin routes (no auth middleware needed for login form)
+Route::get('/admin/login', [AdminController::class, 'showLoginForm'])->name('admin.login');
+Route::post('/admin/login', [AdminController::class, 'login'])->name('admin.login.submit');
+
+// Protected routes (require authentication)
+Route::middleware('auth')->group(function () {
+    // Admin dashboard route - only accessible by admins
+    Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+    
+    // User dashboard route - only accessible by regular users
+    Route::get('/user/dashboard', [UserController::class, 'dashboard'])->name('user.dashboard');
+    
+    // Resource route for admin members (admin only)
+    Route::resource('admin/members', AdminMemberController::class);
+    
+    // Logout route
+    Route::post('/logout', function () {
+        Auth::logout();
+        request()->session()->invalidate();
+        request()->session()->regenerateToken();
+        return redirect('/login');
+    })->name('logout');
+});
+
+// Regular user login routes
+Route::get('/login', function () {
+    return view('auth.login'); // Make sure this view exists
+})->name('login');
+
+// Home route - redirect based on user type
+Route::get('/', function () {
+    if (Auth::check()) {
+        $user = Auth::user();
+        if ($user->is_admin) {
+            return redirect()->route('dashboard'); // This routes to admin dashboard
+        } else {
+            return redirect()->route('user.dashboard');
+        }
+    }
+    
+    // If not authenticated, show login
+    return redirect()->route('login');
+});
+
 // Debug route to check session driver
 Route::get('/session-test', function () {
-    return config('session.driver');
-});
-Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
-
-
-Route::get('/', function () {
-    $user = Auth::user();
-    $profileId = $user ? $user->code : null;
-    $perPage = request('per_page', 10);
-    $allowedPerPage = [10, 50, 100];
-    if (!in_array($perPage, $allowedPerPage)) {
-        $perPage = 10;
-    }
-    $users = App\Models\User::paginate((int) $perPage)->appends(['per_page' => $perPage]);
-    return view('dashboard', compact('profileId', 'users'));
+    return response()->json([
+        'session_driver' => config('session.driver'),
+        'session_id' => session()->getId(),
+        'csrf_token' => csrf_token()
+    ]);
 });
