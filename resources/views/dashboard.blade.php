@@ -8,7 +8,7 @@
             <h1 class="dashboard-title">INA</h1>
             <nav class="main-nav">
                 <a href="#" class="nav-link active">Home</a>
-                <a href="#" class="nav-link">Profiles</a>
+                <a href="{{ route('profile.hellow') }}" class="nav-link">Profiles</a>
                 <div class="nav-dropdown">
                     <a href="#" class="nav-link">Sales ▼</a>
                 </div>

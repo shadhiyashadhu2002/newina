@@ -1,3 +1,4 @@
+
 <?php
 
 use App\Http\Controllers\AdminController;
@@ -13,15 +14,30 @@ Route::post('/admin/login', [AdminController::class, 'login'])->name('admin.logi
 
 // Protected routes (require authentication)
 Route::middleware('auth')->group(function () {
+    // Profile edit page route (user)
+    Route::get('/profile/{id}/edit', function ($id) {
+        return view('profile.edit_hi');
+    })->name('profile.edit_hi');
     // Admin dashboard route - only accessible by admins
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
-    
+
     // User dashboard route - only accessible by regular users
     Route::get('/user/dashboard', [UserController::class, 'dashboard'])->name('user.dashboard');
-    
+
+    // Profile page route (user)
+    Route::get('/profile', function () {
+        $users = \App\Models\User::all();
+    return view('profile.profile', compact('users'));
+    })->name('profile.hellow');
+
+    // Profile page route (admin)
+    Route::get('/admin/profile', function () {
+        return view('admin.profile');
+    })->name('admin.profile');
+
     // Resource route for admin members (admin only)
     Route::resource('admin/members', AdminMemberController::class);
-    
+
     // Logout route
     Route::post('/logout', function () {
         Auth::logout();

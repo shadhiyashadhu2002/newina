@@ -37,7 +37,7 @@
                         <h6 class="card-title">Menu</h6>
                         <ul class="list-unstyled">
                             <li><a href="{{ route('user.dashboard') }}" class="text-decoration-none">Dashboard</a></li>
-                            <li><a href="#" class="text-decoration-none">My Profile</a></li>
+                            <li><a href="{{ route('admin.profile') }}" class="text-decoration-none">My Profile</a></li>
                             <li><a href="#" class="text-decoration-none">My Settings</a></li>
                             <li><a href="#" class="text-decoration-none">My Activity</a></li>
                         </ul>
