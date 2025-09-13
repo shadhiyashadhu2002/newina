@@ -21,6 +21,13 @@ class User extends Authenticatable
         'name',
         'email',
         'password',
+        'is_admin',
+        'gender',
+        'mobile_number_1',
+        'mobile_number_2',
+        'whatsapp_number',
+        'welcome_call_completed',
+        'comments',
     ];
 
     /**
@@ -45,4 +52,5 @@ class User extends Authenticatable
             'password' => 'hashed',
         ];
     }
+    
 }

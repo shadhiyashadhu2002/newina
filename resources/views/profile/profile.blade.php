@@ -218,13 +218,16 @@
       width: 100%;
       border-collapse: collapse;
       font-size: 14px;
+      background: #fff;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+      border: 1px solid #d0e8f2;
     }
 
     table th, table td {
       padding: 15px 12px;
       text-align: center;
       vertical-align: middle;
-      border-bottom: 1px solid #e8f4fd;
+      border: 1px solid #d0e8f2;
     }
 
     table th {
@@ -241,14 +244,14 @@
       transition: all 0.3s ease;
     }
 
-    table tbody tr:hover {
-      background: linear-gradient(135deg, #f0f9ff, #e0f2fe);
-      transform: scale(1.01);
-      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    table tbody tr:nth-child(even) {
+      background: #f8fbff;
     }
 
-    table tbody tr:nth-child(even) {
-      background: rgba(248, 250, 252, 0.5);
+    table tbody tr:hover {
+      background: #e0f2fe;
+      transform: scale(1.01);
+      box-shadow: 0 2px 10px rgba(0,0,0,0.08);
     }
 
     table th:first-child,
@@ -400,10 +403,10 @@
         <button>Followup Due</button>
         <button class="active">All</button>
       </div>
-      <button class="btn-add">
+      <a href="{{ route('profile.addnew') }}" class="btn-add" style="text-decoration:none;">
         <span>⊕</span>
         Add New Profile
-      </button>
+      </a>
     </div>
 
     <div class="table-container">
@@ -444,8 +447,8 @@
             <td><a href="#" class="profile-link">{{ $user->code }}</a></td>
             <td class="name-cell">{{ $user->first_name }}</td>
             <td>{{ $user->created_at ? $user->created_at->format('d-M-Y') : '-' }}</td>
-            <td>{{ $user->assign_date ?? '-' }}</td>
-            <td>{{ $user->followup_date ?? '-' }}</td>
+            <td>{{ $user->created_at ? $user->created_at->format('d-M-Y') : '-' }}</td>
+            <td>{{ $user->created_at ? $user->created_at->format('d-M-Y') : '-' }}</td>
             <td class="email-cell">{{ $user->assigned_to ?? '-' }}</td>
             <td>{{ $user->status ?? '-' }}</td>
             <td class="actions">
