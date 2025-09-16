@@ -29,23 +29,8 @@ Route::middleware('auth')->group(function () {
     // Profile update route (user)
     Route::put('/profile/{id}', [UserController::class, 'updateProfile'])->name('profile.update');
     
-    // Profile edit page route (user) - Fixed duplicate routes
-    Route::get('/profile/{id}/edit', function ($id) {
-        $user = \App\Models\User::findOrFail($id);
-        // Fetch gender from members table using user id
-        $member = \App\Models\Member::where('user_id', $user->id)->first();
-        $gender = null;
-        if ($member) {
-            if ($member->gender == 1) {
-                $gender = 'Male';
-            } elseif ($member->gender == 2) {
-                $gender = 'Female';
-            } else {
-                $gender = 'Other';
-            }
-        }
-        return view('profile.profile_edit', compact('user', 'gender'));
-    })->name('profile.edit_hi');
+    // Profile edit page route (user) - Controller based
+    Route::get('/profile/{id}/edit', [UserController::class, 'editProfile'])->name('profile.edit_hi');
     
     // Admin dashboard route - only accessible by admins
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
