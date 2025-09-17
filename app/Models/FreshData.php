@@ -15,6 +15,14 @@ class FreshData extends Model
 		'source',
 		'remarks',
 		'assigned_to',
+		'gender',
+		'registration_date',
+		'profile_id',
+		'mobile_number_2',
+		'whatsapp_number',
+		'profile_created',
+		'photo_uploaded',
+		'welcome_call',
 	];
 
 	public function user()

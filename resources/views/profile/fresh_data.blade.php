@@ -612,14 +612,14 @@
                             <td>{{ $data->name }}</td>
                             <td>{{ $data->mobile }}</td>
                             <td>{{ $data->gender ?? '-' }}</td>
-                            <td>{{ $data->user && $data->user->code ? $data->user->code : '-' }}</td>
+                            <td>{{ $data->profile_id ?? '-' }}</td>
                             <td>{{ $data->created_at ? $data->created_at->format('d-M-Y') : '-' }}</td>
                             <td>{{ $data->user && $data->user->name ? $data->user->name : '-' }}</td>
                             <td>{{ $data->status ?? '-' }}</td>
                             <td>{{ $data->remarks ?? '-' }}</td>
                             <td>{{ $data->source }}</td>
                             <td class="actions">
-                                <a href="#" class="action-btn edit-btn" title="Edit">✏️</a>
+                                <a href="{{ route('edit.fresh.data', $data->id) }}" class="action-btn edit-btn" title="Edit">✏️</a>
                                 <a href="#" class="action-btn view-btn" title="View">👁️</a>
                                 <button class="action-btn delete-btn" title="Delete" onclick="deleteRecord(this)">🗑️</button>
                             </td>

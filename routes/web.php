@@ -87,8 +87,11 @@ Route::get('/session-test', function () {
 });
 use App\Http\Controllers\FreshDataController;
 
+Route::post('/edit-fresh-data/{id}', [FreshDataController::class, 'update'])->name('update.fresh.data');
+
 Route::get('/fresh-data', [FreshDataController::class, 'index'])->name('fresh.data');
 Route::get('/add-fresh-data', function () {
     return view('profile.addfreashdata');
 })->name('add.fresh.data');
 Route::post('/add-fresh-data', [FreshDataController::class, 'store'])->name('add.fresh.data.store');
+Route::get('/edit-fresh-data/{id}', [FreshDataController::class, 'edit'])->name('edit.fresh.data');
