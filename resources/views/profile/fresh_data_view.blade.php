@@ -346,28 +346,12 @@
                 </thead>
                 <tbody>
                     <tr>
-                        <td class="mobile-number">6238254145</td>
-                        <td class="comment-text">Switch off</td>
-                        <td class="followup-action">Switch off</td>
-                        <td class="date-cell">21-Sep-2024</td>
-                        <td class="date-cell">20-Sep-2024</td>
-                        <td class="email-cell">manasagopal435@gmail.com</td>
-                    </tr>
-                    <tr>
-                        <td class="mobile-number">9876543210</td>
-                        <td class="comment-text">Interested in product demo</td>
-                        <td class="followup-action">Schedule demo</td>
-                        <td class="date-cell">22-Sep-2024</td>
-                        <td class="date-cell">20-Sep-2024</td>
-                        <td class="email-cell">saleexecutive@example.com</td>
-                    </tr>
-                    <tr>
-                        <td class="mobile-number">8765432109</td>
-                        <td class="comment-text">Requested pricing details</td>
-                        <td class="followup-action">Send quotation</td>
-                        <td class="date-cell">23-Sep-2024</td>
-                        <td class="date-cell">19-Sep-2024</td>
-                        <td class="email-cell">salesmanager@example.com</td>
+                        <td class="mobile-number">{{ $freshData->mobile }}</td>
+                        <td class="comment-text">{{ $freshData->remarks ?? '-' }}</td>
+                        <td class="followup-action">{{ $freshData->status ?? '-' }}</td>
+                        <td class="date-cell">{{ $freshData->next_followup_date ?? '-' }}</td>
+                        <td class="date-cell">{{ $freshData->created_at ? $freshData->created_at->format('d-M-Y') : '-' }}</td>
+                        <td class="email-cell">{{ $freshData->user->name ?? '-' }}</td>
                     </tr>
                 </tbody>
             </table>
