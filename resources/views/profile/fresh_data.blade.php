@@ -513,10 +513,10 @@
         <nav>
             <ul class="header-nav">
                 <li><a href="#" data-page="home">Home</a></li>
-                <li><a href="#" data-page="profiles">Profiles</a></li>
+                <li><a href="{{ route('profile.hellow') }}" data-page="profiles">Profiles</a></li>
                 <li><a href="#" data-page="sales">Sales <span class="dropdown-arrow">▼</span></a></li>
                 <li><a href="#" data-page="helpline">HelpLine</a></li>
-                <li><a href="#" class="active" data-page="fresh-data">Fresh Data</a></li>
+                <li><a href="{{ route('fresh.data') }}" class="active" data-page="fresh-data">Fresh Data</a></li>
                 <li><a href="#" data-page="abc">abc</a></li>
                 <li><a href="#" data-page="services">Services <span class="dropdown-arrow">▼</span></a></li>
             </ul>
@@ -752,14 +752,14 @@
         // Navigation functionality
         document.querySelectorAll('.header-nav a').forEach(link => {
             link.addEventListener('click', function(e) {
-                if (this.getAttribute('href') && this.getAttribute('href') !== '#') {
-                    return;
+                // Only prevent default if href is '#' (no real navigation)
+                if (!this.getAttribute('href') || this.getAttribute('href') === '#') {
+                    e.preventDefault();
+                    document.querySelectorAll('.header-nav a').forEach(l => l.classList.remove('active'));
+                    this.classList.add('active');
+                    const page = this.getAttribute('data-page');
+                    console.log('Navigating to:', page);
                 }
-                e.preventDefault();
-                document.querySelectorAll('.header-nav a').forEach(l => l.classList.remove('active'));
-                this.classList.add('active');
-                const page = this.getAttribute('data-page');
-                console.log('Navigating to:', page);
             });
         });
 

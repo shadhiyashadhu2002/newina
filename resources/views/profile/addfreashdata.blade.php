@@ -305,6 +305,11 @@
           <textarea id="remarks" name="remarks" placeholder="Enter any additional remarks or notes"></textarea>
         </div>
 
+        <div class="form-group" style="display: flex; align-items: center; gap: 10px;">
+          <input type="checkbox" id="welcome_call" name="welcome_call" value="1" {{ old('welcome_call') ? 'checked' : '' }}>
+          <label for="welcome_call" style="margin: 0; cursor: pointer;">Welcome Call is Completed? (Please Tick)</label>
+        </div>
+
         <div class="button-container">
           <button type="submit" class="btn btn-add">Add</button>
           <a href="#" class="btn btn-back" onclick="goBack()">Back</a>

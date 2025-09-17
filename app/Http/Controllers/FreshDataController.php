@@ -31,8 +31,10 @@ class FreshDataController extends Controller
             'name' => 'required|string|max:255',
             'source' => 'required|string|max:255',
             'remarks' => 'nullable|string',
+            'welcome_call' => 'nullable|boolean',
         ]);
-    $validated['assigned_to'] = Auth::id();
+        $validated['assigned_to'] = Auth::id();
+        $validated['welcome_call'] = $request->has('welcome_call');
         FreshData::create($validated);
         return redirect()->route('fresh.data')->with('success', 'Fresh data added successfully!');
     }

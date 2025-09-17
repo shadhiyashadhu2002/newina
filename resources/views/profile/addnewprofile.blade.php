@@ -281,12 +281,12 @@
 
             <!-- Welcome Call Completed -->
             <div class="add-profiles-checkbox-group">
-                <label for="welcome_call">Welcome Call is Completed? (Please Tick)</label>
-                <input type="checkbox" 
-                       id="welcome_call"
-                       name="welcome_call_completed" 
-                       value="1"
-                       {{ old('welcome_call_completed') ? 'checked' : '' }}>
+          <label for="welcome_call">Welcome Call is Completed? (Please Tick)</label>
+          <input type="checkbox" 
+              id="welcome_call"
+              name="welcome_call" 
+              value="1"
+              {{ old('welcome_call') ? 'checked' : '' }}>
             </div>
 
             <!-- Comments -->
