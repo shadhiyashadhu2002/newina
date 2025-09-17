@@ -620,7 +620,7 @@
                             <td>{{ $data->source }}</td>
                             <td class="actions">
                                 <a href="{{ route('edit.fresh.data', $data->id) }}" class="action-btn edit-btn" title="Edit">✏️</a>
-                                <a href="#" class="action-btn view-btn" title="View">👁️</a>
+                                <a href="{{ route('fresh.data.view', $data->id) }}" class="action-btn view-btn" title="View">👁️</a>
                                 <button class="action-btn delete-btn" title="Delete" onclick="deleteRecord(this)">🗑️</button>
                             </td>
                         </tr>

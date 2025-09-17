@@ -95,3 +95,4 @@ Route::get('/add-fresh-data', function () {
 })->name('add.fresh.data');
 Route::post('/add-fresh-data', [FreshDataController::class, 'store'])->name('add.fresh.data.store');
 Route::get('/edit-fresh-data/{id}', [FreshDataController::class, 'edit'])->name('edit.fresh.data');
+Route::get('/fresh-data/view/{id}', [FreshDataController::class, 'view'])->name('fresh.data.view');

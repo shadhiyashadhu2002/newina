@@ -59,4 +59,10 @@ class FreshDataController extends Controller
         $freshData->update($validated);
         return redirect()->route('fresh.data')->with('success', 'Fresh data updated successfully!');
     }
+    // Show a hi message for the view page
+    public function view($id)
+    {
+        $freshData = FreshData::with('user')->findOrFail($id);
+        return view('profile.fresh_data_view', compact('freshData'));
+    }
 }
