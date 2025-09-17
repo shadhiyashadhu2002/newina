@@ -375,7 +375,7 @@
     
     <nav>
       <ul class="header-nav">
-  <li><a href="{{ route('dashboard') }}">Home</a></li>
+        <li><a href="#" data-page="home">Home</a></li>
         <li><a href="#" data-page="profiles" class="active">Profiles</a></li>
         <li><a href="#" data-page="sales">Sales <span class="dropdown-arrow">▼</span></a></li>
         <li><a href="#" data-page="helpline">HelpLine</a></li>
@@ -466,21 +466,22 @@
     // Main header navigation
     document.querySelectorAll('.header-nav a').forEach(link => {
       link.addEventListener('click', function(e) {
-        // If the link has an href to a real page (like Home), allow normal navigation
-        if (this.getAttribute('href') && this.getAttribute('href') !== '#') {
-          return; // Let the browser handle navigation
-        }
         e.preventDefault();
+        
         // Remove active class from all nav links
         document.querySelectorAll('.header-nav a').forEach(l => l.classList.remove('active'));
+        
         // Add active class to clicked link
         this.classList.add('active');
+        
         // Get the page name
         const page = this.getAttribute('data-page');
         console.log('Navigating to:', page);
+        
         // Update page title
         const pageTitle = document.querySelector('.page-title');
         pageTitle.textContent = this.textContent.replace('▼', '').trim();
+        
         // You can add logic here to load different content based on the page
         if (page === 'home') {
           // Load home dashboard with cards

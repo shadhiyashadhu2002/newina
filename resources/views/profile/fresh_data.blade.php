@@ -190,7 +190,31 @@
                         </tr>
                     </thead>
                     <tbody>
-                        {{-- Empty table - data will be populated from backend --}}
+                        @if(session('success'))
+                            <tr>
+                                <td colspan="10">
+                                    <div class="alert alert-success">{{ session('success') }}</div>
+                                </td>
+                            </tr>
+                        @endif
+                        @forelse($freshData as $data)
+                            <tr>
+                                <td><input type="checkbox" class="row-checkbox"></td>
+                                <td>{{ $data->name }}</td>
+                                <td>{{ $data->mobile }}</td>
+                                <td>{{ $data->gender ?? '-' }}</td>
+                                <td>{{ $data->profile_id ?? '-' }}</td>
+                                <td>{{ $data->followup_date ?? '-' }}</td>
+                                <td>{{ $data->user ? $data->user->name : '-' }}</td>
+                                <td>{{ $data->status ?? '-' }}</td>
+                                <td>{{ $data->comments ?? $data->remarks ?? '-' }}</td>
+                                <td>{{ $data->source }}</td>
+                            </tr>
+                        @empty
+                            <tr>
+                                <td colspan="10" style="text-align:center;">No fresh data found.</td>
+                            </tr>
+                        @endforelse
                     </tbody>
                 </table>
 

@@ -1,7 +1,6 @@
 <?php
 
 namespace App\Http\Controllers;
-
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use App\Models\User;
@@ -14,7 +13,7 @@ class UserController extends Controller
         
         // If user is admin, redirect to admin dashboard
         if ($user->is_admin) {
-            return redirect()->route('dashboard'); // This is the admin dashboard route
+            return redirect()->route('dashboard'); 
         }
         
         return view('user.dashboard', compact('user'));
@@ -53,8 +52,8 @@ class UserController extends Controller
         return redirect()->route('profile.hellow')->with('success', 'Profile updated successfully!');
     }
 
-public function store(Request $request)
-{
+    public function store(Request $request)
+    {
     // Validation and creation logic
     $validated = $request->validate([
         'code' => 'required|unique:users',
@@ -69,8 +68,7 @@ public function store(Request $request)
     $user = new User();
     $user->code = $validated['code'];
     $user->first_name = $validated['first_name'];
-    $user->name = $validated['first_name']; // For compatibility
-    $user->gender = $validated['gender'];
+    $user->name = $validated['first_name']; 
     $user->phone = $validated['phone'];
     $user->phone2 = $validated['phone2'] ?? null;
     $user->whatsapp_number = $validated['whatsapp_phone'] ?? null;
@@ -78,5 +76,5 @@ public function store(Request $request)
     $user->save();
 
     return redirect()->route('profile.hellow')->with('success', 'Profile created successfully!');
-}
+    }
 }
