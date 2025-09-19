@@ -458,11 +458,14 @@
   <main class="main-content">
     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px;">
       <h1 class="page-title">New Services</h1>
-      <button id="add-new-service-btn" class="add-service-btn-beautiful">
-        <span>✨</span> Add New Service
-      </button>
+      @if(Auth::check() && Auth::user()->is_admin)
+        <button id="add-new-service-btn" class="add-service-btn-beautiful">
+          <span>✨</span> Add New Service
+        </button>
+      @endif
     </div>
 
+    @if(Auth::check() && Auth::user()->is_admin)
     <!-- Add New Service Modal -->
     <div id="add-service-modal" class="modal-overlay">
       <div class="modal-content-beautiful">
@@ -506,6 +509,7 @@
         </form>
       </div>
     </div>
+    @endif
 
     <div class="table-container">
       <h2 class="table-title">List of New Services</h2>
@@ -517,6 +521,7 @@
             <th>Name</th>
             <th>Plan Name</th>
             <th>Payment Date</th>
+            <th>Executive Name</th>
             <th>Actions</th>
           </tr>
         </thead>
@@ -526,13 +531,15 @@
             <td>Tatau</td>
             <td>Assisted</td>
             <td>05-Mar-2025</td>
-             <td><a href="{{ route('service.details', ['id' => 39987, 'name' => 'Tatau']) }}" class="action-link">Service Details</a></td>
+            <td>John Doe</td>
+            <td><a href="{{ route('service.details', ['id' => 39987, 'name' => 'Tatau']) }}" class="action-link">Service Details</a></td>
           </tr>
           <tr>
             <td>25663</td>
             <td>THANWEIN</td>
             <td>Assisted</td>
             <td>03-Mar-2025</td>
+            <td>Jane Smith</td>
             <td><a href="{{ route('service.details', ['id' => 25663, 'name' => 'THANWEIN']) }}" class="action-link">Service Details</a></td>
           </tr>
           <tr>
@@ -540,6 +547,7 @@
             <td>Amwer</td>
             <td>Assisted</td>
             <td>15-Feb-2025</td>
+            <td>Michael Lee</td>
             <td><a href="{{ route('service.details', ['id' => 204543, 'name' => 'Amwer']) }}" class="action-link">Service Details</a></td>
           </tr>
           <tr>
@@ -547,6 +555,7 @@
             <td>Shabaob ali</td>
             <td>Assisted</td>
             <td>09-Jan-2025</td>
+            <td>Priya Kumar</td>
             <td><a href="{{ route('service.details', ['id' => 28275, 'name' => 'Shabaob ali']) }}" class="action-link">Service Details</a></td>
           </tr>
           <tr>
@@ -554,13 +563,15 @@
             <td>FECRU MAHAMMED</td>
             <td>Assisted</td>
             <td>03-Jan-2025</td>
-             <td><a href="{{ route('service.details', ['id' => 29365, 'name' => 'FECRU MAHAMMED']) }}" class="action-link">Service Details</a></td>
+            <td>Ahmed Ali</td>
+            <td><a href="{{ route('service.details', ['id' => 29365, 'name' => 'FECRU MAHAMMED']) }}" class="action-link">Service Details</a></td>
           </tr>
           <tr>
             <td>271548</td>
             <td>Al Idhadi</td>
             <td>Assisted</td>
             <td>03-Jan-2025</td>
+            <td>Fatima Noor</td>
             <td><a href="#" class="action-link">Service Details</a></td>
           </tr>
           <tr>
@@ -568,6 +579,7 @@
             <td>Isuka business</td>
             <td>Assisted</td>
             <td>30-Dec-2024</td>
+            <td>Ravi Patel</td>
             <td><a href="#" class="action-link">Service Details</a></td>
           </tr>
           <tr>
@@ -575,6 +587,7 @@
             <td>Marmon jiu</td>
             <td>Assisted</td>
             <td>24-Dec-2024</td>
+            <td>Emily Chen</td>
             <td><a href="#" class="action-link">Service Details</a></td>
           </tr>
           <tr>
@@ -582,6 +595,7 @@
             <td>Irmstad</td>
             <td>Assisted</td>
             <td>06-Dec-2024</td>
+            <td>David Kim</td>
             <td><a href="#" class="action-link">Service Details</a></td>
           </tr>
         </tbody>
