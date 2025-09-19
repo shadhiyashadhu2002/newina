@@ -522,10 +522,10 @@
             </ul>
         </nav>
         <button class="logout-btn">Logout</button>
-        <form id="logout-form" action="{{ route('logout') }}" method="POST" style="display:none;">
-            @csrf
-        </form>
-        <button class="logout-btn" id="logout-btn">Logout</button>
+                <form id="logout-form" action="{{ route('logout') }}" method="POST" style="display:none;">
+                    @csrf
+                </form>
+                <button class="logout-btn" id="logout-btn">Logout</button>
     </header>
     
     <main class="main-content">
@@ -653,12 +653,18 @@
     </main>
 
     <script>
-        // Logout functionality
-        document.getElementById('logout-btn').addEventListener('click', function() {
-            if(confirm('Are you sure you want to logout?')) {
-                document.getElementById('logout-form').submit();
-            }
-        });
+                // Logout functionality
+                document.addEventListener('DOMContentLoaded', function() {
+                    var logoutBtn = document.getElementById('logout-btn');
+                    if (logoutBtn) {
+                        logoutBtn.addEventListener('click', function(e) {
+                            e.preventDefault();
+                            if(confirm('Are you sure you want to logout?')) {
+                                document.getElementById('logout-form').submit();
+                            }
+                        });
+                    }
+                });
         document.addEventListener('DOMContentLoaded', function() {
             // Select All Checkbox functionality
             const selectAllCheckbox = document.getElementById('selectAll');

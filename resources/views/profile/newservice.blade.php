@@ -620,9 +620,15 @@
 
   <script>
     // Logout functionality
-    document.getElementById('logout-btn').addEventListener('click', function() {
-      if(confirm('Are you sure you want to logout?')) {
-        document.getElementById('logout-form').submit();
+    document.addEventListener('DOMContentLoaded', function() {
+      var logoutBtn = document.getElementById('logout-btn');
+      if (logoutBtn) {
+        logoutBtn.addEventListener('click', function(e) {
+          e.preventDefault();
+          if(confirm('Are you sure you want to logout?')) {
+            document.getElementById('logout-form').submit();
+          }
+        });
       }
     });
     // Modal logic for Add New Service
