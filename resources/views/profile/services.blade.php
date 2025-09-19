@@ -343,46 +343,6 @@
   </style>
 </head>
 <body>
-  <!-- Add New Service Button -->
-  <button id="add-new-service-btn" class="btn btn-primary" style="margin: 20px 0;">Add New Service</button>
-
-  <!-- Add New Service Modal -->
-  <div id="add-service-modal" style="display:none; position:fixed; top:0; left:0; width:100vw; height:100vh; background:rgba(0,0,0,0.4); z-index:2000; align-items:center; justify-content:center;">
-    <div style="background:#fff; border-radius:10px; padding:30px; max-width:400px; margin:auto; position:relative;">
-      <h2 style="margin-bottom:20px;">Add New Service</h2>
-      <form id="add-service-form-modal">
-        <div class="form-group">
-          <label>Profile ID</label>
-          <input type="text" name="profile_id" required>
-        </div>
-        <div class="form-group">
-          <label>Name</label>
-          <input type="text" name="name" required>
-        </div>
-        <div class="form-group">
-          <label>Gender</label>
-          <select name="gender" required>
-            <option value="">Select Gender</option>
-            <option value="male">Male</option>
-            <option value="female">Female</option>
-            <option value="other">Other</option>
-          </select>
-        </div>
-        <div class="form-group">
-          <label>Mobile Number</label>
-          <input type="text" name="mobile" required>
-        </div>
-        <div class="form-group">
-          <label>Service Executive</label>
-          <input type="text" name="service_executive" required>
-        </div>
-        <div style="display:flex; justify-content:flex-end; gap:10px; margin-top:20px;">
-          <button type="button" id="close-modal-btn" class="btn btn-secondary">Cancel</button>
-          <button type="submit" class="btn btn-primary">Add</button>
-        </div>
-      </form>
-    </div>
-  </div>
 
   <!-- Main Dashboard Header -->
   <header class="main-header">
