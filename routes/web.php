@@ -40,7 +40,7 @@ Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard
     Route::post('/profile', [UserController::class, 'store'])->name('profile.store');
     // Profile page route (user)
     Route::get('/profile', function () {
-    $users = \App\Models\User::orderBy('created_at', 'desc')->get();
+    $users = \App\Models\User::whereNotNull('code')->orderBy('created_at', 'desc')->take(10)->get();
         return view('profile.profile', compact('users'));
     })->name('profile.hellow');
     

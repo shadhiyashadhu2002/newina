@@ -343,6 +343,46 @@
   </style>
 </head>
 <body>
+  <!-- Add New Service Button -->
+  <button id="add-new-service-btn" class="btn btn-primary" style="margin: 20px 0;">Add New Service</button>
+
+  <!-- Add New Service Modal -->
+  <div id="add-service-modal" style="display:none; position:fixed; top:0; left:0; width:100vw; height:100vh; background:rgba(0,0,0,0.4); z-index:2000; align-items:center; justify-content:center;">
+    <div style="background:#fff; border-radius:10px; padding:30px; max-width:400px; margin:auto; position:relative;">
+      <h2 style="margin-bottom:20px;">Add New Service</h2>
+      <form id="add-service-form-modal">
+        <div class="form-group">
+          <label>Profile ID</label>
+          <input type="text" name="profile_id" required>
+        </div>
+        <div class="form-group">
+          <label>Name</label>
+          <input type="text" name="name" required>
+        </div>
+        <div class="form-group">
+          <label>Gender</label>
+          <select name="gender" required>
+            <option value="">Select Gender</option>
+            <option value="male">Male</option>
+            <option value="female">Female</option>
+            <option value="other">Other</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Mobile Number</label>
+          <input type="text" name="mobile" required>
+        </div>
+        <div class="form-group">
+          <label>Service Executive</label>
+          <input type="text" name="service_executive" required>
+        </div>
+        <div style="display:flex; justify-content:flex-end; gap:10px; margin-top:20px;">
+          <button type="button" id="close-modal-btn" class="btn btn-secondary">Cancel</button>
+          <button type="submit" class="btn btn-primary">Add</button>
+        </div>
+      </form>
+    </div>
+  </div>
 
   <!-- Main Dashboard Header -->
   <header class="main-header">
@@ -350,13 +390,13 @@
     
     <nav>
       <ul class="header-nav">
-        <li><a href="#" data-page="dashboard">Home</a></li>
-    <li><a href="{{ route('profile.hellow') }}" data-page="profiles" onclick="return true;">Profiles</a></li>
-        <li><a href="#" data-page="sales">Sales <span class="dropdown-arrow">▼</span></a></li>
-        <li><a href="#" data-page="helpline">HelpLine</a></li>
-        <li><a href="#" data-page="fresh-data">Fresh Data <span class="dropdown-arrow">▼</span></a></li>
-        <li><a href="#" data-page="abc">abc</a></li>
-        <li><a href="#" data-page="services" class="active">Services <span class="dropdown-arrow">▼</span></a></li>
+        <li><a href="{{ route('dashboard') }}" class="nav-link">Home</a></li>
+        <li><a href="{{ route('profile.hellow') }}" class="nav-link">Profiles</a></li>
+        <li><a href="#" class="nav-link">Sales <span class="dropdown-arrow">▼</span></a></li>
+        <li><a href="#" class="nav-link">HelpLine</a></li>
+        <li><a href="{{ route('fresh.data') }}" class="nav-link">Fresh Data <span class="dropdown-arrow">▼</span></a></li>
+        <li><a href="#" class="nav-link">abc</a></li>
+        <li><a href="{{ route('services.page') }}" class="nav-link active">Services <span class="dropdown-arrow">▼</span></a></li>
       </ul>
     </nav>
     
@@ -471,71 +511,30 @@
   </main>
 
   <script>
-    // Main header navigation
-    document.querySelectorAll('.header-nav a').forEach(link => {
-      link.addEventListener('click', function(e) {
-        e.preventDefault();
-        // Remove active class from all nav links
-        document.querySelectorAll('.header-nav a').forEach(l => l.classList.remove('active'));
-        // Add active class to clicked link
-        this.classList.add('active');
-        // Get the page name
-        const page = this.getAttribute('data-page');
-        console.log('Navigating to:', page);
-        // Update page title
-        const pageTitle = document.querySelector('.page-title');
-        pageTitle.textContent = this.textContent.replace('▼', '').trim();
-        
-        // Load different pages based on selection
-        if (page === 'dashboard') {
-          loadHomePage();
-        } else if (page === 'profiles') {
-          loadProfilesPage();
-        } else if (page === 'sales') {
-          loadSalesPage();
-        } else if (page === 'helpline') {
-          loadHelplinePage();
-        } else if (page === 'fresh-data') {
-          loadFreshDataPage();
-        } else if (page === 'abc') {
-          loadAbcPage();
-        } else if (page === 'services') {
-          loadServicesPage();
-        }
-      });
+    // Modal logic for Add New Service
+    const addNewServiceBtn = document.getElementById('add-new-service-btn');
+    const addServiceModal = document.getElementById('add-service-modal');
+    const closeModalBtn = document.getElementById('close-modal-btn');
+    addNewServiceBtn.addEventListener('click', function() {
+      addServiceModal.style.display = 'flex';
     });
-      // Only handle SPA navigation for links with href="#"
-      document.querySelectorAll('.header-nav a').forEach(link => {
-        link.addEventListener('click', function(e) {
-          if (!this.getAttribute('href') || this.getAttribute('href') === '#') {
-            e.preventDefault();
-            document.querySelectorAll('.header-nav a').forEach(l => l.classList.remove('active'));
-            this.classList.add('active');
-            // Get the page name
-            const page = this.getAttribute('data-page');
-            console.log('Navigating to:', page);
-            // Update page title
-            const pageTitle = document.querySelector('.page-title');
-            pageTitle.textContent = this.textContent.replace('▼', '').trim();
-            // Load different pages based on selection
-            if (page === 'dashboard') {
-              loadHomePage();
-            } else if (page === 'profiles') {
-              loadProfilesPage();
-            } else if (page === 'sales') {
-              loadSalesPage();
-            } else if (page === 'helpline') {
-              loadHelplinePage();
-            } else if (page === 'fresh-data') {
-              loadFreshDataPage();
-            } else if (page === 'abc') {
-              loadAbcPage();
-            } else if (page === 'services') {
-              loadServicesPage();
-            }
-          }
-        });
-      });
+    closeModalBtn.addEventListener('click', function() {
+      addServiceModal.style.display = 'none';
+    });
+    // Optional: Close modal on outside click
+    addServiceModal.addEventListener('click', function(e) {
+      if (e.target === addServiceModal) {
+        addServiceModal.style.display = 'none';
+      }
+    });
+    // Handle form submit (demo only)
+    document.getElementById('add-service-form-modal').addEventListener('submit', function(e) {
+      e.preventDefault();
+      alert('Service added!');
+      addServiceModal.style.display = 'none';
+      this.reset();
+    });
+    // No SPA navigation: allow browser to follow real links for navigation
 
     // Logout functionality
     document.querySelector('.logout-btn').addEventListener('click', function() {

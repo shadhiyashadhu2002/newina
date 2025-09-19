@@ -512,13 +512,13 @@
         <a href="#" class="header-brand">INA</a>
         <nav>
             <ul class="header-nav">
-                <li><a href="#" data-page="home">Home</a></li>
+                <li><a href="{{ route('dashboard') }}" data-page="home">Home</a></li>
                 <li><a href="{{ route('profile.hellow') }}" data-page="profiles">Profiles</a></li>
                 <li><a href="#" data-page="sales">Sales <span class="dropdown-arrow">▼</span></a></li>
                 <li><a href="#" data-page="helpline">HelpLine</a></li>
                 <li><a href="{{ route('fresh.data') }}" class="active" data-page="fresh-data">Fresh Data</a></li>
                 <li><a href="#" data-page="abc">abc</a></li>
-                <li><a href="#" data-page="services">Services <span class="dropdown-arrow">▼</span></a></li>
+                <li><a href="{{ route('services.page') }}" data-page="services">Services <span class="dropdown-arrow">▼</span></a></li>
             </ul>
         </nav>
         <button class="logout-btn">Logout</button>

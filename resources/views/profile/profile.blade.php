@@ -442,6 +442,7 @@
         </thead>
         <tbody>
         @foreach($users as $user)
+          @if($user->code)
           <tr>
             <td><input type="checkbox"></td>
             <td><a href="#" class="profile-link">{{ $user->code }}</a></td>
@@ -456,6 +457,7 @@
               <button class="delete">🗑️</button>
             </td>
           </tr>
+          @endif
         @endforeach
         </tbody>
       </table>

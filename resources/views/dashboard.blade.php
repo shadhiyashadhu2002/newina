@@ -6,7 +6,7 @@
         <div class="header-left">
             <h1 class="dashboard-title">INA</h1>
             <nav class="main-nav">
-                <a href="#" class="nav-link active">Home</a>
+                <a href="{{ route('dashboard') }}" class="nav-link active">Home</a>
                 <a href="{{ route('profile.hellow') }}" class="nav-link">Profiles</a>
                 <div class="nav-dropdown">
                     <a href="#" class="nav-link">Sales ▼</a>
@@ -17,7 +17,7 @@
                 </div>
                 <a href="#" class="nav-link">abc</a>
                 <div class="nav-dropdown">
-                    <a href="#" class="nav-link">Services ▼</a>
+                    <a href="{{ route('services.page') }}" class="nav-link">Services ▼</a>
                 </div>
             </nav>
         </div>
