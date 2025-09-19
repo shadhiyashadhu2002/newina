@@ -386,6 +386,10 @@
     </nav>
     
     <button class="logout-btn">Logout</button>
+    <form id="logout-form" action="{{ route('logout') }}" method="POST" style="display:none;">
+      @csrf
+    </form>
+    <button class="logout-btn" id="logout-btn">Logout</button>
   </header>
 
   <!-- Main Content Area -->
@@ -465,6 +469,12 @@
   </main>
 
   <script>
+    // Logout functionality
+    document.getElementById('logout-btn').addEventListener('click', function() {
+      if(confirm('Are you sure you want to logout?')) {
+        document.getElementById('logout-form').submit();
+      }
+    });
     // Main header navigation
     document.querySelectorAll('.header-nav a').forEach(link => {
       link.addEventListener('click', function(e) {

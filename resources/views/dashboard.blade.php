@@ -25,7 +25,10 @@
             @if(isset($profileId) && $profileId)
             <span class="profile-id">Profile ID: {{ $profileId }}</span>
             @endif
-            <a href="#" class="logout-btn">Logout</a>
+            <form id="logout-form" action="{{ route('logout') }}" method="POST" style="display:none;">
+                @csrf
+            </form>
+            <button class="logout-btn" id="logout-btn">Logout</button>
         </div>
     </div>
     <div class="stats-grid">
@@ -182,6 +185,20 @@
         </div>
     </div>
 </div>
+<script>
+    // Logout functionality
+    document.addEventListener('DOMContentLoaded', function() {
+        var logoutBtn = document.getElementById('logout-btn');
+        if (logoutBtn) {
+            logoutBtn.addEventListener('click', function(e) {
+                e.preventDefault();
+                if(confirm('Are you sure you want to logout?')) {
+                    document.getElementById('logout-form').submit();
+                }
+            });
+        }
+    });
+</script>
 
 <style>
     * {
