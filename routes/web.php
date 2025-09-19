@@ -1,6 +1,4 @@
-
 <?php
-
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\AdminMemberController;
@@ -8,6 +6,7 @@ use App\Http\Controllers\UserController;
 use App\Http\Controllers\Auth\LoginController; // Add this import
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\FreshDataController;
 
 // Admin routes (no auth middleware needed for login form)
 Route::get('/admin/login', [AdminController::class, 'showLoginForm'])->name('admin.login');
@@ -24,24 +23,24 @@ Route::post('/register', [LoginController::class, 'register'])->name('register.s
 // Protected routes (require authentication)
 Route::middleware('auth')->group(function () {
     // Add New Profile page route
-    Route::get('/profile/add', function () {
+Route::get('/profile/add', function () {
         return view('profile.addnewprofile');
     })->name('profile.addnew');
     // Profile update route (user)
-    Route::put('/profile/{id}', [UserController::class, 'updateProfile'])->name('profile.update');
+Route::put('/profile/{id}', [UserController::class, 'updateProfile'])->name('profile.update');
     
     // Profile edit page route (user) - Controller based
-    Route::get('/profile/{id}/edit', [UserController::class, 'editProfile'])->name('profile.edit_hi');
+Route::get('/profile/{id}/edit', [UserController::class, 'editProfile'])->name('profile.edit_hi');
     
     // Admin dashboard route - only accessible by admins
-    Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
     
     // User dashboard route - only accessible by regular users
     Route::get('/user/dashboard', [UserController::class, 'dashboard'])->name('user.dashboard');
     Route::post('/profile', [UserController::class, 'store'])->name('profile.store');
     // Profile page route (user)
     Route::get('/profile', function () {
-    $users = \App\Models\User::whereDate('created_at', now()->toDateString())->get();
+    $users = \App\Models\User::orderBy('created_at', 'desc')->get();
         return view('profile.profile', compact('users'));
     })->name('profile.hellow');
     
@@ -85,10 +84,9 @@ Route::get('/session-test', function () {
         'csrf_token' => csrf_token()
     ]);
 });
-use App\Http\Controllers\FreshDataController;
+
 
 Route::post('/edit-fresh-data/{id}', [FreshDataController::class, 'update'])->name('update.fresh.data');
-
 Route::get('/fresh-data', [FreshDataController::class, 'index'])->name('fresh.data');
 Route::get('/add-fresh-data', function () {
     return view('profile.addfreashdata');
@@ -96,3 +94,18 @@ Route::get('/add-fresh-data', function () {
 Route::post('/add-fresh-data', [FreshDataController::class, 'store'])->name('add.fresh.data.store');
 Route::get('/edit-fresh-data/{id}', [FreshDataController::class, 'edit'])->name('edit.fresh.data');
 Route::get('/fresh-data/view/{id}', [FreshDataController::class, 'view'])->name('fresh.data.view');
+Route::get('/services', function () {
+    return view('profile.services');
+})->name('services.page');
+
+Route::get('/service-details/{id}/{name}', function ($id, $name) {
+    return view('profile.servicedetails', ['id' => $id, 'name' => $name]);
+})->name('service.details');
+// New Service page route
+Route::get('/new-service', function () {
+    return view('profile.newservice');
+})->name('new.service');
+// Active Service page route
+Route::get('/active-service', function () {
+    return view('profile.activeservice');
+})->name('active.service');

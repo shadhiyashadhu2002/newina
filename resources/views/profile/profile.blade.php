@@ -381,7 +381,7 @@
     <li><a href="#" data-page="helpline">HelpLine</a></li>
     <li><a href="{{ route('fresh.data') }}">Fresh Data <span class="dropdown-arrow">▼</span></a></li>
     <li><a href="#" data-page="abc">abc</a></li>
-    <li><a href="#" data-page="services">Services <span class="dropdown-arrow">▼</span></a></li>
+  <li><a href="{{ route('services.page') }}">Services <span class="dropdown-arrow">▼</span></a></li>
       </ul>
     </nav>
     
