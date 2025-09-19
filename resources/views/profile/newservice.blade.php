@@ -437,11 +437,10 @@
   <!-- Main Dashboard Header -->
   <header class="main-header">
     <a href="#" class="header-brand">INA</a>
-    
     <nav>
       <ul class="header-nav">
-      <li><a href="{{ route('dashboard') }}">Home</a></li>
-  <li><a href="{{ route('profile.hellow') }}">Profiles</a></li>
+        <li><a href="{{ route('dashboard') }}">Home</a></li>
+        <li><a href="{{ route('profile.hellow') }}">Profiles</a></li>
         <li><a href="#">Sales <span class="dropdown-arrow">▼</span></a></li>
         <li><a href="#">HelpLine</a></li>
         <li><a href="{{ route('fresh.data') }}">Fresh Data <span class="dropdown-arrow">▼</span></a></li>
@@ -449,8 +448,6 @@
         <li><a href="{{ route('services.page') }}" class="active">Services <span class="dropdown-arrow">▼</span></a></li>
       </ul>
     </nav>
-    
-    <button class="logout-btn">Logout</button>
     <form id="logout-form" action="{{ route('logout') }}" method="POST" style="display:none;">
       @csrf
     </form>

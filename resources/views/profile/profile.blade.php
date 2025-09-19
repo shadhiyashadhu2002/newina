@@ -385,7 +385,6 @@
       </ul>
     </nav>
     
-    <button class="logout-btn">Logout</button>
     <form id="logout-form" action="{{ route('logout') }}" method="POST" style="display:none;">
       @csrf
     </form>

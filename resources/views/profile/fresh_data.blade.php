@@ -521,11 +521,10 @@
                 <li><a href="{{ route('services.page') }}" data-page="services">Services <span class="dropdown-arrow">▼</span></a></li>
             </ul>
         </nav>
-        <button class="logout-btn">Logout</button>
-                <form id="logout-form" action="{{ route('logout') }}" method="POST" style="display:none;">
-                    @csrf
-                </form>
-                <button class="logout-btn" id="logout-btn">Logout</button>
+            <form id="logout-form" action="{{ route('logout') }}" method="POST" style="display:none;">
+                @csrf
+            </form>
+            <button class="logout-btn" id="logout-btn">Logout</button>
     </header>
     
     <main class="main-content">
