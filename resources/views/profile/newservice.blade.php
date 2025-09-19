@@ -498,34 +498,8 @@
           </div>
           <div class="modal-form-row">
             <div class="modal-form-group">
-              <label>Plan Name</label>
-              <select name="plan_name" required>
-                <option value="">Select Plan</option>
-                <option value="assisted">Assisted</option>
-                <option value="premium">Premium</option>
-                <option value="standard">Standard</option>
-                <option value="basic">Basic</option>
-              </select>
-            </div>
-            <div class="modal-form-group">
-              <label>Payment Date</label>
-              <input type="date" name="payment_date" required>
-            </div>
-          </div>
-          <div class="modal-form-row">
-            <div class="modal-form-group">
               <label>Service Executive</label>
               <input type="text" name="service_executive" placeholder="Enter service executive name" required>
-            </div>
-            <div class="modal-form-group">
-              <label>Email Address</label>
-              <input type="email" name="email" placeholder="Enter email address">
-            </div>
-          </div>
-          <div class="modal-form-row">
-            <div class="modal-form-group">
-              <label>Address</label>
-              <input type="text" name="address" placeholder="Enter address">
             </div>
           </div>
           <div class="modal-actions">
