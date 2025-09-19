@@ -3,31 +3,29 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>INA Dashboard - Client Details</title>
+  <title>INA Dashboard - Add Service</title>
   <style>
     * {
       margin: 0;
       padding: 0;
       box-sizing: border-box;
-      font-family: Arial, sans-serif;
     }
 
     body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
       background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
       color: #333;
       min-height: 100vh;
-      padding: 0;
-      margin: 0;
     }
 
-    /* Main Dashboard Header */
+    /* Main Dashboard Header - Same as profile page */
     .main-header {
       background: linear-gradient(135deg, #4a69bd, #5a4fcf);
-      padding: 12px 20px;
+      padding: 15px 30px;
       display: flex;
       justify-content: space-between;
       align-items: center;
-      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+      box-shadow: 0 2px 20px rgba(0, 0, 0, 0.2);
       position: sticky;
       top: 0;
       z-index: 1000;
@@ -35,7 +33,7 @@
 
     .header-brand {
       color: white;
-      font-size: 22px;
+      font-size: 24px;
       font-weight: 700;
       text-decoration: none;
     }
@@ -43,7 +41,7 @@
     .header-nav {
       display: flex;
       list-style: none;
-      gap: 15px;
+      gap: 25px;
       align-items: center;
     }
 
@@ -55,18 +53,19 @@
       color: rgba(255, 255, 255, 0.9);
       text-decoration: none;
       font-weight: 500;
-      font-size: 14px;
-      padding: 8px 12px;
-      border-radius: 6px;
+      font-size: 15px;
+      padding: 10px 16px;
+      border-radius: 8px;
       transition: all 0.3s ease;
       display: flex;
       align-items: center;
-      gap: 4px;
+      gap: 5px;
     }
 
     .header-nav a:hover {
       color: white;
       background: rgba(255, 255, 255, 0.1);
+      transform: translateY(-1px);
     }
 
     .header-nav a.active {
@@ -84,151 +83,220 @@
       background: rgba(255, 255, 255, 0.1);
       border: 1px solid rgba(255, 255, 255, 0.3);
       color: white;
-      padding: 6px 12px;
-      border-radius: 15px;
+      padding: 8px 16px;
+      border-radius: 20px;
       cursor: pointer;
       transition: all 0.3s ease;
       font-weight: 500;
-      font-size: 14px;
     }
 
     .logout-btn:hover {
       background: rgba(255, 255, 255, 0.2);
+      transform: translateY(-1px);
     }
 
     /* Main Content Area */
     .main-content {
-  padding: 40px 30px;
-  max-width: 1400px;
-  margin: 0 auto;
+      padding: 30px;
+      max-width: 1200px;
+      margin: 0 auto;
     }
 
     .page-title {
       color: #fff;
-      font-size: 24px;
+      font-size: 28px;
       font-weight: 600;
-      margin-bottom: 20px;
+      margin-bottom: 25px;
       text-shadow: 0 2px 4px rgba(0,0,0,0.3);
-      text-align: center;
     }
 
-    /* Box Container */
-    .boxes-container {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 40px;
-  margin-bottom: 40px;
-  align-items: stretch;
+    /* Form Container */
+    .form-container {
+      background: rgba(255, 255, 255, 0.95);
+      border-radius: 15px;
+      padding: 30px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(255, 255, 255, 0.3);
+      max-width: 800px;
+      margin: 0 auto;
     }
 
-    .box {
-  background: rgba(255, 255, 255, 0.95);
-  border-radius: 10px;
-  padding: 20px;
-  box-shadow: 0 5px 15px rgba(0,0,0,0.2);
-  border: 1px solid rgba(255, 255, 255, 0.3);
-  min-height: 600px;
-  height: auto;
-  display: flex;
-  flex-direction: column;
-  justify-content: flex-start;
+    /* Tab Navigation */
+    .tab-nav {
+      display: flex;
+      margin-bottom: 30px;
+      border-bottom: 2px solid #e0e0e0;
     }
 
-    .box-header {
-  display: flex;
-  align-items: center;
-  margin-bottom: 15px;
-  padding-bottom: 10px;
-  border-bottom: 2px solid #e0e0e0;
-  background: #ffe066;
-  border-radius: 8px 8px 0 0;
-  padding-top: 10px;
-  padding-left: 10px;
-  padding-right: 10px;
+    .tab-nav button {
+      background: none;
+      border: none;
+      padding: 12px 20px;
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: 500;
+      color: #666;
+      border-bottom: 3px solid transparent;
+      transition: all 0.3s ease;
+      display: flex;
+      align-items: center;
+      gap: 8px;
     }
 
-    .box-icon {
-      font-size: 20px;
-      margin-right: 10px;
+    .tab-nav button:hover {
+      color: #333;
+      background: rgba(0,0,0,0.05);
     }
 
-    .box-title {
-      font-size: 18px;
-      font-weight: bold;
+    .tab-nav button.active {
+      color: #4CAF50;
+      border-bottom-color: #4CAF50;
+      background: rgba(76, 175, 80, 0.05);
+    }
+
+    /* Form Layout */
+    .form-row {
+      display: flex;
+      gap: 20px;
+      margin-bottom: 20px;
+    }
+
+    .form-group {
+      flex: 1;
+    }
+
+    .form-group.half {
+      flex: 0.5;
+    }
+
+    .form-group label {
+      display: block;
+      margin-bottom: 6px;
+      font-weight: 500;
+      color: #333;
+      font-size: 14px;
+    }
+
+    .form-group input,
+    .form-group select,
+    .form-group textarea {
+      width: 100%;
+      padding: 10px 12px;
+      border: 2px solid #e0e0e0;
+      border-radius: 8px;
+      font-size: 14px;
+      transition: all 0.3s ease;
+      background: white;
+    }
+
+    .form-group input:focus,
+    .form-group select:focus,
+    .form-group textarea:focus {
+      outline: none;
+      border-color: #4CAF50;
+      box-shadow: 0 0 0 3px rgba(76, 175, 80, 0.1);
+    }
+
+    .form-group textarea {
+      resize: vertical;
+      min-height: 80px;
+    }
+
+    /* Section Headers */
+    .section-header {
+      background: linear-gradient(135deg, #f8fbff, #e8f4fd);
+      padding: 12px 20px;
+      margin: 25px -30px 20px -30px;
+      border-left: 4px solid #4CAF50;
+      font-weight: 600;
       color: #2c3e50;
+      font-size: 16px;
     }
 
-    /* Info Items */
-    .info-item {
+    /* Action Buttons */
+    .form-actions {
       display: flex;
-      margin-bottom: 12px;
+      justify-content: flex-end;
+      gap: 15px;
+      margin-top: 30px;
+      padding-top: 20px;
+      border-top: 1px solid #e0e0e0;
     }
 
-    .info-label {
+    .btn {
+      padding: 12px 25px;
+      border: none;
+      border-radius: 25px;
       font-weight: 600;
-      color: #555;
-      min-width: 140px;
-      padding-right: 10px;
+      cursor: pointer;
+      font-size: 14px;
+      transition: all 0.3s ease;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
     }
 
-    .info-value {
-      color: #333;
-      flex: 1;
+    .btn-primary {
+      background: linear-gradient(135deg, #4CAF50, #45a049);
+      color: white;
+      box-shadow: 0 4px 15px rgba(76, 175, 80, 0.4);
     }
 
-    /* Contact Items */
-    .contact-item {
-      display: flex;
-      margin-bottom: 12px;
-      align-items: flex-start;
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(76, 175, 80, 0.6);
     }
 
-    .contact-label {
-      font-weight: 600;
-      color: #555;
-      min-width: 140px;
-      padding-right: 10px;
+    .btn-secondary {
+      background: linear-gradient(135deg, #6c757d, #5a6268);
+      color: white;
+      box-shadow: 0 4px 15px rgba(108, 117, 125, 0.4);
     }
 
-    .contact-value {
-      color: #333;
-      flex: 1;
+    .btn-secondary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(108, 117, 125, 0.6);
     }
 
-    /* Responsive design */
-    @media (max-width: 900px) {
-      .boxes-container {
-        grid-template-columns: 1fr 1fr;
-      }
+    /* Profile ID Section */
+    .profile-id-section {
+      background: #f8f9fa;
+      padding: 15px;
+      border-radius: 8px;
+      margin-bottom: 20px;
+      border-left: 4px solid #007bff;
     }
 
-    @media (max-width: 600px) {
-      .main-header {
+    .profile-id-section h4 {
+      color: #007bff;
+      margin-bottom: 10px;
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+      .form-row {
         flex-direction: column;
-        gap: 10px;
-        padding: 10px;
+        gap: 15px;
       }
-      .header-nav {
-        flex-wrap: wrap;
-        justify-content: center;
-        gap: 8px;
+      
+      .form-container {
+        margin: 0 15px;
+        padding: 20px;
       }
-      .header-nav a {
-        font-size: 13px;
-        padding: 6px 10px;
+      
+      .main-content {
+        padding: 15px;
       }
-      .boxes-container {
-        grid-template-columns: 1fr;
+      
+      .tab-nav {
+        overflow-x: auto;
+        white-space: nowrap;
       }
-      .info-item,
-      .contact-item {
+      
+      .form-actions {
         flex-direction: column;
-        margin-bottom: 15px;
-      }
-      .info-label,
-      .contact-label {
-        min-width: auto;
-        margin-bottom: 5px;
       }
     }
   </style>
@@ -256,224 +324,313 @@
 
   <!-- Main Content Area -->
   <main class="main-content">
-    <h1 class="page-title">Client Details - 38584</h1>
+    <h1 class="page-title">Add Service</h1>
 
-    <div class="boxes-container">
-  <!-- Service Details Box -->
-  <div class="box service-details-box">
-
-        <div class="box-header">
-          <span class="box-icon">⚙️</span>
-          <h2 class="box-title">Service Details</h2>
-        </div>
-        <div class="info-item">
-          <span class="info-label">Profile ID:</span>
-          <span class="info-value">38584</span>
-        </div>
-        <div class="info-item">
-          <span class="info-label">Service Name:</span>
-          <span class="info-value">Premium</span>
-        </div>
-        <div class="info-item">
-          <span class="info-label">Price:</span>
-          <span class="info-value">01-Jan-2025</span>
-        </div>
-        <div class="info-item">
-          <span class="info-label">Success Fee:</span>
-          <span class="info-value">31-Dec-2025</span>
-        </div>
-        <div class="info-item">
-          <span class="info-label">Start Date:</span>
-          <span class="info-value">31-Dec-2025</span>
-        </div>
-        <div class="info-item">
-          <span class="info-label">Expiry Date:</span>
-          <span class="info-value">31-Dec-2025</span>
-        </div>
-         <div class="info-item">
-          <span class="info-label">Discription:</span>
-          <span class="info-value">Royal service 7 months</span>
-        </div>
-        <div class="info-item">
-        </div>
+    <div class="form-container">
+      <!-- Tab Navigation -->
+      <div class="tab-nav">
+        <button id="tab-service" class="active" type="button"><span>📋</span>Service</button>
+        <button id="tab-member" type="button"><span>👤</span>Member Info</button>
+        <button id="tab-partner" type="button"><span>💝</span>Partner Preference</button>
+        <button id="tab-contact" type="button"><span>📞</span>Contact Details</button>
       </div>
 
-  <!-- Member Info Box -->
-  <div class="box service-details-box">
-    
-        <div class="box-header">
-          <span class="box-icon">👤</span>
-          <h2 class="box-title">Member Info</h2>
+      <form id="addServiceForm">
+  <div id="tab-content-service">
+          <!-- Profile ID Section -->
+          <div class="profile-id-section">
+            <h4>Profile ID</h4>
+            <div class="form-row">
+              <div class="form-group">
+                <input type="text" placeholder="Enter Profile ID" value="">
+              </div>
+            </div>
+          </div>
+          <!-- Service Details -->
+          <div class="form-row">
+            <div class="form-group">
+              <label>Service Name</label>
+              <input type="text" placeholder="Enter service name">
+            </div>
+            <div class="form-group">
+              <label>Amount Paid</label>
+              <input type="number" placeholder="7000.00" step="0.01">
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>Service Details</label>
+              <textarea placeholder="Enter detailed service information"></textarea>
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>Service Duration (Days)</label>
+              <input type="number" placeholder="0">
+            </div>
+            <div class="form-group">
+              <label>Success Fee</label>
+              <input type="number" placeholder="0" step="0.01">
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>Refund Price</label>
+              <input type="number" placeholder="0" step="0.01">
+            </div>
+            <div class="form-group">
+              <label>After Payment</label>
+              <select>
+                <option value="">Select status</option>
+                <option value="pending">Pending</option>
+                <option value="confirmed">Confirmed</option>
+                <option value="processing">Processing</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>Start Date</label>
+              <input type="date">
+            </div>
+            <div class="form-group">
+              <label>Expiry Date</label>
+              <input type="date">
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>RM Name</label>
+              <select>
+                <option value="">Select Executive</option>
+                <option value="exec1">Executive 1</option>
+                <option value="exec2">Executive 2</option>
+                <option value="exec3">Executive 3</option>
+              </select>
+            </div>
+          </div>
+          <!-- Form Actions -->
+          <div class="form-actions">
+            <button type="button" class="btn btn-secondary" disabled>Previous</button>
+            <button type="button" class="btn btn-primary" id="next-to-member">Next</button>
+          </div>
         </div>
-        <div class="info-item">
-          <span class="info-label">Name:</span>
-          <span class="info-value">Musthafia</span>
+        <div id="tab-content-member" style="display:none;">
+          <div class="section-header">Member Info</div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>Name</label>
+              <input type="text" value="Musthafia" readonly>
+            </div>
+            <div class="form-group">
+              <label>Age</label>
+              <input type="text" value="30" readonly>
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>Education</label>
+              <input type="text" value="B.TECH" readonly>
+            </div>
+            <div class="form-group">
+              <label>Occupation</label>
+              <input type="text" value="BUSINESS" readonly>
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>Annual Income</label>
+              <input type="text" value="200/2020" readonly>
+            </div>
+            <div class="form-group">
+              <label>Marital Status</label>
+              <input type="text" value="News Married" readonly>
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>Family Status</label>
+              <input type="text" value="Weekly" readonly>
+            </div>
+            <div class="form-group">
+              <label>Father Details</label>
+              <input type="text" value="Change activity" readonly>
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>Mother Details</label>
+              <input type="text" value="sin" readonly>
+            </div>
+            <div class="form-group">
+              <label>Sibling Details</label>
+              <input type="text" value="Dr. notch, phara" readonly>
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>Caste</label>
+              <input type="text" value="" readonly>
+            </div>
+            <div class="form-group">
+              <label>SubCaste</label>
+              <input type="text" value="min" readonly>
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>Eating Habits</label>
+              <input type="text" value="All" readonly>
+            </div>
+            <div class="form-group">
+              <label>Country Living In</label>
+              <input type="text" value="India" readonly>
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>Residing State</label>
+              <input type="text" value="Kerala" readonly>
+            </div>
+          </div>
+          <div class="form-actions">
+            <button type="button" class="btn btn-secondary" id="back-to-service">Previous</button>
+            <button type="button" class="btn btn-primary" id="next-to-partner">Next</button>
+          </div>
         </div>
-        <div class="info-item">
-          <span class="info-label">Age:</span>
-          <span class="info-value">30</span>
-        </div>
-        <div class="info-item">
-          <span class="info-label">Education:</span>
-          <span class="info-value">B.TECH</span>
-        </div>
-        <div class="info-item">
-          <span class="info-label">Occupation:</span>
-          <span class="info-value">BUSINESS</span>
-        </div>
-        <div class="info-item">
-          <span class="info-label">Annual Income:</span>
-          <span class="info-value">200/2020</span>
-        </div>
-        <div class="info-item">
-          <span class="info-label">Marital Status:</span>
-          <span class="info-value">News Married</span>
-        </div>
-        <div class="info-item">
-          <span class="info-label">Family Status:</span>
-          <span class="info-value">Weekly</span>
-        </div>
-        <div class="info-item">
-          <span class="info-label">Father Details:</span>
-          <span class="info-value">Change activity</span>
-        </div>
-        <div class="info-item">
-          <span class="info-label">Mother Details:</span>
-          <span class="info-value">sin</span>
-        </div>
-        <div class="info-item">
-          <span class="info-label">Sibling Details:</span>
-          <span class="info-value">Dr. notch, phara</span>
-        </div>
-        <div class="info-item">
-          <span class="info-label">Caste:</span>
-          <span class="info-value"></span>
-        </div>
-        <div class="info-item">
-          <span class="info-label">SubCaste:</span>
-          <span class="info-value">min</span>
-        </div>
-         <div class="info-item">
-          <span class="info-label">Eating Habits:</span>
-          <span class="info-value">All</span>
-        </div>
-         <div class="info-item">
-          <span class="info-label">country Living In:</span>
-          <span class="info-value">India</span>
-        </div>
-         <div class="info-item">
-          <span class="info-label">Residing State:</span>
-          <span class="info-value">Kerala</span>
-        </div>
-      </div>
 
-  <!-- Partner Preference Box -->
-  <div class="box">
+        <!-- Partner Preference Tab Content -->
+        <div id="tab-content-partner" style="display:none;">
+          <div class="section-header">Partner Preference</div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>Preferred Age</label>
+              <input type="text" placeholder="Preferred Age">
+            </div>
+            <div class="form-group">
+              <label>Preferred Height</label>
+              <input type="text" placeholder="Preferred Height">
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>Preferred Weight</label>
+              <input type="text" placeholder="Preferred Weight">
+            </div>
+            <div class="form-group">
+              <label>Preferred Education</label>
+              <input type="text" placeholder="Preferred Education">
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>Preferred Religion</label>
+              <input type="text" placeholder="Preferred Religion">
+            </div>
+            <div class="form-group">
+              <label>Preferred Caste</label>
+              <input type="text" placeholder="Preferred Caste">
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>Preferred Sub Caste</label>
+              <input type="text" placeholder="Preferred Sub Caste">
+            </div>
+            <div class="form-group">
+              <label>Preferred Marital Status</label>
+              <input type="text" placeholder="Preferred Marital Status">
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>Preferred Annual Income</label>
+              <input type="text" placeholder="Preferred Annual Income">
+            </div>
+            <div class="form-group">
+              <label>Preferred Occupation</label>
+              <input type="text" placeholder="Preferred Occupation">
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>Preferred Family Status</label>
+              <input type="text" placeholder="Preferred Family Status">
+            </div>
+            <div class="form-group">
+              <label>Preferred Eating Habits</label>
+              <input type="text" placeholder="Preferred Eating Habits">
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>Preferred Ancestor Origin</label>
+              <input type="text" placeholder="Preferred Ancestor Origin">
+            </div>
+            <div class="form-group">
+              <label>Preferred Residing State</label>
+              <input type="text" placeholder="Preferred Residing State">
+            </div>
+          </div>
+          <div class="form-actions">
+            <button type="button" class="btn btn-secondary" id="back-to-member">Previous</button>
+            <button type="button" class="btn btn-primary" id="next-to-contact">Next</button>
+          </div>
+        </div>
 
-        <div class="box-header">
-          <span class="box-icon">💞</span>
-          <h2 class="box-title">Partner Preference</h2>
+        <!-- Contact Details Tab Content -->
+        <div id="tab-content-contact" style="display:none;">
+          <div class="section-header">Contact Details</div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>Customer Name</label>
+              <input type="text" placeholder="Customer Name">
+            </div>
+            <div class="form-group">
+              <label>Mobile Number</label>
+              <input type="text" placeholder="Mobile Number">
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>Whatsapp No</label>
+              <input type="text" placeholder="Whatsapp No">
+            </div>
+            <div class="form-group">
+              <label>Email</label>
+              <input type="email" placeholder="Email">
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>Alternate Contact</label>
+              <input type="text" placeholder="Alternate Contact">
+            </div>
+            <div class="form-group">
+              <label>Client</label>
+              <input type="text" placeholder="Client">
+            </div>
+          </div>
+          <div class="form-actions">
+            <button type="button" class="btn btn-secondary" id="back-to-partner">Previous</button>
+            <button type="submit" class="btn btn-primary">Submit</button>
+          </div>
         </div>
-        <div class="info-item">
-          <span class="info-label">Preferred Age:</span>
-          <span class="info-value">22 - 27</span>
         </div>
-        <div class="info-item">
-          <span class="info-label">Preferred Height:</span>
-          <span class="info-value">160 - 168</span>
-        </div>
-        <div class="info-item">
-          <span class="info-label">Preferred Weight:</span>
-          <span class="info-value">50 - 65</span>
-        </div>
-        <div class="info-item">
-          <span class="info-label">Preferred Education:</span>
-          <span class="info-value">AAY</span>
-        </div>
-        <div class="info-item">
-          <span class="info-label">Preferred Religion:</span>
-          <span class="info-value">Islam</span>
-        </div>
-        <div class="info-item">
-          <span class="info-label">Preferred Caste:</span>
-          <span class="info-value">AAY</span>
-        </div>
-        <div class="info-item">
-          <span class="info-label">Preferred Sub-Caste:</span>
-          <span class="info-value">AAY</span>
-        </div>
-        <div class="info-item">
-          <span class="info-label">Preferred Marital Status:</span>
-          <span class="info-value">Never Married</span>
-        </div>
-        <div class="info-item">
-          <span class="info-label">Preferred Annual Income:</span>
-          <span class="info-value">0</span>
-        </div>
-        <div class="info-item">
-          <span class="info-label">Preferred Occupation:</span>
-          <span class="info-value">AAY</span>
-        </div>
-        <div class="info-item">
-          <span class="info-label">Preferred Family Status:</span>
-          <span class="info-value">Weekly</span>
-        </div>
-         <div class="info-item">
-          <span class="info-label">Preferred Eating Habits:</span>
-          <span class="info-value">Weekly</span>
-        </div>
-         <div class="info-item">
-          <span class="info-label">Preferred Ancestor Origin :</span>
-          <span class="info-value">Ernakulam</span>
-        </div>
-         <div class="info-item">
-          <span class="info-label">Preferred Residing State :</span>
-          <span class="info-value">Kerala</span>
-        </div>
-      </div>
-
-      <!-- Contact Details Box -->
-      <div class="box">
-        <div class="box-header">
-          <span class="box-icon">📞</span>
-          <h2 class="box-title">Contact Details</h2>
-        </div>
-        <div class="contact-item">
-          <span class="contact-label">Customer Name:</span>
-          <span class="contact-value">Musthafia</span>
-        </div>
-        <div class="contact-item">
-          <span class="contact-label">Mobile No.:</span>
-          <span class="contact-value">+971506668472</span>
-        </div>
-        <div class="contact-item">
-          <span class="contact-label">WhatsApp No.:</span>
-          <span class="contact-value">+97150668472</span>
-        </div>
-        <div class="contact-item">
-          <span class="contact-label">Email:</span>
-          <span class="contact-value">greenimiringsshop@email.com</span>
-        </div>
-        <div class="contact-item">
-          <span class="contact-label">Alternate Contact:</span>
-          <span class="contact-value">+971559161021</span>
-        </div>
-        <div class="contact-item">
-          <span class="contact-label">Client:</span>
-          <span class="contact-value">father</span>
-        </div>
-      </div>
+      </form>
     </div>
   </main>
 
   <script>
-    // Main header navigation
+    // Navigation functionality - same as profile page
     document.querySelectorAll('.header-nav a').forEach(link => {
       link.addEventListener('click', function(e) {
         if (!this.getAttribute('href') || this.getAttribute('href') === '#') {
           e.preventDefault();
           document.querySelectorAll('.header-nav a').forEach(l => l.classList.remove('active'));
           this.classList.add('active');
+          const page = this.getAttribute('data-page');
+          console.log('Navigating to:', page);
         }
       });
     });
@@ -482,6 +639,100 @@
     document.querySelector('.logout-btn').addEventListener('click', function() {
       if(confirm('Are you sure you want to logout?')) {
         alert('Logging out...');
+      }
+    });
+
+    // Tab navigation
+    function showTab(tab) {
+      // Remove active from all tab buttons
+      document.querySelectorAll('.tab-nav button').forEach(btn => btn.classList.remove('active'));
+      // Hide all tab contents
+      document.getElementById('tab-content-service').style.display = 'none';
+      document.getElementById('tab-content-member').style.display = 'none';
+      document.getElementById('tab-content-partner').style.display = 'none';
+      document.getElementById('tab-content-contact').style.display = 'none';
+      // Show the selected tab
+      if(tab === 'service') {
+        document.getElementById('tab-service').classList.add('active');
+        document.getElementById('tab-content-service').style.display = '';
+      } else if(tab === 'member') {
+        document.getElementById('tab-member').classList.add('active');
+        document.getElementById('tab-content-member').style.display = '';
+      } else if(tab === 'partner') {
+        document.getElementById('tab-partner').classList.add('active');
+        document.getElementById('tab-content-partner').style.display = '';
+      } else if(tab === 'contact') {
+        document.getElementById('tab-contact').classList.add('active');
+        document.getElementById('tab-content-contact').style.display = '';
+      }
+    }
+
+    document.getElementById('tab-service').addEventListener('click', function() {
+      showTab('service');
+    });
+    document.getElementById('tab-member').addEventListener('click', function() {
+      showTab('member');
+    });
+    document.getElementById('tab-partner').addEventListener('click', function() {
+      showTab('partner');
+    });
+    document.getElementById('tab-contact').addEventListener('click', function() {
+      showTab('contact');
+    });
+
+    // Next button to Member Info
+    document.getElementById('next-to-member').addEventListener('click', function() {
+      showTab('member');
+    });
+    // Next button to Partner Preference
+    document.getElementById('next-to-partner').addEventListener('click', function() {
+      showTab('partner');
+    });
+    // Next button to Contact Details
+    document.getElementById('next-to-contact').addEventListener('click', function() {
+      showTab('contact');
+    });
+    // Previous button to Service
+    var backBtn = document.getElementById('back-to-service');
+    if (backBtn) {
+      backBtn.addEventListener('click', function() {
+        showTab('service');
+      });
+    }
+    // Previous button to Member Info
+    var backToMemberBtn = document.getElementById('back-to-member');
+    if (backToMemberBtn) {
+      backToMemberBtn.addEventListener('click', function() {
+        showTab('member');
+      });
+    }
+    // Previous button to Partner Preference
+    var backToPartnerBtn = document.getElementById('back-to-partner');
+    if (backToPartnerBtn) {
+      backToPartnerBtn.addEventListener('click', function() {
+        showTab('partner');
+      });
+    }
+
+    // Form submission
+    document.getElementById('addServiceForm').addEventListener('submit', function(e) {
+      e.preventDefault();
+      
+      // Get form data
+      const formData = new FormData(this);
+      
+      // Show success message
+      alert('Service added successfully!');
+      
+      // Here you would typically send the data to your server
+      console.log('Form submitted');
+    });
+
+    // Cancel button
+    document.querySelector('.btn-secondary').addEventListener('click', function() {
+      if(confirm('Are you sure you want to cancel? All unsaved changes will be lost.')) {
+        // Redirect back to services page or clear form
+        location.href = '#services';
       }
     });
   </script>

@@ -375,8 +375,8 @@
     
     <nav>
       <ul class="header-nav">
-    <li><a href="{{ route('dashboard') }}" data-page="dashboard">Home</a></li>
-    <li><a href="#" data-page="profiles" class="active">Profiles</a></li>
+  <li><a href="{{ route('dashboard') }}">Home</a></li>
+  <li><a href="{{ route('profile.hellow') }}" class="active">Profiles</a></li>
     <li><a href="#" data-page="sales">Sales <span class="dropdown-arrow">▼</span></a></li>
     <li><a href="#" data-page="helpline">HelpLine</a></li>
     <li><a href="{{ route('fresh.data') }}">Fresh Data <span class="dropdown-arrow">▼</span></a></li>

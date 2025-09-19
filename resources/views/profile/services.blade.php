@@ -351,7 +351,7 @@
     <nav>
       <ul class="header-nav">
         <li><a href="#" data-page="dashboard">Home</a></li>
-        <li><a href="#" data-page="profiles">Profiles</a></li>
+    <li><a href="{{ route('profile.hellow') }}" data-page="profiles" onclick="return true;">Profiles</a></li>
         <li><a href="#" data-page="sales">Sales <span class="dropdown-arrow">▼</span></a></li>
         <li><a href="#" data-page="helpline">HelpLine</a></li>
         <li><a href="#" data-page="fresh-data">Fresh Data <span class="dropdown-arrow">▼</span></a></li>
@@ -377,13 +377,16 @@
         </div>
       </div>
 
-      <div class="dashboard-card">
-        <div class="card-icon active">👥</div>
-        <div class="card-content">
-          <h3>11</h3>
-          <p>Active Services</p>
+
+      <a href="{{ route('active.service') }}" style="text-decoration:none; color:inherit;">
+        <div class="dashboard-card">
+          <div class="card-icon active">👥</div>
+          <div class="card-content">
+            <h3>11</h3>
+            <p>Active Services</p>
+          </div>
         </div>
-      </div>
+      </a>
 
       <a href="{{ route('new.service') }}" style="text-decoration:none; color:inherit;">
         <div class="dashboard-card">
@@ -501,6 +504,38 @@
         }
       });
     });
+      // Only handle SPA navigation for links with href="#"
+      document.querySelectorAll('.header-nav a').forEach(link => {
+        link.addEventListener('click', function(e) {
+          if (!this.getAttribute('href') || this.getAttribute('href') === '#') {
+            e.preventDefault();
+            document.querySelectorAll('.header-nav a').forEach(l => l.classList.remove('active'));
+            this.classList.add('active');
+            // Get the page name
+            const page = this.getAttribute('data-page');
+            console.log('Navigating to:', page);
+            // Update page title
+            const pageTitle = document.querySelector('.page-title');
+            pageTitle.textContent = this.textContent.replace('▼', '').trim();
+            // Load different pages based on selection
+            if (page === 'dashboard') {
+              loadHomePage();
+            } else if (page === 'profiles') {
+              loadProfilesPage();
+            } else if (page === 'sales') {
+              loadSalesPage();
+            } else if (page === 'helpline') {
+              loadHelplinePage();
+            } else if (page === 'fresh-data') {
+              loadFreshDataPage();
+            } else if (page === 'abc') {
+              loadAbcPage();
+            } else if (page === 'services') {
+              loadServicesPage();
+            }
+          }
+        });
+      });
 
     // Logout functionality
     document.querySelector('.logout-btn').addEventListener('click', function() {
