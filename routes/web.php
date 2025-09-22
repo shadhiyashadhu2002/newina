@@ -98,13 +98,39 @@ Route::get('/services', function () {
     return view('profile.services');
 })->name('services.page');
 
+use App\Models\Service;
 Route::get('/service-details/{id}/{name}', function ($id, $name) {
-    return view('profile.servicedetails', ['id' => $id, 'name' => $name]);
+    $service = Service::where('profile_id', $id)->first();
+    if (!$service) {
+        abort(404, 'Service not found for this profile');
+    }
+    return view('profile.servicedetails', compact('service'));
 })->name('service.details');
 // New Service page route
+use App\Http\Controllers\ServiceController;
+
+// New Service page route (show list for executive or admin)
 Route::get('/new-service', function () {
-    return view('profile.newservice');
+    $user = Auth::user();
+    if ($user && $user->is_admin) {
+        return app(ServiceController::class)->allServices();
+    } else if ($user) {
+        return app(ServiceController::class)->executiveServices();
+    }
+    return redirect()->route('login');
 })->name('new.service');
+
+// Store new service (AJAX)
+Route::post('/new-service', [ServiceController::class, 'store'])->name('new.service.store');
+
+// Progressive save service route (for service details page)
+Route::post('/save-service', [ServiceController::class, 'store'])->name('service.save');
+
+// CSRF token refresh route
+Route::get('/csrf-token', function () {
+    return response()->json(['csrf_token' => csrf_token()]);
+})->name('csrf.token');
+
 // Active Service page route
 Route::get('/active-service', function () {
     return view('profile.activeservice');

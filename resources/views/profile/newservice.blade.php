@@ -3,6 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="csrf-token" content="{{ csrf_token() }}">
   <title>INA Dashboard - New Services</title>
   <style>
     * {
@@ -477,14 +478,14 @@
               <input type="text" name="profile_id" placeholder="Enter Profile ID" required>
             </div>
             <div class="modal-form-group">
-              <label>Full Name</label>
-              <input type="text" name="name" placeholder="Enter full name" required>
+              <label>Member Name</label>
+              <input type="text" name="member_name" placeholder="Enter member name" required>
             </div>
           </div>
           <div class="modal-form-row">
             <div class="modal-form-group">
               <label>Gender</label>
-              <select name="gender" required>
+              <select name="member_gender" required>
                 <option value="">Select Gender</option>
                 <option value="male">Male</option>
                 <option value="female">Female</option>
@@ -493,7 +494,7 @@
             </div>
             <div class="modal-form-group">
               <label>Mobile Number</label>
-              <input type="tel" name="mobile" placeholder="Enter mobile number" required>
+              <input type="tel" name="member_mobile" placeholder="Enter mobile number" required>
             </div>
           </div>
           <div class="modal-form-row">
@@ -526,78 +527,20 @@
           </tr>
         </thead>
         <tbody id="services-tbody">
-          <tr>
-            <td>39987</td>
-            <td>Tatau</td>
-            <td>Assisted</td>
-            <td>05-Mar-2025</td>
-            <td>John Doe</td>
-            <td><a href="{{ route('service.details', ['id' => 39987, 'name' => 'Tatau']) }}" class="action-link">Service Details</a></td>
-          </tr>
-          <tr>
-            <td>25663</td>
-            <td>THANWEIN</td>
-            <td>Assisted</td>
-            <td>03-Mar-2025</td>
-            <td>Jane Smith</td>
-            <td><a href="{{ route('service.details', ['id' => 25663, 'name' => 'THANWEIN']) }}" class="action-link">Service Details</a></td>
-          </tr>
-          <tr>
-            <td>204543</td>
-            <td>Amwer</td>
-            <td>Assisted</td>
-            <td>15-Feb-2025</td>
-            <td>Michael Lee</td>
-            <td><a href="{{ route('service.details', ['id' => 204543, 'name' => 'Amwer']) }}" class="action-link">Service Details</a></td>
-          </tr>
-          <tr>
-            <td>28275</td>
-            <td>Shabaob ali</td>
-            <td>Assisted</td>
-            <td>09-Jan-2025</td>
-            <td>Priya Kumar</td>
-            <td><a href="{{ route('service.details', ['id' => 28275, 'name' => 'Shabaob ali']) }}" class="action-link">Service Details</a></td>
-          </tr>
-          <tr>
-            <td>29365</td>
-            <td>FECRU MAHAMMED</td>
-            <td>Assisted</td>
-            <td>03-Jan-2025</td>
-            <td>Ahmed Ali</td>
-            <td><a href="{{ route('service.details', ['id' => 29365, 'name' => 'FECRU MAHAMMED']) }}" class="action-link">Service Details</a></td>
-          </tr>
-          <tr>
-            <td>271548</td>
-            <td>Al Idhadi</td>
-            <td>Assisted</td>
-            <td>03-Jan-2025</td>
-            <td>Fatima Noor</td>
-            <td><a href="#" class="action-link">Service Details</a></td>
-          </tr>
-          <tr>
-            <td>28113</td>
-            <td>Isuka business</td>
-            <td>Assisted</td>
-            <td>30-Dec-2024</td>
-            <td>Ravi Patel</td>
-            <td><a href="#" class="action-link">Service Details</a></td>
-          </tr>
-          <tr>
-            <td>18440</td>
-            <td>Marmon jiu</td>
-            <td>Assisted</td>
-            <td>24-Dec-2024</td>
-            <td>Emily Chen</td>
-            <td><a href="#" class="action-link">Service Details</a></td>
-          </tr>
-          <tr>
-            <td>204032</td>
-            <td>Irmstad</td>
-            <td>Assisted</td>
-            <td>06-Dec-2024</td>
-            <td>David Kim</td>
-            <td><a href="#" class="action-link">Service Details</a></td>
-          </tr>
+        @if(isset($services) && count($services))
+            @foreach($services as $service)
+            <tr>
+                <td>{{ $service->profile_id }}</td>
+                <td>{{ $service->name }}</td>
+                <td>{{ $service->plan_name }}</td>
+                <td>{{ $service->payment_date ? \Carbon\Carbon::parse($service->payment_date)->format('d-M-Y') : '' }}</td>
+                <td>{{ $service->service_executive }}</td>
+                <td><a href="{{ route('service.details', ['id' => $service->profile_id, 'name' => $service->name]) }}" class="action-link">Service Details</a></td>
+            </tr>
+            @endforeach
+        @else
+            <tr><td colspan="6" style="text-align:center;">No services found.</td></tr>
+        @endif
         </tbody>
       </table>
     </div>
@@ -654,52 +597,61 @@
     // Handle form submission
     serviceForm.addEventListener('submit', function(e) {
       e.preventDefault();
-      
-      // Get form data
       const formData = new FormData(this);
-      const profileId = formData.get('profile_id');
-      const name = formData.get('name');
-      const planName = formData.get('plan_name');
-      const paymentDate = formData.get('payment_date');
       
-      // Format payment date
-      const date = new Date(paymentDate);
-      const formattedDate = date.toLocaleDateString('en-GB', {
-        day: '2-digit',
-        month: 'short',
-        year: 'numeric'
+      // Add debug logging
+      console.log('Form data being sent:');
+      for (let [key, value] of formData.entries()) {
+        console.log(key, value);
+      }
+      
+      fetch("{{ route('new.service.store') }}", {
+        method: 'POST',
+        headers: {
+          'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+          'Accept': 'application/json',
+          'X-Requested-With': 'XMLHttpRequest'
+        },
+        body: formData
+      })
+      .then(response => {
+        console.log('Response status:', response.status);
+        console.log('Response headers:', response.headers);
+        
+        if (!response.ok) {
+          return response.text().then(text => {
+            console.log('Error response body:', text);
+            throw new Error(`HTTP error! status: ${response.status}, body: ${text.substring(0, 200)}...`);
+          });
+        }
+        
+        return response.text().then(text => {
+          console.log('Response body:', text);
+          try {
+            return JSON.parse(text);
+          } catch (e) {
+            console.error('Failed to parse JSON:', e);
+            throw new Error('Response is not valid JSON: ' + text.substring(0, 100));
+          }
+        });
+      })
+      .then(data => {
+        if (data.success) {
+          showNotification('Service added successfully!', 'success');
+          // Close modal and reset form
+          addServiceModal.classList.remove('active');
+          document.body.style.overflow = 'auto';
+          serviceForm.reset();
+          // Reload the page to refresh the service list
+          setTimeout(() => window.location.reload(), 1000);
+        } else {
+          showNotification(data.message || 'Failed to add service', 'error');
+        }
+      })
+      .catch(error => {
+        console.error('Error:', error);
+        showNotification('Failed to add service: ' + error.message, 'error');
       });
-
-      // Create new table row
-      const newRow = document.createElement('tr');
-      newRow.innerHTML = `
-        <td>${profileId}</td>
-        <td>${name}</td>
-        <td>${planName}</td>
-        <td>${formattedDate}</td>
-        <td><a href="#" class="action-link">Service Details</a></td>
-      `;
-
-      // Add animation for new row
-      newRow.style.backgroundColor = 'rgba(102, 126, 234, 0.2)';
-      newRow.style.animation = 'fadeIn 0.5s ease';
-
-      // Add to beginning of table
-      servicesTableBody.insertBefore(newRow, servicesTableBody.firstChild);
-
-      // Reset background color after animation
-      setTimeout(() => {
-        newRow.style.backgroundColor = '';
-        newRow.style.animation = '';
-      }, 1000);
-
-      // Show success message
-      showNotification('Service added successfully!', 'success');
-
-      // Close modal and reset form
-      addServiceModal.classList.remove('active');
-      document.body.style.overflow = 'auto';
-      this.reset();
     });
 
     // Notification function
