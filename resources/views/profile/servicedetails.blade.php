@@ -358,7 +358,10 @@
         <li><a href="#" data-page="services" class="active">Services <span class="dropdown-arrow">▼</span></a></li>
       </ul>
     </nav>
-    <button class="logout-btn">Logout</button>
+    <form id="logout-form" action="{{ route('logout') }}" method="POST" style="display: none;">
+      @csrf
+    </form>
+    <button class="logout-btn" onclick="confirmLogout()">Logout</button>
   </header>
 
   <!-- Main Content Area -->
@@ -1196,12 +1199,12 @@
       });
     });
 
-    // Logout functionality
-    document.querySelector('.logout-btn').addEventListener('click', function() {
-      if(confirm('Are you sure you want to logout?')) {
-        alert('Logging out...');
+    // Logout functionality - Global function
+    window.confirmLogout = function() {
+      if (confirm('Are you sure you want to logout?')) {
+        document.getElementById('logout-form').submit();
       }
-    });
+    };
 
     // Redirect to service details page with current profile data
     function redirectToServiceDetails() {
