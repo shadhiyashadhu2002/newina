@@ -450,7 +450,6 @@
               </div>
             </div>
             <div class="form-actions" style="{{ isset($service) ? 'display: none;' : '' }}">
-              <button type="button" class="btn btn-info" onclick="testAjax()" style="margin-right: 10px;">Test AJAX</button>
               <button type="button" class="btn btn-primary" id="save-next-1">Save & Next</button>
             </div>
           </div>
@@ -1221,44 +1220,5 @@
       initializePage();
     });
 
-    // Test AJAX function
-    function testAjax() {
-      const csrfTokenElement = document.querySelector('meta[name="csrf-token"]');
-      const csrfToken = csrfTokenElement ? csrfTokenElement.getAttribute('content') : '';
-      
-      if (!csrfToken) {
-        alert('CSRF token not found!');
-        return;
-      }
-      
-      console.log('Testing AJAX connection...');
-      
-      fetch('/save-service', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'X-CSRF-TOKEN': csrfToken,
-          'X-Requested-With': 'XMLHttpRequest'
-        },
-        body: JSON.stringify({
-          profile_id: 'TEST001',
-          section: 'service',
-          service_name: 'Test Service',
-          member_name: 'Test Member',
-          contact_customer_name: 'Test Customer'
-        })
-      })
-      .then(response => {
-        console.log('Response status:', response.status);
-        return response.json();
-      })
-      .then(data => {
-        console.log('Response data:', data);
-        alert('AJAX Test - Success: ' + data.success + ', Message: ' + data.message);
-      })
-      .catch(error => {
-        console.error('AJAX Test Error:', error);
-        alert('AJAX Test Failed: ' + error.message);
-      });
-    }
+
   </script>
