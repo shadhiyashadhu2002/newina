@@ -465,6 +465,7 @@
                 <label>Age</label>
                 <input type="number" name="member_age" id="member-age-input" placeholder="Age" 
                        value="{{ isset($service) ? $service->member_age : '' }}" 
+                       maxlength="2" max="99" min="18"
                        {{ isset($service) ? 'readonly' : '' }}>
               </div>
             </div>
@@ -549,8 +550,9 @@
             <div class="form-row">
               <div class="form-group">
                 <label>Preferred Age</label>
-                <input type="text" name="preferred_age" id="preferred-age-input" placeholder="Preferred Age" 
+                <input type="number" name="preferred_age" id="preferred-age-input" placeholder="Preferred Age" 
                        value="{{ isset($service) ? $service->preferred_age : '' }}" 
+                       maxlength="2" max="99" min="18"
                        {{ isset($service) ? 'readonly' : '' }}>
               </div>
               <div class="form-group">
@@ -690,6 +692,9 @@
     
     // Initialize the page
     function initializePage() {
+      // Initialize form validations
+      setupFormValidations();
+      
       if (!isViewMode) {
         // Set default profile ID for new services
         document.getElementById('profile-id-input').value = 'INA001';
@@ -704,6 +709,70 @@
         document.getElementById('edit-service-btn').onclick = function() {
           enableEditMode();
         };
+      }
+    }
+
+    // Setup form validations
+    function setupFormValidations() {
+      // Date validation: Expiry date should not be before start date
+      const startDateInput = document.getElementById('start-date-input');
+      const expiryDateInput = document.getElementById('expiry-date-input');
+      
+      if (startDateInput && expiryDateInput) {
+        startDateInput.addEventListener('change', function() {
+          const startDate = this.value;
+          if (startDate) {
+            // Set minimum date for expiry date to be the start date
+            expiryDateInput.setAttribute('min', startDate);
+            
+            // If expiry date is already set and is before start date, clear it
+            if (expiryDateInput.value && expiryDateInput.value < startDate) {
+              expiryDateInput.value = '';
+              alert('Expiry date cannot be before the start date. Please select a valid expiry date.');
+            }
+          }
+        });
+        
+        // Validate on expiry date change as well
+        expiryDateInput.addEventListener('change', function() {
+          const startDate = startDateInput.value;
+          const expiryDate = this.value;
+          
+          if (startDate && expiryDate && expiryDate < startDate) {
+            this.value = '';
+            alert('Expiry date cannot be before the start date. Please select a valid expiry date.');
+          }
+        });
+      }
+      
+      // Age restrictions: Member age - 2 digits max
+      const memberAgeInput = document.getElementById('member-age-input');
+      if (memberAgeInput) {
+        memberAgeInput.setAttribute('maxlength', '2');
+        memberAgeInput.setAttribute('max', '99');
+        memberAgeInput.addEventListener('input', function() {
+          // Remove any non-numeric characters
+          this.value = this.value.replace(/[^0-9]/g, '');
+          // Limit to 2 digits
+          if (this.value.length > 2) {
+            this.value = this.value.slice(0, 2);
+          }
+        });
+      }
+      
+      // Age restrictions: Preferred age - 2 digits max
+      const preferredAgeInput = document.getElementById('preferred-age-input');
+      if (preferredAgeInput) {
+        preferredAgeInput.setAttribute('maxlength', '2');
+        preferredAgeInput.setAttribute('max', '99');
+        preferredAgeInput.addEventListener('input', function() {
+          // Remove any non-numeric characters
+          this.value = this.value.replace(/[^0-9]/g, '');
+          // Limit to 2 digits
+          if (this.value.length > 2) {
+            this.value = this.value.slice(0, 2);
+          }
+        });
       }
     }
 
@@ -728,6 +797,9 @@
       
       // Hide edit button, show save button
       document.getElementById('edit-service-btn').style.display = 'none';
+      
+      // Re-setup form validations for edit mode
+      setupFormValidations();
       
       // Set up form navigation for editing
       setupFormNavigation();
