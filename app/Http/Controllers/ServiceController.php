@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\Service;
+use App\Models\User;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 
@@ -87,14 +88,30 @@ class ServiceController extends Controller
     {
         $user = Auth::user();
         $services = Service::where('service_executive', $user->first_name)->orderByDesc('created_at')->get();
-        return view('profile.newservice', compact('services'));
+        
+        // Get all staff users for service executive dropdown (in case executives can also add services, exclude admins)
+        $staffUsers = User::where('user_type', 'staff')
+                          ->where('is_admin', '!=', 1)
+                          ->select('first_name', 'id')
+                          ->orderBy('first_name')
+                          ->get();
+        
+        return view('profile.newservice', compact('services', 'staffUsers'));
     }
 
     // List all services (admin view)
     public function allServices()
     {
         $services = Service::orderByDesc('created_at')->get();
-        return view('profile.newservice', compact('services'));
+        
+        // Get all staff users for service executive dropdown (exclude admins)
+        $staffUsers = User::where('user_type', 'staff')
+                          ->where('is_admin', '!=', 1)
+                          ->select('first_name', 'id')
+                          ->orderBy('first_name')
+                          ->get();
+        
+        return view('profile.newservice', compact('services', 'staffUsers'));
     }
 
     // Handle progressive saving by section
