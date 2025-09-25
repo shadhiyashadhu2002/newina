@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>INA Dashboard - Add Service</title>
+  <title>INA Dashboard - Active Service Profiles</title>
   <style>
     * {
       margin: 0;
@@ -18,7 +18,7 @@
       min-height: 100vh;
     }
 
-    /* Main Dashboard Header - Same as profile page */
+    /* Main Dashboard Header - Same as original code */
     .main-header {
       background: linear-gradient(135deg, #4a69bd, #5a4fcf);
       padding: 15px 30px;
@@ -98,7 +98,7 @@
     /* Main Content Area */
     .main-content {
       padding: 30px;
-      max-width: 1200px;
+      max-width: 1400px;
       margin: 0 auto;
     }
 
@@ -108,214 +108,200 @@
       font-weight: 600;
       margin-bottom: 25px;
       text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+      text-align: center;
     }
 
-    /* Form Container */
-    .form-container {
+    /* Table Container */
+    .table-container {
       background: rgba(255, 255, 255, 0.95);
       border-radius: 15px;
-      padding: 30px;
+      padding: 0;
       box-shadow: 0 10px 30px rgba(0,0,0,0.2);
       backdrop-filter: blur(10px);
       border: 1px solid rgba(255, 255, 255, 0.3);
-      max-width: 800px;
-      margin: 0 auto;
+      overflow: hidden;
     }
 
-    /* Tab Navigation */
-    .tab-nav {
-      display: flex;
-      margin-bottom: 30px;
-      border-bottom: 2px solid #e0e0e0;
-    }
-
-    .tab-nav button {
-      background: none;
-      border: none;
-      padding: 12px 20px;
-      cursor: pointer;
-      font-size: 14px;
-      font-weight: 500;
-      color: #666;
-      border-bottom: 3px solid transparent;
-      transition: all 0.3s ease;
+    /* Table Header */
+    .table-header {
+      background: linear-gradient(135deg, #4CAF50, #45a049);
+      color: white;
+      padding: 20px 30px;
+      font-size: 18px;
+      font-weight: 600;
       display: flex;
       align-items: center;
-      gap: 8px;
+      gap: 10px;
     }
 
-    .tab-nav button:hover {
-      color: #333;
-      background: rgba(0,0,0,0.05);
+    /* Table Styles */
+    .profiles-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 14px;
     }
 
-    .tab-nav button.active {
-      color: #4CAF50;
-      border-bottom-color: #4CAF50;
+    .profiles-table th {
+      background: #f8f9fa;
+      padding: 15px 12px;
+      text-align: left;
+      font-weight: 600;
+      color: #2c3e50;
+      border-bottom: 2px solid #e9ecef;
+      font-size: 13px;
+    }
+
+    .profiles-table td {
+      padding: 15px 12px;
+      border-bottom: 1px solid #e9ecef;
+      vertical-align: middle;
+    }
+
+    .profiles-table tbody tr:hover {
       background: rgba(76, 175, 80, 0.05);
     }
 
-    /* Form Layout */
-    .form-row {
-      display: flex;
-      gap: 20px;
-      margin-bottom: 20px;
-    }
-
-    .form-group {
-      flex: 1;
-    }
-
-    .form-group.half {
-      flex: 0.5;
-    }
-
-    .form-group label {
-      display: block;
-      margin-bottom: 6px;
-      font-weight: 500;
-      color: #333;
-      font-size: 14px;
-    }
-
-    .form-group input,
-    .form-group select,
-    .form-group textarea {
-      width: 100%;
-      padding: 10px 12px;
-      border: 2px solid #e0e0e0;
-      border-radius: 8px;
-      font-size: 14px;
-      transition: all 0.3s ease;
-      background: white;
-    }
-
-    .form-group input:focus,
-    .form-group select:focus,
-    .form-group textarea:focus {
-      outline: none;
-      border-color: #4CAF50;
-      box-shadow: 0 0 0 3px rgba(76, 175, 80, 0.1);
-    }
-
-    .form-group textarea {
-      resize: vertical;
-      min-height: 80px;
-    }
-
-    /* Section Headers */
-    .section-header {
-      background: linear-gradient(135deg, #f8fbff, #e8f4fd);
-      padding: 12px 20px;
-      margin: 25px -30px 20px -30px;
-      border-left: 4px solid #4CAF50;
-      font-weight: 600;
-      color: #2c3e50;
-      font-size: 16px;
-    }
-
     /* Action Buttons */
-    .form-actions {
-      display: flex;
-      justify-content: flex-end;
-      gap: 15px;
-      margin-top: 30px;
-      padding-top: 20px;
-      border-top: 1px solid #e0e0e0;
-    }
-
-    .btn {
-      padding: 12px 25px;
+    .action-btn {
+      padding: 6px 12px;
       border: none;
-      border-radius: 25px;
-      font-weight: 600;
+      border-radius: 15px;
+      font-size: 12px;
+      font-weight: 500;
       cursor: pointer;
-      font-size: 14px;
       transition: all 0.3s ease;
-      text-decoration: none;
+      margin: 2px;
       display: inline-flex;
       align-items: center;
-      gap: 8px;
+      gap: 4px;
+      text-decoration: none;
     }
 
-    .btn-primary {
-      background: linear-gradient(135deg, #4CAF50, #45a049);
+    .btn-shortlist-ina {
+      background: #28a745;
       color: white;
-      box-shadow: 0 4px 15px rgba(76, 175, 80, 0.4);
     }
 
-    .btn-primary:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 6px 20px rgba(76, 175, 80, 0.6);
+    .btn-shortlist-ina:hover {
+      background: #218838;
+      transform: translateY(-1px);
     }
 
-    .btn-secondary {
-      background: linear-gradient(135deg, #6c757d, #5a6268);
+    .btn-shortlist-others {
+      background: #17a2b8;
       color: white;
-      box-shadow: 0 4px 15px rgba(108, 117, 125, 0.4);
     }
 
-    .btn-secondary:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 6px 20px rgba(108, 117, 125, 0.6);
+    .btn-shortlist-others:hover {
+      background: #138496;
+      transform: translateY(-1px);
     }
 
-    /* Profile ID Section */
-    .profile-id-section {
-      background: #f8f9fa;
-      padding: 15px;
-      border-radius: 8px;
-      margin-bottom: 20px;
-      border-left: 4px solid #007bff;
+    .btn-shortlist-varuna {
+      background: #ffc107;
+      color: #212529;
     }
 
-    .profile-id-section h4 {
-      color: #007bff;
-      margin-bottom: 10px;
+    .btn-shortlist-varuna:hover {
+      background: #e0a800;
+      transform: translateY(-1px);
+    }
+
+    .btn-view-prospects {
+      background: #dc3545;
+      color: white;
+    }
+
+    .btn-view-prospects:hover {
+      background: #c82333;
+      transform: translateY(-1px);
+    }
+
+    .btn-view-details {
+      background: #6c757d;
+      color: white;
+    }
+
+    .btn-view-details:hover {
+      background: #5a6268;
+      transform: translateY(-1px);
+    }
+
+    /* Profile ID styling */
+    .profile-id {
+      font-weight: 600;
+      color: #2c3e50;
+    }
+
+    /* Executive name styling */
+    .executive-name {
+      color: #666;
+      font-style: italic;
+    }
+
+    /* Date styling */
+    .date {
+      color: #666;
+      font-size: 13px;
     }
 
     /* Responsive */
+    @media (max-width: 1200px) {
+      .profiles-table {
+        font-size: 12px;
+      }
+      
+      .action-btn {
+        padding: 4px 8px;
+        font-size: 11px;
+      }
+    }
+
     @media (max-width: 768px) {
-      .form-row {
-        flex-direction: column;
-        gap: 15px;
-      }
-      
-      .form-container {
-        margin: 0 15px;
-        padding: 20px;
-      }
-      
       .main-content {
         padding: 15px;
       }
       
-      .tab-nav {
-        overflow-x: auto;
-        white-space: nowrap;
+      .table-container {
+        margin: 0 10px;
       }
       
-      .form-actions {
-        flex-direction: column;
+      .profiles-table {
+        font-size: 11px;
+      }
+      
+      .profiles-table th,
+      .profiles-table td {
+        padding: 8px 6px;
+      }
+      
+      .action-btn {
+        padding: 3px 6px;
+        font-size: 10px;
+        margin: 1px;
+      }
+      
+      .header-nav {
+        flex-wrap: wrap;
+        gap: 15px;
       }
     }
   </style>
 </head>
 <body>
 
-  <!-- Main Dashboard Header -->
+  <!-- Main Dashboard Header - Same as original -->
   <header class="main-header">
     <a href="#" class="header-brand">INA</a>
     
     <nav>
       <ul class="header-nav">
-        <li><a href="#" data-page="dashboard">Home</a></li>
-        <li><a href="#" data-page="profiles">Profiles</a></li>
-        <li><a href="#" data-page="sales">Sales <span class="dropdown-arrow">▼</span></a></li>
-        <li><a href="#" data-page="helpline">HelpLine</a></li>
-        <li><a href="#" data-page="fresh-data">Fresh Data <span class="dropdown-arrow">▼</span></a></li>
-        <li><a href="#" data-page="abc">abc</a></li>
-        <li><a href="#" data-page="services" class="active">Services <span class="dropdown-arrow">▼</span></a></li>
+        <li><a href="{{ route('dashboard') }}" data-page="dashboard">Home</a></li>
+        <li><a href="{{ route('profile.hellow') }}" data-page="profiles">Profiles</a></li>
+        <li><a href="{{ route('active.service') }}" data-page="active-service" class="active">Active Services</a></li>
+        <li><a href="{{ route('shortlist.ina') }}" data-page="shortlist-ina">Shortlist INA</a></li>
+        <li><a href="{{ route('shortlist.others') }}" data-page="shortlist-others">Shortlist Others</a></li>
+        <li><a href="{{ route('new.service') }}" data-page="services">Add Service</a></li>
       </ul>
     </nav>
     
@@ -324,143 +310,142 @@
 
   <!-- Main Content Area -->
   <main class="main-content">
-    <h1 class="page-title">Add Service</h1>
+    <h1 class="page-title">Active Service Profiles</h1>
 
-    <div class="form-container">
-      <!-- Tab Navigation -->
-      <div class="tab-nav">
-        <button class="active">
-          <span>📋</span>
-          Service
-        </button>
-        <button>
-          <span>👤</span>
-          Member Info
-        </button>
-        <button>
-          <span>💝</span>
-          Partner Preference
-        </button>
-        <button>
-          <span>📞</span>
-          Contact Details
-        </button>
+    <div class="table-container">
+      <!-- Table Header -->
+      <div class="table-header">
+        <span>📋</span>
+        List of Active Profiles
       </div>
 
-      <form id="addServiceForm">
-        <!-- Profile ID Section -->
-        <div class="profile-id-section">
-          <h4>Profile ID</h4>
-          <div class="form-row">
-            <div class="form-group">
-              <input type="text" placeholder="Enter Profile ID" value="">
-            </div>
-          </div>
-        </div>
-
-        <!-- Service Details Section -->
-        <div class="section-header">Service Details</div>
-        
-        <div class="form-row">
-          <div class="form-group">
-            <label>Service Name</label>
-            <input type="text" placeholder="Enter service name">
-          </div>
-          <div class="form-group">
-            <label>Booking</label>
-            <select>
-              <option value="">Select booking type</option>
-              <option value="online">Online</option>
-              <option value="offline">Offline</option>
-              <option value="phone">Phone</option>
-            </select>
-          </div>
-        </div>
-
-        <div class="form-row">
-          <div class="form-group">
-            <label>Service Details</label>
-            <textarea placeholder="Enter detailed service information"></textarea>
-          </div>
-        </div>
-
-        <!-- Pricing Section -->
-        <div class="section-header">Pricing Information</div>
-        
-        <div class="form-row">
-          <div class="form-group">
-            <label>Amount Paid</label>
-            <input type="number" placeholder="7000.00" step="0.01">
-          </div>
-          <div class="form-group">
-            <label>Service Description Days</label>
-            <input type="number" placeholder="0">
-          </div>
-        </div>
-
-        <div class="form-row">
-          <div class="form-group">
-            <label>Refund Price</label>
-            <input type="number" placeholder="0" step="0.01">
-          </div>
-          <div class="form-group">
-            <label>Success Fee</label>
-            <input type="number" placeholder="0" step="0.01">
-          </div>
-        </div>
-
-        <!-- Payment Details Section -->
-        <div class="section-header">Payment Details</div>
-        
-        <div class="form-row">
-          <div class="form-group">
-            <label>After Payment</label>
-            <select>
-              <option value="">Select status</option>
-              <option value="pending">Pending</option>
-              <option value="confirmed">Confirmed</option>
-              <option value="processing">Processing</option>
-            </select>
-          </div>
-          <div class="form-group">
-            <label>Expiry Date</label>
-            <input type="date">
-          </div>
-        </div>
-
-        <!-- Additional Information -->
-        <div class="form-row">
-          <div class="form-group">
-            <label>Start Date</label>
-            <input type="date">
-          </div>
-          <div class="form-group">
-            <label>Net Master</label>
-            <input type="text" placeholder="Enter net master details">
-          </div>
-        </div>
-
-        <div class="form-row">
-          <div class="form-group">
-            <label>Extra Features</label>
-            <textarea placeholder="Enter any additional features or notes"></textarea>
-          </div>
-        </div>
-
-        <!-- Form Actions -->
-        <div class="form-actions">
-          <button type="button" class="btn btn-secondary">Cancel</button>
-          <button type="submit" class="btn btn-primary">
-            <span>💾</span>
-            Save Service
-          </button>
-        </div>
-      </form>
+      <!-- Profiles Table -->
+      <table class="profiles-table">
+        <thead>
+          <tr>
+            <th>Profile ID</th>
+            <th>Start Date</th>
+            <th>Expiry Date</th>
+            <th>Executive Name</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><span class="profile-id">38584</span></td>
+            <td><span class="date">27-Jan-2025</span></td>
+            <td><span class="date">03-Nov-2025</span></td>
+            <td><span class="executive-name">greeshmarajegh1989</span></td>
+            <td>
+              <a href="{{ route('shortlist.ina') }}" class="action-btn btn-shortlist-ina">📋 Shortlist from INA</a>
+              <a href="{{ route('shortlist.others') }}" class="action-btn btn-shortlist-others">📋 Shortlist from Others</a>
+              <a href="{{ route('view.prospects', '38584') }}" class="action-btn btn-view-prospects">👀 View Prospects</a>
+              <a href="{{ route('view.client.details', '38584') }}" class="action-btn btn-view-details">👤 View Client Details</a>
+            </td>
+          </tr>
+          <tr>
+            <td><span class="profile-id">44260</span></td>
+            <td><span class="date">17-Jun-2025</span></td>
+            <td><span class="date">15-Oct-2025</span></td>
+            <td><span class="executive-name">greeshmarajegh1989</span></td>
+            <td>
+              <a href="{{ route('shortlist.ina') }}" class="action-btn btn-shortlist-ina">📋 Shortlist from INA</a>
+              <a href="{{ route('shortlist.others') }}" class="action-btn btn-shortlist-others">📋 Shortlist from Others</a>
+              <a href="{{ route('view.prospects', '44260') }}" class="action-btn btn-view-prospects">👀 View Prospects</a>
+              <a href="{{ route('view.client.details', '44260') }}" class="action-btn btn-view-details">👤 View Client Details</a>
+            </td>
+          </tr>
+          <tr>
+            <td><span class="profile-id">29541</span></td>
+            <td><span class="date">15-May-2025</span></td>
+            <td><span class="date">11-Nov-2025</span></td>
+            <td><span class="executive-name">greeshmarajegh1989</span></td>
+            <td>
+              <a href="{{ route('shortlist.ina') }}" class="action-btn btn-shortlist-ina">📋 Shortlist from INA</a>
+              <a href="{{ route('shortlist.others') }}" class="action-btn btn-shortlist-others">📋 Shortlist from Others</a>
+              <a href="{{ route('view.prospects', '29541') }}" class="action-btn btn-view-prospects">👀 View Prospects</a>
+              <a href="{{ route('view.client.details', '29541') }}" class="action-btn btn-view-details">👤 View Client Details</a>
+            </td>
+          </tr>
+          <tr>
+            <td><span class="profile-id">41787</span></td>
+            <td><span class="date">05-Jul-2025</span></td>
+            <td><span class="date">03-Oct-2025</span></td>
+            <td><span class="executive-name">shijina680</span></td>
+            <td>
+              <a href="{{ route('shortlist.ina') }}" class="action-btn btn-shortlist-ina">📋 Shortlist from INA</a>
+              <a href="{{ route('shortlist.others') }}" class="action-btn btn-shortlist-others">📋 Shortlist from Others</a>
+              <a href="{{ route('view.prospects', '41787') }}" class="action-btn btn-view-prospects">👀 View Prospects</a>
+              <a href="{{ route('view.client.details', '41787') }}" class="action-btn btn-view-details">👤 View Client Details</a>
+            </td>
+          </tr>
+          <tr>
+            <td><span class="profile-id">87025</span></td>
+            <td><span class="date">16-Jul-2025</span></td>
+            <td><span class="date">12-Jan-2026</span></td>
+            <td><span class="executive-name">greeshmarajegh1989</span></td>
+            <td>
+              <a href="{{ route('shortlist.ina') }}" class="action-btn btn-shortlist-ina">📋 Shortlist from INA</a>
+              <a href="{{ route('shortlist.others') }}" class="action-btn btn-shortlist-others">📋 Shortlist from Others</a>
+              <a href="{{ route('view.prospects', '87025') }}" class="action-btn btn-view-prospects">👀 View Prospects</a>
+              <a href="{{ route('view.client.details', '87025') }}" class="action-btn btn-view-details">👤 View Client Details</a>
+            </td>
+          </tr>
+          <tr>
+            <td><span class="profile-id">30955</span></td>
+            <td><span class="date">15-May-2025</span></td>
+            <td><span class="date">11-Nov-2025</span></td>
+            <td><span class="executive-name">greeshmarajegh1989</span></td>
+            <td>
+              <a href="{{ route('shortlist.ina') }}" class="action-btn btn-shortlist-ina">📋 Shortlist from INA</a>
+              <a href="{{ route('shortlist.others') }}" class="action-btn btn-shortlist-others">📋 Shortlist from Others</a>
+              <a href="{{ route('view.prospects', '30955') }}" class="action-btn btn-view-prospects">👀 View Prospects</a>
+              <a href="{{ route('view.client.details', '30955') }}" class="action-btn btn-view-details">👤 View Client Details</a>
+            </td>
+          </tr>
+          <tr>
+            <td><span class="profile-id">41519</span></td>
+            <td><span class="date">30-Jul-2025</span></td>
+            <td><span class="date">26-Oct-2025</span></td>
+            <td><span class="executive-name">shijina680</span></td>
+            <td>
+              <a href="{{ route('shortlist.ina') }}" class="action-btn btn-shortlist-ina">📋 Shortlist from INA</a>
+              <a href="{{ route('shortlist.others') }}" class="action-btn btn-shortlist-others">📋 Shortlist from Others</a>
+              <a href="{{ route('view.prospects', '41519') }}" class="action-btn btn-view-prospects">👀 View Prospects</a>
+              <a href="{{ route('view.client.details', '41519') }}" class="action-btn btn-view-details">👤 View Client Details</a>
+            </td>
+          </tr>
+          <tr>
+            <td><span class="profile-id">51139</span></td>
+            <td><span class="date">12-Sep-2025</span></td>
+            <td><span class="date">11-Mar-2026</span></td>
+            <td><span class="executive-name">greeshmarajegh1989</span></td>
+            <td>
+              <a href="{{ route('shortlist.ina') }}" class="action-btn btn-shortlist-ina">📋 Shortlist from INA</a>
+              <a href="{{ route('shortlist.others') }}" class="action-btn btn-shortlist-others">📋 Shortlist from Others</a>
+              <a href="{{ route('view.prospects', '51139') }}" class="action-btn btn-view-prospects">👀 View Prospects</a>
+              <a href="{{ route('view.client.details', '51139') }}" class="action-btn btn-view-details">👤 View Client Details</a>
+            </td>
+          </tr>
+          <tr>
+            <td><span class="profile-id">17004</span></td>
+            <td><span class="date">23-Aug-2025</span></td>
+            <td><span class="date">21-Nov-2025</span></td>
+            <td><span class="executive-name">greeshmarajegh1989</span></td>
+            <td>
+              <a href="{{ route('shortlist.ina') }}" class="action-btn btn-shortlist-ina">📋 Shortlist from INA</a>
+              <a href="{{ route('shortlist.others') }}" class="action-btn btn-shortlist-others">📋 Shortlist from Others</a>
+              <a href="{{ route('view.prospects', '17004') }}" class="action-btn btn-view-prospects">👀 View Prospects</a>
+              <a href="{{ route('view.client.details', '17004') }}" class="action-btn btn-view-details">👤 View Client Details</a>
+            </td>
+          </tr>
+        </tbody>
+      </table>
     </div>
   </main>
 
   <script>
-    // Navigation functionality - same as profile page
+    // Navigation functionality - same as original
     document.querySelectorAll('.header-nav a').forEach(link => {
       link.addEventListener('click', function(e) {
         if (!this.getAttribute('href') || this.getAttribute('href') === '#') {
@@ -480,38 +465,29 @@
       }
     });
 
-    // Tab navigation
-    document.querySelectorAll('.tab-nav button').forEach(button => {
-      button.addEventListener('click', function() {
-        document.querySelectorAll('.tab-nav button').forEach(btn => btn.classList.remove('active'));
-        this.classList.add('active');
+    // Action button functionality
+    document.querySelectorAll('.action-btn').forEach(btn => {
+      btn.addEventListener('click', function(e) {
+        const action = this.textContent.trim();
+        const profileRow = this.closest('tr');
+        const profileId = profileRow.querySelector('.profile-id').textContent;
         
-        // Here you can add logic to show/hide different form sections
-        const tabText = this.textContent.trim();
-        console.log('Switched to tab:', tabText);
+        console.log(`Action: ${action} for Profile ID: ${profileId}`);
+        
+        // All buttons now have proper navigation links
+        // No need to prevent default or show alerts - all buttons navigate to their respective pages
       });
     });
 
-    // Form submission
-    document.getElementById('addServiceForm').addEventListener('submit', function(e) {
-      e.preventDefault();
-      
-      // Get form data
-      const formData = new FormData(this);
-      
-      // Show success message
-      alert('Service added successfully!');
-      
-      // Here you would typically send the data to your server
-      console.log('Form submitted');
-    });
-
-    // Cancel button
-    document.querySelector('.btn-secondary').addEventListener('click', function() {
-      if(confirm('Are you sure you want to cancel? All unsaved changes will be lost.')) {
-        // Redirect back to services page or clear form
-        location.href = '#services';
-      }
+    // Table row click functionality
+    document.querySelectorAll('.profiles-table tbody tr').forEach(row => {
+      row.addEventListener('click', function(e) {
+        // Only trigger if not clicking on action buttons
+        if (!e.target.classList.contains('action-btn')) {
+          const profileId = this.querySelector('.profile-id').textContent;
+          console.log(`Row clicked for Profile ID: ${profileId}`);
+        }
+      });
     });
   </script>
 

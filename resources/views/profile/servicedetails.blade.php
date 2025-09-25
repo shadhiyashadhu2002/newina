@@ -417,7 +417,7 @@
               </div>
               <div class="form-group">
                 <label>Price</label>
-                <input type="number" name="amount_paid" id="amount-paid-input" placeholder="7000.00" step="0.01" 
+                <input type="number" name="amount_paid" id="amount-paid-input" placeholder="9000.00" step="0.01" 
                        value="{{ isset($service) ? $service->amount_paid : '' }}" 
                        {{ isset($service) ? 'readonly' : 'required' }}>
               </div>

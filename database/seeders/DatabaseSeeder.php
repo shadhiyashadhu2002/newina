@@ -34,5 +34,29 @@ class DatabaseSeeder extends Seeder
             'is_admin' => 1,
             'phone2' => '8888888888',
         ]);
+
+        // Create a staff user 'john' with password 'staff123'
+        \App\Models\User::create([
+            'name' => 'john',
+            'first_name' => 'John',
+            'last_name' => 'Smith',
+            'email' => 'john@staff.com',
+            'password' => bcrypt('staff123'),
+            'is_admin' => 0,
+            'user_type' => 'staff',
+            'phone2' => '7777777777',
+        ]);
+
+        // Create another staff user 'sarah' with password 'staff123'
+        \App\Models\User::create([
+            'name' => 'sarah',
+            'first_name' => 'Sarah',
+            'last_name' => 'Johnson',
+            'email' => 'sarah@staff.com',
+            'password' => bcrypt('staff123'),
+            'is_admin' => 0,
+            'user_type' => 'staff',
+            'phone2' => '6666666666',
+        ]);
     }
 }

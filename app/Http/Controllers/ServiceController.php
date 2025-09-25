@@ -220,4 +220,64 @@ class ServiceController extends Controller
             ], 500);
         }
     }
+
+    // Handle profile assignment from other sources
+    public function assignProfile(Request $request)
+    {
+        try {
+            // Validate the request data
+            $validated = $request->validate([
+                'profile_id' => 'required|string',
+                'other_site_member_id' => 'required|string',
+                'profile_source' => 'required|string',
+                'service_date' => 'required|date',
+                'name' => 'nullable|string',
+                'contact_numbers' => 'nullable|string',
+                'remarks' => 'nullable|string',
+            ]);
+
+            // Create or update the service record
+            $service = Service::updateOrCreate(
+                [
+                    'profile_id' => $validated['profile_id'],
+                ],
+                [
+                    'profile_id' => $validated['profile_id'],
+                    'member_id' => $validated['other_site_member_id'],
+                    'service_name' => 'Profile Assignment from ' . $validated['profile_source'],
+                    'profile_source' => $validated['profile_source'],
+                    'service_date' => $validated['service_date'],
+                    'name' => $validated['name'],
+                    'contact_numbers' => $validated['contact_numbers'],
+                    'remarks' => $validated['remarks'],
+                    'service_executive' => Auth::user()->first_name ?? 'admin',
+                    'status' => 'assigned',
+                ]
+            );
+
+            // Return success response
+            return response()->json([
+                'success' => true,
+                'message' => 'Profile assigned successfully!',
+                'service_id' => $service->id
+            ]);
+
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Validation failed',
+                'errors' => $e->errors()
+            ], 422);
+        } catch (\Exception $e) {
+            Log::error('Profile assignment failed', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to assign profile. Please try again.'
+            ], 500);
+        }
+    }
 }
