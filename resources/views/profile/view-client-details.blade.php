@@ -14,7 +14,7 @@
 
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #ac0742 0%, #9d1955 100%);
             color: #333;
             min-height: 100vh;
             padding: 20px;
@@ -51,7 +51,7 @@
         .page-title {
             font-size: 36px;
             font-weight: 700;
-            background: linear-gradient(135deg, #4a69bd, #5a4fcf);
+            background: linear-gradient(135deg, #ac0742, #9d1955);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             background-clip: text;

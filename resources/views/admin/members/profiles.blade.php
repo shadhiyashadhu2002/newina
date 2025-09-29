@@ -385,7 +385,7 @@
 }
 
 .status-badge.interest-followup {
-    background: #2196F3;
+    background: #ac0742;
     color: white;
 }
 

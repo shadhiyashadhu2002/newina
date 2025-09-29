@@ -14,14 +14,14 @@
 
     body {
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      background: linear-gradient(135deg, #ac0742 0%, #9d1955 100%);
       color: #333;
       min-height: 100vh;
     }
 
     /* Main Dashboard Header */
     .main-header {
-      background: linear-gradient(135deg, #4a69bd, #5a4fcf);
+      background: linear-gradient(135deg, #ac0742, #9d1955);
       padding: 15px 30px;
       display: flex;
       justify-content: space-between;
@@ -111,7 +111,7 @@
 
     /* Add Service Button Styling */
     .add-service-btn-beautiful {
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      background: linear-gradient(135deg, #ac0742 0%, #9d1955 100%);
       color: white;
       border: none;
       padding: 15px 30px;
@@ -212,7 +212,7 @@
       transform: translateX(-50%);
       width: 80px;
       height: 3px;
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      background: linear-gradient(135deg, #ac0742 0%, #9d1955 100%);
       border-radius: 2px;
     }
 
@@ -251,9 +251,9 @@
     .modal-form-group input:focus,
     .modal-form-group select:focus {
       outline: none;
-      border-color: #667eea;
+      border-color: #ac0742;
       background: white;
-      box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+      box-shadow: 0 0 0 3px rgba(172, 7, 66, 0.1);
       transform: translateY(-1px);
     }
 
@@ -285,9 +285,9 @@
     }
 
     .btn-primary {
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      background: linear-gradient(135deg, #ac0742 0%, #9d1955 100%);
       color: white;
-      box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+      box-shadow: 0 5px 15px rgba(172, 7, 66, 0.4);
     }
 
     .btn-primary:before {
@@ -352,7 +352,7 @@
     }
 
     .services-table th {
-      background: linear-gradient(135deg, #4a69bd, #5a4fcf);
+      background: linear-gradient(135deg, #ac0742, #9d1955);
       color: white;
       text-align: left;
       padding: 15px;
@@ -379,7 +379,7 @@
     }
 
     .action-link {
-      color: #4a69bd;
+      color: #ac0742;
       text-decoration: none;
       font-weight: 500;
       display: inline-flex;
@@ -388,12 +388,13 @@
 
     .action-link:before {
       content: "○";
-      margin-right: 8px;
-      font-weight: bold;
+      margin-right: 5px;
+      font-size: 10px;
+      color: #9d1955;
     }
 
     .action-link:hover {
-      color: #5a4fcf;
+      color: #9d1955;
       text-decoration: underline;
     }
 

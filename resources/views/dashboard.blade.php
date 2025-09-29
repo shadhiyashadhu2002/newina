@@ -209,7 +209,7 @@
 
     body {
         font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        background: linear-gradient(135deg, #ac0742 0%, #9d1955 100%);
         min-height: 100vh;
     }
 
@@ -325,7 +325,7 @@
     }
 
     .blue {
-        background: linear-gradient(135deg, #2196F3, #1976d2);
+        background: linear-gradient(135deg, #ac0742, #9d1955);
     }
 
     .teal {
@@ -403,7 +403,7 @@
     }
 
     .toggle-filters-btn {
-        background: #2196F3;
+        background: #ac0742;
         color: white;
         border: none;
         padding: 8px 16px;
@@ -413,7 +413,7 @@
     }
 
     .toggle-filters-btn:hover {
-        background: #1976d2;
+        background: #9d1955;
     }
 
     .filter-row {
@@ -446,7 +446,7 @@
     .filter-select:focus,
     .filter-input:focus {
         outline: none;
-        border-color: #2196F3;
+        border-color: #ac0742;
     }
 
     .filter-actions {
@@ -563,12 +563,12 @@
     }
 
     .action-btn.history {
-        background: #2196F3;
+        background: #ac0742;
         color: white;
     }
 
     .action-btn.history:hover {
-        background: #1976d2;
+        background: #9d1955;
     }
 
 

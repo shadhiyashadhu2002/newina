@@ -14,14 +14,14 @@
 
     body {
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      background: linear-gradient(135deg, #ac0742 0%, #9d1955 100%);
       color: #333;
       min-height: 100vh;
     }
 
     /* Main Dashboard Header - Same as profile page */
     .main-header {
-      background: linear-gradient(135deg, #4a69bd, #5a4fcf);
+      background: linear-gradient(135deg, #ac0742, #9d1955);
       padding: 15px 30px;
       display: flex;
       justify-content: space-between;
@@ -319,13 +319,33 @@
     }
 
     .status-badge.view-mode {
-      background: #e3f2fd;
-      color: #1976d2;
+      background: #fdf2f8;
+      color: #ac0742;
     }
 
     .status-badge.edit-mode {
       background: #fff3e0;
       color: #f57c00;
+    }
+
+    .status-badge.new-mode {
+      background: #e3f2fd;
+      color: #1976d2;
+    }
+
+    .status-badge.active-mode {
+      background: #e8f5e8;
+      color: #4CAF50;
+    }
+
+    .status-badge.completed-mode {
+      background: #f3e5f5;
+      color: #9c27b0;
+    }
+
+    .status-badge.cancelled-mode {
+      background: #ffebee;
+      color: #f44336;
     }
 
     /* Responsive */
@@ -361,13 +381,13 @@
     <a href="#" class="header-brand">INA</a>
     <nav>
       <ul class="header-nav">
-        <li><a href="#" data-page="dashboard">Home</a></li>
-        <li><a href="#" data-page="profiles">Profiles</a></li>
+        <li><a href="{{ route('dashboard') }}">Home</a></li>
+        <li><a href="{{ route('profile.hellow') }}">Profiles</a></li>
         <li><a href="#" data-page="sales">Sales <span class="dropdown-arrow">▼</span></a></li>
         <li><a href="#" data-page="helpline">HelpLine</a></li>
-        <li><a href="#" data-page="fresh-data">Fresh Data <span class="dropdown-arrow">▼</span></a></li>
+        <li><a href="{{ route('fresh.data') }}">Fresh Data <span class="dropdown-arrow">▼</span></a></li>
         <li><a href="#" data-page="abc">abc</a></li>
-        <li><a href="#" data-page="services" class="active">Services <span class="dropdown-arrow">▼</span></a></li>
+        <li><a href="{{ route('services.page') }}" class="active">Services <span class="dropdown-arrow">▼</span></a></li>
       </ul>
     </nav>
     <form id="logout-form" action="{{ route('logout') }}" method="POST" style="display: none;">
@@ -408,10 +428,19 @@
 
         <form id="addServiceForm" method="POST" action="{{ route('new.service.store') }}">
           @csrf
+          @if(isset($service))
+            @method('PUT')
+          @endif
           <div id="step-1" class="wizard-step">
             <h3>Service Details</h3>
             <div class="profile-id-section">
-              <h4>Profile ID</h4>
+              <h4>Profile ID 
+                @if(isset($service) && $service->status)
+                  <span class="status-badge {{ $service->status }}-mode">
+                    {{ ucfirst($service->status) }}
+                  </span>
+                @endif
+              </h4>
               <div class="form-row">
                 <div class="form-group">
                   <input type="text" name="profile_id" id="profile-id-input" placeholder="Profile ID" 
@@ -1169,7 +1198,8 @@
         saveSection('service', {
           profile_id: profileId,
           service_name: serviceName,
-          amount_paid: amountPaid,
+          service_price: servicePrice,
+          amount_paid: document.getElementById('amount-paid-input').value || servicePrice,
           success_fee: document.getElementById('success-fee-input').value || '0',
           start_date: startDate,
           expiry_date: expiryDate,
@@ -1269,6 +1299,23 @@
 
       // Form submission
       document.getElementById('addServiceForm').onsubmit = function(e) {
+        // Check if key fields are filled to show user what status will be set
+        const serviceName = document.querySelector('input[name="service_name"]').value;
+        const amountPaid = document.querySelector('input[name="amount_paid"]').value;
+        const startDate = document.querySelector('input[name="start_date"]').value;
+        const expiryDate = document.querySelector('input[name="expiry_date"]').value;
+        const contactMobile = document.querySelector('input[name="contact_mobile_no"]').value;
+        const contactName = document.querySelector('input[name="contact_customer_name"]').value;
+        
+        const hasServiceDetails = serviceName && amountPaid && startDate && expiryDate;
+        const hasContactDetails = contactMobile && contactName;
+        
+        if (hasServiceDetails && hasContactDetails) {
+          console.log('Service will be marked as ACTIVE');
+        } else {
+          console.log('Service will remain as NEW until all details are completed');
+        }
+        
         // Allow the form to submit normally to the server
         // The server will handle the redirect to new.service route
         return true;

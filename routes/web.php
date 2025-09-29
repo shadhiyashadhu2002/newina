@@ -4,6 +4,7 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\AdminMemberController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\Auth\LoginController; // Add this import
+use App\Http\Controllers\ServiceController;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\FreshDataController;
@@ -94,9 +95,12 @@ Route::get('/add-fresh-data', function () {
 Route::post('/add-fresh-data', [FreshDataController::class, 'store'])->name('add.fresh.data.store');
 Route::get('/edit-fresh-data/{id}', [FreshDataController::class, 'edit'])->name('edit.fresh.data');
 Route::get('/fresh-data/view/{id}', [FreshDataController::class, 'view'])->name('fresh.data.view');
-Route::get('/services', function () {
-    return view('profile.services');
-})->name('services.page');
+Route::get('/services', [ServiceController::class, 'servicesDashboard'])->name('services.page');
+Route::post('/services/update-status/{id}', [ServiceController::class, 'updateStatus'])->name('services.updateStatus');
+Route::post('/save-service', [ServiceController::class, 'saveSection'])->name('save.service.section');
+Route::get('/csrf-token', function() {
+    return response()->json(['token' => csrf_token()]);
+})->name('csrf.token');
 
 use App\Models\Service;
 Route::get('/service-details/{id}/{name}', function ($id, $name) {
@@ -106,8 +110,11 @@ Route::get('/service-details/{id}/{name}', function ($id, $name) {
     }
     return view('profile.servicedetails', compact('service'));
 })->name('service.details');
-// New Service page route
-use App\Http\Controllers\ServiceController;
+
+// Route for creating new service details (without existing service)
+Route::get('/profile/{id}/servicedetails', function ($id) {
+    return view('profile.servicedetails');
+})->name('profile.servicedetails');
 
 // New Service page route (show list for executive or admin)
 Route::get('/new-service', function () {

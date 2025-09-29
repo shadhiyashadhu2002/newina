@@ -1,5 +1,13 @@
-<!DOCTYPE html>
-<html lang="en">
+<!DOCTYPE html        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #ac0742 0%, #9d1955 100%);
+            color: #333;
+            min-height: 100vh;
+        }
+
+        /* Main Dashboard Header */
+        .main-header {
+            background: linear-gradient(135deg, #ac0742, #9d1955);ng="en">
 
 <head>
     <meta charset="UTF-8">
@@ -14,14 +22,14 @@
 
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #ac0742 0%, #9d1955 100%);
             color: #333;
             min-height: 100vh;
         }
 
         /* Header Styles */
         .main-header {
-            background: linear-gradient(135deg, #4a69bd, #5a4fcf);
+            background: linear-gradient(135deg, #ac0742, #9d1955);
             padding: 15px 30px;
             display: flex;
             justify-content: space-between;
@@ -168,12 +176,12 @@
         }
 
         .assign-btn {
-            background: linear-gradient(135deg, #2196F3, #1976D2);
-            box-shadow: 0 4px 15px rgba(33, 150, 243, 0.3);
+            background: linear-gradient(135deg, #ac0742, #9d1955);
+            box-shadow: 0 4px 15px rgba(172, 7, 66, 0.3);
         }
 
         .assign-btn:hover {
-            box-shadow: 0 6px 20px rgba(33, 150, 243, 0.4);
+            box-shadow: 0 6px 20px rgba(172, 7, 66, 0.4);
         }
 
         .import-btn {

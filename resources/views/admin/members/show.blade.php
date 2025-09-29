@@ -24,7 +24,7 @@
 
         /* Header */
         .admin-header {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #ac0742 0%, #9d1955 100%);
             color: white;
             padding: 15px 30px;
             box-shadow: 0 2px 10px rgba(0,0,0,0.1);
@@ -156,7 +156,7 @@
 
         /* Profile Header */
         .profile-header {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #ac0742 0%, #9d1955 100%);
             color: white;
             padding: 40px;
             text-align: center;
@@ -262,7 +262,7 @@
             left: 0;
             right: 0;
             height: 3px;
-            background: linear-gradient(90deg, #667eea, #764ba2);
+            background: linear-gradient(90deg, #ac0742, #9d1955);
         }
 
         .section-content {
@@ -312,7 +312,7 @@
         }
 
         .field-value:hover {
-            border-bottom-color: #667eea;
+            border-bottom-color: #ac0742;
             color: #333;
         }
 

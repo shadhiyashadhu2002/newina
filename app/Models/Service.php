@@ -15,6 +15,7 @@ class Service extends Model
         'plan_name',
         'payment_date',
         'service_executive',
+        'status',
         // Service Details
         'service_name',
         'amount_paid',

@@ -13,14 +13,14 @@
 
     body {
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      background: linear-gradient(135deg, #ac0742 0%, #9d1955 100%);
       color: #333;
       min-height: 100vh;
     }
 
     /* Main Dashboard Header */
     .main-header {
-      background: linear-gradient(135deg, #4a69bd, #5a4fcf);
+      background: linear-gradient(135deg, #ac0742, #9d1955);
       padding: 15px 30px;
       display: flex;
       justify-content: space-between;
@@ -151,7 +151,7 @@
     }
 
     .card-icon.active {
-      background: linear-gradient(135deg, #2196F3, #1976D2);
+      background: linear-gradient(135deg, #ac0742, #9d1955);
     }
 
     .card-icon.new {
@@ -275,14 +275,14 @@
 
     /* Profile ID links */
     .profile-link {
-      color: #2196F3;
+      color: #ac0742;
       text-decoration: none;
       font-weight: 600;
       transition: color 0.3s ease;
     }
 
     .profile-link:hover {
-      color: #1976D2;
+      color: #9d1955;
       text-decoration: underline;
     }
 
@@ -375,7 +375,7 @@
       <div class="dashboard-card">
         <div class="card-icon total">📊</div>
         <div class="card-content">
-          <h3>19</h3>
+          <h3>{{ $totalServices }}</h3>
           <p>Total Services</p>
         </div>
       </div>
@@ -385,7 +385,7 @@
         <div class="dashboard-card">
           <div class="card-icon active">👥</div>
           <div class="card-content">
-            <h3>11</h3>
+            <h3>{{ $activeServices }}</h3>
             <p>Active Services</p>
           </div>
         </div>
@@ -395,11 +395,19 @@
         <div class="dashboard-card">
           <div class="card-icon new">⚡</div>
           <div class="card-content">
-            <h3>26</h3>
+            <h3>{{ $newServices }}</h3>
             <p>New Services</p>
           </div>
         </div>
       </a>
+
+      <div class="dashboard-card">
+        <div class="card-icon completed" style="background: linear-gradient(135deg, #4CAF50, #45a049);">✅</div>
+        <div class="card-content">
+          <h3>{{ $completedServices }}</h3>
+          <p>Completed Services</p>
+        </div>
+      </div>
     </div>
 
 
@@ -486,6 +494,40 @@
         });
       }
     });
+
+    // Function to refresh dashboard counts
+    function refreshDashboardCounts() {
+      fetch('{{ route("services.page") }}', {
+        method: 'GET',
+        headers: {
+          'X-Requested-With': 'XMLHttpRequest',
+          'Accept': 'text/html'
+        }
+      })
+      .then(response => response.text())
+      .then(html => {
+        // Extract the counts from the response and update the dashboard
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(html, 'text/html');
+        const cards = document.querySelectorAll('.dashboard-card h3');
+        const newCards = doc.querySelectorAll('.dashboard-card h3');
+        
+        if (newCards.length >= cards.length) {
+          cards.forEach((card, index) => {
+            if (newCards[index]) {
+              card.textContent = newCards[index].textContent;
+            }
+          });
+        }
+      })
+      .catch(error => {
+        console.error('Error refreshing counts:', error);
+      });
+    }
+
+    // Auto-refresh counts every 30 seconds to catch new services
+    setInterval(refreshDashboardCounts, 30000);
+
     // Modal logic for Add New Service
     const addNewServiceBtn = document.getElementById('add-new-service-btn');
     const addServiceModal = document.getElementById('add-service-modal');

@@ -13,14 +13,14 @@
 
     body {
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      background: linear-gradient(135deg, #ac0742 0%, #9d1955 100%);
       color: #333;
       min-height: 100vh;
     }
 
     /* Main Dashboard Header */
     .main-header {
-      background: linear-gradient(135deg, #4a69bd, #5a4fcf);
+      background: linear-gradient(135deg, #ac0742, #9d1955);
       padding: 15px 30px;
       display: flex;
       justify-content: space-between;
@@ -261,14 +261,14 @@
 
     /* Profile ID links */
     a.profile-link {
-      color: #2196F3;
+      color: #ac0742;
       text-decoration: none;
       font-weight: 600;
       transition: color 0.3s ease;
     }
 
     a.profile-link:hover {
-      color: #1976D2;
+      color: #9d1955;
       text-decoration: underline;
     }
 
