@@ -494,23 +494,13 @@
             </div>
             <div class="modal-form-group">
               <label>Mobile Number</label>
-              <input type="tel" name="member_mobile" id="member-mobile-input" placeholder="Enter mobile number" 
-                     maxlength="12" pattern="[0-9]{10,12}" required>
+              <input type="tel" name="member_mobile" placeholder="Enter mobile number" required>
             </div>
           </div>
           <div class="modal-form-row">
             <div class="modal-form-group">
               <label>Service Executive</label>
-              <select name="service_executive" required>
-                <option value="">Select Service Executive</option>
-                @if(isset($staffUsers) && count($staffUsers) > 0)
-                  @foreach($staffUsers as $staff)
-                    <option value="{{ $staff->first_name }}">{{ $staff->first_name }}</option>
-                  @endforeach
-                @else
-                  <option value="">No staff members available</option>
-                @endif
-              </select>
+              <input type="text" name="service_executive" placeholder="Enter service executive name" required>
             </div>
           </div>
           <div class="modal-actions">
@@ -568,54 +558,7 @@
           }
         });
       }
-
-      // Mobile number validation - restrict to numbers only and max 12 digits
-      const mobileInput = document.getElementById('member-mobile-input');
-      if (mobileInput) {
-        mobileInput.addEventListener('input', function(e) {
-          // Remove any non-numeric characters
-          let value = e.target.value.replace(/[^0-9]/g, '');
-          
-          // Limit to 12 digits
-          if (value.length > 12) {
-            value = value.slice(0, 12);
-          }
-          
-          // Update the input value
-          e.target.value = value;
-        });
-
-        // Prevent pasting non-numeric content
-        mobileInput.addEventListener('paste', function(e) {
-          e.preventDefault();
-          let paste = (e.clipboardData || window.clipboardData).getData('text');
-          let numericOnly = paste.replace(/[^0-9]/g, '').slice(0, 12);
-          this.value = numericOnly;
-        });
-
-        // Prevent typing non-numeric characters
-        mobileInput.addEventListener('keypress', function(e) {
-          // Allow backspace, delete, tab, escape, enter
-          if ([8, 9, 27, 13, 46].indexOf(e.keyCode) !== -1 ||
-              // Allow Ctrl+A, Ctrl+C, Ctrl+V, Ctrl+X
-              (e.keyCode === 65 && e.ctrlKey === true) ||
-              (e.keyCode === 67 && e.ctrlKey === true) ||
-              (e.keyCode === 86 && e.ctrlKey === true) ||
-              (e.keyCode === 88 && e.ctrlKey === true)) {
-            return;
-          }
-          // Ensure that it is a number and stop the keypress
-          if ((e.shiftKey || (e.keyCode < 48 || e.keyCode > 57)) && (e.keyCode < 96 || e.keyCode > 105)) {
-            e.preventDefault();
-          }
-          // Check if adding this digit would exceed 12 digits
-          if (this.value.length >= 12) {
-            e.preventDefault();
-          }
-        });
-      }
     });
-
     // Modal logic for Add New Service
     const addNewServiceBtn = document.getElementById('add-new-service-btn');
     const addServiceModal = document.getElementById('add-service-modal');

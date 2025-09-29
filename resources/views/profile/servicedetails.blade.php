@@ -204,6 +204,18 @@
       min-height: 80px;
     }
 
+    /* Hide number input spinners/arrows */
+    #amount-paid-input::-webkit-outer-spin-button,
+    #amount-paid-input::-webkit-inner-spin-button {
+      -webkit-appearance: none;
+      margin: 0;
+    }
+
+    #amount-paid-input {
+      -moz-appearance: textfield;
+      appearance: textfield;
+    }
+
     /* View Mode Styling */
     .form-group input[readonly],
     .form-group textarea[readonly] {
@@ -421,18 +433,24 @@
                 </select>
               </div>
               <div class="form-group">
-                <label>Price</label>
-                <input type="number" name="amount_paid" id="amount-paid-input" placeholder="9000.00" step="0.01" 
-                       value="{{ isset($service) ? $service->amount_paid : '' }}" 
+                <label>Service Price</label>
+                <input type="number" name="service_price" id="service-price-input" placeholder="18000.00" step="0.01" 
+                       value="{{ isset($service) ? $service->service_price : '' }}" 
                        {{ isset($service) ? 'readonly' : 'required' }}>
               </div>
             </div>
             <div class="form-row">
               <div class="form-group">
+                <label>Paid Amount</label>
+                <input type="number" name="amount_paid" id="amount-paid-input" placeholder="0.00" step="0.01" 
+                       value="{{ isset($service) ? $service->amount_paid : '' }}" 
+                       {{ isset($service) ? 'readonly' : '' }}>
+              </div>
+              <div class="form-group">
                 <label>Success Fee</label>
                 <input type="number" name="success_fee" id="success-fee-input" placeholder="0" step="0.01" 
                        value="{{ isset($service) ? $service->success_fee : '' }}" 
-                       {{ isset($service) ? 'readonly' : '' }}>
+                       {{ isset($service) ? 'readonly' : '' }} readonly>
               </div>
               <div class="form-group">
                 <label>Start Date</label>
@@ -948,12 +966,15 @@
       setupServicePricing();
     });
 
-    // Function to setup automatic service pricing
+    // Function to setup automatic service pricing and success fee calculation
     function setupServicePricing() {
       const serviceNameSelect = document.getElementById('service-name-input');
-      const priceInput = document.getElementById('amount-paid-input');
+      const servicePriceInput = document.getElementById('service-price-input');
+      const paidAmountInput = document.getElementById('amount-paid-input');
+      const successFeeInput = document.getElementById('success-fee-input');
       
-      if (serviceNameSelect && priceInput) {
+      // Auto-populate service price based on service name
+      if (serviceNameSelect && servicePriceInput) {
         serviceNameSelect.addEventListener('change', function() {
           const selectedService = this.value;
           let price = '';
@@ -969,15 +990,41 @@
           
           if (servicePrices[selectedService]) {
             price = servicePrices[selectedService];
-            priceInput.value = price;
+            servicePriceInput.value = price;
+            calculateSuccessFee(); // Recalculate success fee when price changes
           }
         });
         
         // Set initial price if service is already selected
-        if (serviceNameSelect.value && !priceInput.value) {
+        if (serviceNameSelect.value && !servicePriceInput.value) {
           serviceNameSelect.dispatchEvent(new Event('change'));
         }
       }
+      
+      // Calculate success fee when paid amount changes
+      if (paidAmountInput) {
+        paidAmountInput.addEventListener('input', calculateSuccessFee);
+      }
+      
+      // Calculate success fee when service price changes
+      if (servicePriceInput) {
+        servicePriceInput.addEventListener('input', calculateSuccessFee);
+      }
+      
+      // Function to calculate success fee (Service Price - Paid Amount)
+      function calculateSuccessFee() {
+        if (servicePriceInput && paidAmountInput && successFeeInput) {
+          const servicePrice = parseFloat(servicePriceInput.value) || 0;
+          const paidAmount = parseFloat(paidAmountInput.value) || 0;
+          const successFee = servicePrice - paidAmount;
+          
+          // Only show positive success fee, negative means overpaid
+          successFeeInput.value = Math.max(0, successFee).toFixed(2);
+        }
+      }
+      
+      // Initial calculation
+      calculateSuccessFee();
     }
 
     // Function to refresh CSRF token
@@ -1110,12 +1157,12 @@
         // Validate required fields for section 1
         const profileId = document.getElementById('profile-id-input').value;
         const serviceName = document.getElementById('service-name-input').value;
-        const amountPaid = document.getElementById('amount-paid-input').value;
+        const servicePrice = document.getElementById('service-price-input').value;
         const startDate = document.getElementById('start-date-input').value;
         const expiryDate = document.getElementById('expiry-date-input').value;
         
-        if (!profileId || !serviceName || !amountPaid || !startDate || !expiryDate) {
-          alert('Please fill in all required fields (Profile ID, Service Name, Price, Start Date, Expiry Date)');
+        if (!profileId || !serviceName || !servicePrice || !startDate || !expiryDate) {
+          alert('Please fill in all required fields (Profile ID, Service Name, Service Price, Start Date, Expiry Date)');
           return;
         }
         

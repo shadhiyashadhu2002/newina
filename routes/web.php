@@ -122,39 +122,7 @@ Route::get('/new-service', function () {
 
 // Store new service (AJAX)
 Route::post('/new-service', [ServiceController::class, 'store'])->name('new.service.store');
-
-// Progressive save service route (for service details page)
-Route::post('/save-service', [ServiceController::class, 'store'])->name('service.save');
-
-// CSRF token refresh route
-Route::get('/csrf-token', function () {
-    return response()->json(['csrf_token' => csrf_token()]);
-})->name('csrf.token');
-
 // Active Service page route
 Route::get('/active-service', function () {
     return view('profile.activeservice');
 })->name('active.service');
-
-// Shortlist from INA page route
-Route::get('/shortlist-ina', function () {
-    return view('profile.shortlist-ina');
-})->name('shortlist.ina');
-
-// Shortlist from Others page route
-Route::get('/shortlist-others', function () {
-    return view('profile.shortlist-others');
-})->name('shortlist.others');
-
-// Profile assignment from other sources
-Route::post('/assign-profile', [ServiceController::class, 'assignProfile'])->name('assign.profile');
-
-// View Prospects page route
-Route::get('/view-prospects/{profileId?}', function ($profileId = null) {
-    return view('profile.view-prospects', compact('profileId'));
-})->name('view.prospects');
-
-// View Client Details page route
-Route::get('/view-client-details/{profileId?}', function ($profileId = null) {
-    return view('profile.view-client-details', compact('profileId'));
-})->name('view.client.details');

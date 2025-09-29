@@ -60,12 +60,5 @@ class Service extends Model
         'contact_client',
         'contact_phone',
         'contact_address',
-        // Profile Assignment Fields
-        'member_id',
-        'profile_source',
-        'service_date',
-        'contact_numbers',
-        'remarks',
-        'status',
     ];
 }
