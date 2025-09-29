@@ -411,9 +411,14 @@
             <div class="form-row">
               <div class="form-group">
                 <label>Service Name</label>
-                <input type="text" name="service_name" id="service-name-input" placeholder="Enter service name" 
-                       value="{{ isset($service) ? $service->service_name : '' }}" 
-                       {{ isset($service) ? 'readonly' : 'required' }}>
+                <select name="service_name" id="service-name-input" {{ isset($service) ? 'disabled' : 'required' }}>
+                  <option value="">Select service name</option>
+                  <option value="Gold Male" {{ (isset($service) && $service->service_name == 'Gold Male') ? 'selected' : '' }}>Gold Male</option>
+                  <option value="Gold Female" {{ (isset($service) && $service->service_name == 'Gold Female') ? 'selected' : '' }}>Gold Female</option>
+                  <option value="Diamond" {{ (isset($service) && $service->service_name == 'Diamond') ? 'selected' : '' }}>Diamond</option>
+                  <option value="Royal" {{ (isset($service) && $service->service_name == 'Royal') ? 'selected' : '' }}>Royal</option>
+                  <option value="Elite" {{ (isset($service) && $service->service_name == 'Elite') ? 'selected' : '' }}>Elite</option>
+                </select>
               </div>
               <div class="form-group">
                 <label>Price</label>
@@ -780,10 +785,15 @@
 
     // Enable edit mode
     function enableEditMode() {
-      // Remove readonly from all form inputs
+      // Remove readonly from all form inputs and enable selects
       const inputs = document.querySelectorAll('#unified-service-form input, #unified-service-form textarea');
       inputs.forEach(input => {
         input.removeAttribute('readonly');
+      });
+      
+      const selects = document.querySelectorAll('#unified-service-form select');
+      selects.forEach(select => {
+        select.removeAttribute('disabled');
       });
       
       // Show save buttons
@@ -935,7 +945,40 @@
     // Initialize page when DOM is loaded
     document.addEventListener('DOMContentLoaded', function() {
       initializePage();
+      setupServicePricing();
     });
+
+    // Function to setup automatic service pricing
+    function setupServicePricing() {
+      const serviceNameSelect = document.getElementById('service-name-input');
+      const priceInput = document.getElementById('amount-paid-input');
+      
+      if (serviceNameSelect && priceInput) {
+        serviceNameSelect.addEventListener('change', function() {
+          const selectedService = this.value;
+          let price = '';
+          
+          // Define service prices
+          const servicePrices = {
+            'Gold Male': 18000,
+            'Gold Female': 14000,
+            'Diamond': 18000,
+            'Royal': 20000,
+            'Elite': 100000
+          };
+          
+          if (servicePrices[selectedService]) {
+            price = servicePrices[selectedService];
+            priceInput.value = price;
+          }
+        });
+        
+        // Set initial price if service is already selected
+        if (serviceNameSelect.value && !priceInput.value) {
+          serviceNameSelect.dispatchEvent(new Event('change'));
+        }
+      }
+    }
 
     // Function to refresh CSRF token
     function refreshCSRFToken() {
