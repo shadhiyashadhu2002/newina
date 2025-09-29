@@ -340,6 +340,36 @@
         padding: 10px 8px;
       }
     }
+
+    /* Status Badge Styles */
+    .status-badge {
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .status-badge.new {
+      background: linear-gradient(135deg, #ff9800, #f57c00);
+      color: white;
+    }
+
+    .status-badge.active {
+      background: linear-gradient(135deg, #4caf50, #388e3c);
+      color: white;
+    }
+
+    .status-badge.completed {
+      background: linear-gradient(135deg, #2196f3, #1976d2);
+      color: white;
+    }
+
+    .status-badge.cancelled {
+      background: linear-gradient(135deg, #f44336, #d32f2f);
+      color: white;
+    }
   </style>
 </head>
 <body>
@@ -368,7 +398,13 @@
 
   <!-- Main Content Area -->
   <main class="main-content">
-    <h1 class="page-title">Service Dashboard</h1>
+    <h1 class="page-title">
+      @if(Auth::check() && Auth::user()->is_admin)
+        Service Dashboard (Admin Overview)
+      @else
+        Service Dashboard
+      @endif
+    </h1>
 
     <!-- Dashboard Cards -->
     <div class="dashboard-cards">
@@ -415,7 +451,13 @@
     <div class="services-section">
       <div class="section-header">
         <div class="section-icon">📋</div>
-        <h2 class="section-title">Recent Services</h2>
+        <h2 class="section-title">
+          @if(Auth::check() && Auth::user()->is_admin)
+            Recent Services (All Staff)
+          @else
+            Recent Services
+          @endif
+        </h2>
       </div>
 
       <table>
@@ -424,58 +466,40 @@
             <th>Service ID</th>
             <th>Profile ID</th>
             <th>Service Name</th>
+            @if(Auth::check() && Auth::user()->is_admin)
+            <th>Service Executive</th>
+            @endif
+            <th>Status</th>
             <th>Created Date</th>
           </tr>
         </thead>
         <tbody>
+          @forelse($recentServices as $service)
           <tr>
-            <td><strong>24</strong></td>
-            <td><a href="#" class="profile-link">37904</a></td>
-            <td>Elite</td>
-            <td>13-Sep-2025</td>
+            <td><strong>{{ $service->id }}</strong></td>
+            <td><a href="{{ route('service.details', ['id' => $service->profile_id, 'name' => $service->name ?? $service->member_name ?? 'Service']) }}" class="profile-link">{{ $service->profile_id }}</a></td>
+            <td>{{ $service->service_name ?? 'General Service' }}</td>
+            @if(Auth::check() && Auth::user()->is_admin)
+            <td>
+              <span style="color: #ac0742; font-weight: 600;">
+                {{ $service->service_executive ?? 'Unassigned' }}
+              </span>
+            </td>
+            @endif
+            <td>
+              <span class="status-badge {{ $service->status ?? 'new' }}">
+                {{ ucfirst($service->status ?? 'new') }}
+              </span>
+            </td>
+            <td>{{ $service->created_at->format('d-M-Y') }}</td>
           </tr>
+          @empty
           <tr>
-            <td><strong>23</strong></td>
-            <td><a href="#" class="profile-link">51139</a></td>
-            <td>Elite</td>
-            <td>12-Sep-2025</td>
+            <td colspan="{{ Auth::check() && Auth::user()->is_admin ? '6' : '5' }}" style="text-align: center; padding: 20px; color: #666;">
+              No services found. Services you create or are assigned to will appear here.
+            </td>
           </tr>
-          <tr>
-            <td><strong>22</strong></td>
-            <td><a href="#" class="profile-link">41519</a></td>
-            <td>Assisted</td>
-            <td>09-Aug-2025</td>
-          </tr>
-          <tr>
-            <td><strong>21</strong></td>
-            <td><a href="#" class="profile-link">30955</a></td>
-            <td>Elite</td>
-            <td>18-Jul-2025</td>
-          </tr>
-          <tr>
-            <td><strong>20</strong></td>
-            <td><a href="#" class="profile-link">29628</a></td>
-            <td>Elite</td>
-            <td>17-Jul-2025</td>
-          </tr>
-          <tr>
-            <td><strong>19</strong></td>
-            <td><a href="#" class="profile-link">87024</a></td>
-            <td>Elite</td>
-            <td>16-Jul-2025</td>
-          </tr>
-          <tr>
-            <td><strong>18</strong></td>
-            <td><a href="#" class="profile-link">40174</a></td>
-            <td>Assisted</td>
-            <td>05-Jul-2025</td>
-          </tr>
-          <tr>
-            <td><strong>17</strong></td>
-            <td><a href="#" class="profile-link">41785</a></td>
-            <td>Assisted</td>
-            <td>05-Jul-2025</td>
-          </tr>
+          @endforelse
         </tbody>
       </table>
     </div>

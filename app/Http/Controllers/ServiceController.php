@@ -107,19 +107,38 @@ class ServiceController extends Controller
     {
         $user = Auth::user();
         
-        // Get counts for current service executive
-        $totalServices = Service::where('service_executive', $user->first_name)->count();
-        $newServices = Service::where('service_executive', $user->first_name)
-                             ->where('status', 'new')
-                             ->count();
-        $activeServices = Service::where('service_executive', $user->first_name)
-                                ->where('status', 'active')
-                                ->count();
-        $completedServices = Service::where('service_executive', $user->first_name)
-                                   ->where('status', 'completed')
-                                   ->count();
+        if ($user && $user->is_admin) {
+            // Admin sees all services across all staff
+            $totalServices = Service::count();
+            $newServices = Service::where('status', 'new')->count();
+            $activeServices = Service::where('status', 'active')->count();
+            $completedServices = Service::where('status', 'completed')->count();
+            
+            // Get recent services for all staff (last 15 for admin)
+            $recentServices = Service::orderBy('created_at', 'desc')
+                                    ->limit(15)
+                                    ->get();
+        } else {
+            // Staff sees only their assigned services
+            $totalServices = Service::where('service_executive', $user->first_name)->count();
+            $newServices = Service::where('service_executive', $user->first_name)
+                                 ->where('status', 'new')
+                                 ->count();
+            $activeServices = Service::where('service_executive', $user->first_name)
+                                    ->where('status', 'active')
+                                    ->count();
+            $completedServices = Service::where('service_executive', $user->first_name)
+                                       ->where('status', 'completed')
+                                       ->count();
 
-        return view('profile.services', compact('totalServices', 'newServices', 'activeServices', 'completedServices'));
+            // Get recent services for current service executive (last 10)
+            $recentServices = Service::where('service_executive', $user->first_name)
+                                    ->orderBy('created_at', 'desc')
+                                    ->limit(10)
+                                    ->get();
+        }
+
+        return view('profile.services', compact('totalServices', 'newServices', 'activeServices', 'completedServices', 'recentServices'));
     }
 
     // Update service status
@@ -158,21 +177,23 @@ class ServiceController extends Controller
             // Handle different field mappings
             $data['service_executive'] = $data['service_executive'] ?? Auth::user()->first_name ?? 'admin';
             
-            // Determine status based on completed fields (same logic as store method)
-            $hasServiceDetails = !empty($data['service_name']) && !empty($data['amount_paid']) && !empty($data['start_date']) && !empty($data['expiry_date']);
-            $hasContactDetails = !empty($data['contact_mobile_no']) && !empty($data['contact_customer_name']);
-            
-            if ($hasServiceDetails && $hasContactDetails) {
-                $data['status'] = 'active';
-            } else {
-                $data['status'] = 'new';
-            }
-
-            // Find or create service record
+            // Find or create service record first
             $service = Service::updateOrCreate(
                 ['profile_id' => $data['profile_id']],
                 $data
             );
+
+            // Now check the complete service record to determine status
+            $hasServiceDetails = !empty($service->service_name) && !empty($service->amount_paid) && !empty($service->start_date) && !empty($service->expiry_date);
+            $hasContactDetails = !empty($service->contact_mobile_no) && !empty($service->contact_customer_name);
+            
+            if ($hasServiceDetails && $hasContactDetails) {
+                $service->status = 'active';
+                $service->save();
+            } else {
+                $service->status = 'new';
+                $service->save();
+            }
 
             Log::info('Section saved successfully', [
                 'section' => $section,
