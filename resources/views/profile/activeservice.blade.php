@@ -338,10 +338,10 @@
             <td><span class="date">03-Nov-2025</span></td>
             <td><span class="executive-name">greeshmarajegh1989</span></td>
             <td>
-              <a href="#" class="action-btn btn-shortlist-ina">📋 Shortlist from INA</a>
-              <a href="#" class="action-btn btn-shortlist-others">📋 Shortlist from Others</a>
-              <a href="#" class="action-btn btn-view-prospects">👀 View Prospects</a>
-              <a href="#" class="action-btn btn-view-details">👤 View Client Details</a>
+              <a href="{{ route('shortlist.ina', 38584) }}" class="action-btn btn-shortlist-ina">📋 Shortlist from INA</a>
+              <a href="{{ route('shortlist.others', 38584) }}" class="action-btn btn-shortlist-others">📋 Shortlist from Others</a>
+              <a href="{{ route('view.prospects', 38584) }}" class="action-btn btn-view-prospects">👀 View Prospects</a>
+              <a href="{{ route('client.details', 38584) }}" class="action-btn btn-view-details">👤 View Client Details</a>
             </td>
           </tr>
           <tr>
@@ -350,10 +350,10 @@
             <td><span class="date">15-Oct-2025</span></td>
             <td><span class="executive-name">greeshmarajegh1989</span></td>
             <td>
-              <a href="#" class="action-btn btn-shortlist-ina">📋 Shortlist from INA</a>
-              <a href="#" class="action-btn btn-shortlist-others">📋 Shortlist from Others</a>
-              <a href="#" class="action-btn btn-view-prospects">👀 View Prospects</a>
-              <a href="#" class="action-btn btn-view-details">👤 View Client Details</a>
+              <a href="{{ route('shortlist.ina', 44260) }}" class="action-btn btn-shortlist-ina">📋 Shortlist from INA</a>
+              <a href="{{ route('shortlist.others', 44260) }}" class="action-btn btn-shortlist-others">📋 Shortlist from Others</a>
+              <a href="{{ route('view.prospects', 44260) }}" class="action-btn btn-view-prospects">👀 View Prospects</a>
+              <a href="{{ route('client.details', 44260) }}" class="action-btn btn-view-details">👤 View Client Details</a>
             </td>
           </tr>
           <tr>
@@ -362,10 +362,10 @@
             <td><span class="date">11-Nov-2025</span></td>
             <td><span class="executive-name">greeshmarajegh1989</span></td>
             <td>
-              <a href="#" class="action-btn btn-shortlist-ina">📋 Shortlist from INA</a>
-              <a href="#" class="action-btn btn-shortlist-others">📋 Shortlist from Others</a>
-              <a href="#" class="action-btn btn-view-prospects">👀 View Prospects</a>
-              <a href="#" class="action-btn btn-view-details">👤 View Client Details</a>
+              <a href="{{ route('shortlist.ina', 29541) }}" class="action-btn btn-shortlist-ina">📋 Shortlist from INA</a>
+              <a href="{{ route('shortlist.others', 29541) }}" class="action-btn btn-shortlist-others">📋 Shortlist from Others</a>
+              <a href="{{ route('view.prospects', 29541) }}" class="action-btn btn-view-prospects">👀 View Prospects</a>
+              <a href="{{ route('client.details', 29541) }}" class="action-btn btn-view-details">👤 View Client Details</a>
             </td>
           </tr>
           <tr>
@@ -374,10 +374,10 @@
             <td><span class="date">03-Oct-2025</span></td>
             <td><span class="executive-name">shijina680</span></td>
             <td>
-              <a href="#" class="action-btn btn-shortlist-ina">📋 Shortlist from INA</a>
-              <a href="#" class="action-btn btn-shortlist-others">📋 Shortlist from Others</a>
-              <a href="#" class="action-btn btn-view-prospects">👀 View Prospects</a>
-              <a href="#" class="action-btn btn-view-details">👤 View Client Details</a>
+              <a href="{{ route('shortlist.ina', 41787) }}" class="action-btn btn-shortlist-ina">📋 Shortlist from INA</a>
+              <a href="{{ route('shortlist.others', 41787) }}" class="action-btn btn-shortlist-others">📋 Shortlist from Others</a>
+              <a href="{{ route('view.prospects', 41787) }}" class="action-btn btn-view-prospects">👀 View Prospects</a>
+              <a href="{{ route('client.details', 41787) }}" class="action-btn btn-view-details">👤 View Client Details</a>
             </td>
           </tr>
           <tr>
@@ -386,10 +386,10 @@
             <td><span class="date">12-Jan-2026</span></td>
             <td><span class="executive-name">greeshmarajegh1989</span></td>
             <td>
-              <a href="#" class="action-btn btn-shortlist-ina">📋 Shortlist from INA</a>
-              <a href="#" class="action-btn btn-shortlist-others">📋 Shortlist from Others</a>
-              <a href="#" class="action-btn btn-view-prospects">👀 View Prospects</a>
-              <a href="#" class="action-btn btn-view-details">👤 View Client Details</a>
+              <a href="{{ route('shortlist.ina', 87025) }}" class="action-btn btn-shortlist-ina">📋 Shortlist from INA</a>
+              <a href="{{ route('shortlist.others', 87025) }}" class="action-btn btn-shortlist-others">📋 Shortlist from Others</a>
+              <a href="{{ route('view.prospects', 87025) }}" class="action-btn btn-view-prospects">👀 View Prospects</a>
+              <a href="{{ route('client.details', 87025) }}" class="action-btn btn-view-details">👤 View Client Details</a>
             </td>
           </tr>
           <tr>
@@ -398,10 +398,10 @@
             <td><span class="date">11-Nov-2025</span></td>
             <td><span class="executive-name">greeshmarajegh1989</span></td>
             <td>
-              <a href="#" class="action-btn btn-shortlist-ina">📋 Shortlist from INA</a>
-              <a href="#" class="action-btn btn-shortlist-others">📋 Shortlist from Others</a>
-              <a href="#" class="action-btn btn-view-prospects">👀 View Prospects</a>
-              <a href="#" class="action-btn btn-view-details">👤 View Client Details</a>
+              <a href="{{ route('shortlist.ina', 30955) }}" class="action-btn btn-shortlist-ina">📋 Shortlist from INA</a>
+              <a href="{{ route('shortlist.others', 30955) }}" class="action-btn btn-shortlist-others">📋 Shortlist from Others</a>
+              <a href="{{ route('view.prospects', 30955) }}" class="action-btn btn-view-prospects">👀 View Prospects</a>
+              <a href="{{ route('client.details', 30955) }}" class="action-btn btn-view-details">👤 View Client Details</a>
             </td>
           </tr>
           <tr>
@@ -410,10 +410,10 @@
             <td><span class="date">26-Oct-2025</span></td>
             <td><span class="executive-name">shijina680</span></td>
             <td>
-              <a href="#" class="action-btn btn-shortlist-ina">📋 Shortlist from INA</a>
-              <a href="#" class="action-btn btn-shortlist-others">📋 Shortlist from Others</a>
-              <a href="#" class="action-btn btn-view-prospects">👀 View Prospects</a>
-              <a href="#" class="action-btn btn-view-details">👤 View Client Details</a>
+              <a href="{{ route('shortlist.ina', 41519) }}" class="action-btn btn-shortlist-ina">📋 Shortlist from INA</a>
+              <a href="{{ route('shortlist.others', 41519) }}" class="action-btn btn-shortlist-others">📋 Shortlist from Others</a>
+              <a href="{{ route('view.prospects', 41519) }}" class="action-btn btn-view-prospects">👀 View Prospects</a>
+              <a href="{{ route('client.details', 41519) }}" class="action-btn btn-view-details">👤 View Client Details</a>
             </td>
           </tr>
           <tr>
@@ -422,10 +422,10 @@
             <td><span class="date">11-Mar-2026</span></td>
             <td><span class="executive-name">greeshmarajegh1989</span></td>
             <td>
-              <a href="#" class="action-btn btn-shortlist-ina">📋 Shortlist from INA</a>
-              <a href="#" class="action-btn btn-shortlist-others">📋 Shortlist from Others</a>
-              <a href="#" class="action-btn btn-view-prospects">👀 View Prospects</a>
-              <a href="#" class="action-btn btn-view-details">👤 View Client Details</a>
+              <a href="{{ route('shortlist.ina', 51139) }}" class="action-btn btn-shortlist-ina">📋 Shortlist from INA</a>
+              <a href="{{ route('shortlist.others', 51139) }}" class="action-btn btn-shortlist-others">📋 Shortlist from Others</a>
+              <a href="{{ route('view.prospects', 51139) }}" class="action-btn btn-view-prospects">👀 View Prospects</a>
+              <a href="{{ route('client.details', 51139) }}" class="action-btn btn-view-details">👤 View Client Details</a>
             </td>
           </tr>
           <tr>
@@ -434,10 +434,10 @@
             <td><span class="date">21-Nov-2025</span></td>
             <td><span class="executive-name">greeshmarajegh1989</span></td>
             <td>
-              <a href="#" class="action-btn btn-shortlist-ina">📋 Shortlist from INA</a>
-              <a href="#" class="action-btn btn-shortlist-others">📋 Shortlist from Others</a>
-              <a href="#" class="action-btn btn-view-prospects">👀 View Prospects</a>
-              <a href="#" class="action-btn btn-view-details">👤 View Client Details</a>
+              <a href="{{ route('shortlist.ina', 17004) }}" class="action-btn btn-shortlist-ina">📋 Shortlist from INA</a>
+              <a href="{{ route('shortlist.others', 17004) }}" class="action-btn btn-shortlist-others">📋 Shortlist from Others</a>
+              <a href="{{ route('view.prospects', 17004) }}" class="action-btn btn-view-prospects">👀 View Prospects</a>
+              <a href="{{ route('client.details', 17004) }}" class="action-btn btn-view-details">👤 View Client Details</a>
             </td>
           </tr>
         </tbody>
@@ -466,24 +466,16 @@
       }
     });
 
-    // Action button functionality
+    // Action button functionality - removed preventDefault to allow normal navigation
     document.querySelectorAll('.action-btn').forEach(btn => {
       btn.addEventListener('click', function(e) {
-        e.preventDefault();
+        // Allow normal navigation by not preventing default
         const action = this.textContent.trim();
         const profileRow = this.closest('tr');
         const profileId = profileRow.querySelector('.profile-id').textContent;
         
-        console.log(`Action: ${action} for Profile ID: ${profileId}`);
-        
-        // Here you can add specific functionality for each action
-        if (action.includes('Shortlist')) {
-          alert(`Opening shortlist for Profile ID: ${profileId}`);
-        } else if (action.includes('View Prospects')) {
-          alert(`Viewing prospects for Profile ID: ${profileId}`);
-        } else if (action.includes('View Client Details')) {
-          alert(`Viewing client details for Profile ID: ${profileId}`);
-        }
+        console.log(`Navigating to: ${action} for Profile ID: ${profileId}`);
+        // Let the browser handle the navigation normally
       });
     });
 

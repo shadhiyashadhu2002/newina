@@ -220,4 +220,173 @@ class ServiceController extends Controller
             ], 500);
         }
     }
+
+    // Shortlist from INA
+    public function shortlistIna($serviceId)
+    {
+        $service = Service::find($serviceId);
+        
+        if (!$service) {
+            // Create a dummy service for the view if service doesn't exist
+            $service = new Service(['id' => $serviceId, 'name' => 'Service ' . $serviceId]);
+        }
+        
+        return view('profile.shortlist-ina', compact('service'));
+    }
+
+    // Shortlist from Others
+    public function shortlistOthers($serviceId)
+    {
+        $service = Service::find($serviceId);
+        
+        if (!$service) {
+            // Create a dummy service for the view if service doesn't exist
+            $service = new Service(['id' => $serviceId, 'name' => 'Service ' . $serviceId]);
+        }
+        
+        return view('profile.shortlist-others', compact('service'));
+    }
+
+    // View Prospects
+    public function viewProspects($serviceId)
+    {
+        $service = Service::find($serviceId);
+        
+        if (!$service) {
+            // Create a dummy service for the view if service doesn't exist
+            $service = new Service(['id' => $serviceId, 'name' => 'Service ' . $serviceId]);
+        }
+        
+        return view('profile.view-prospects', compact('service'));
+    }
+
+    // Client Details
+    public function clientDetails($clientId)
+    {
+        $service = Service::find($clientId);
+        
+        if (!$service) {
+            // Create a dummy service for the view if service doesn't exist
+            $service = new Service(['id' => $clientId, 'name' => 'Client ' . $clientId]);
+        }
+        
+        return view('profile.view-client-details', compact('service'));
+    }
+
+    // Search profiles (for shortlist-ina)
+    public function searchProfiles(Request $request)
+    {
+        try {
+            // Validate the search criteria
+            $request->validate([
+                'age_min' => 'nullable|integer|min:18|max:100',
+                'age_max' => 'nullable|integer|min:18|max:100',
+                'height_min' => 'nullable|integer|min:100|max:250',
+                'height_max' => 'nullable|integer|min:100|max:250',
+                'weight_min' => 'nullable|integer|min:30|max:200',
+                'weight_max' => 'nullable|integer|min:30|max:200',
+                'religion' => 'nullable|string',
+                'caste' => 'nullable|string',
+                'education' => 'nullable|string',
+                'occupation' => 'nullable|string',
+                'location' => 'nullable|string',
+                'marital_status' => 'nullable|string',
+                'registered_from' => 'nullable|date',
+                'registered_to' => 'nullable|date',
+            ]);
+
+            // Here you would implement actual search logic
+            // For now, return success message
+            
+            // Check if it's an AJAX request
+            if ($request->ajax() || $request->expectsJson()) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Search completed successfully!',
+                    'data' => [
+                        'total_profiles' => 25,
+                        'matching_profiles' => 8,
+                        'search_criteria' => $request->all()
+                    ]
+                ]);
+            }
+
+            // Regular form submission - redirect back with success
+            return redirect()->back()->with('success', 'Search completed successfully! Found 8 matching profiles out of 25 total profiles.');
+
+        } catch (\Exception $e) {
+            Log::error('Error in searchProfiles', [
+                'error' => $e->getMessage(),
+                'data' => $request->all()
+            ]);
+
+            // Check if it's an AJAX request
+            if ($request->ajax() || $request->expectsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Search failed: ' . $e->getMessage()
+                ], 500);
+            }
+
+            // Regular form submission - redirect back with error
+            return redirect()->back()->withErrors(['error' => 'Search failed: ' . $e->getMessage()])->withInput();
+        }
+    }
+
+    // Assign profile from other sources (for shortlist-others)
+    public function assignProfile(Request $request)
+    {
+        try {
+            // Validate the assignment data
+            $request->validate([
+                'profile_id' => 'required|string',
+                'other_site_member_id' => 'required|string',
+                'other_site_url' => 'nullable|url',
+                'notes' => 'nullable|string|max:500'
+            ]);
+
+            // Here you would implement actual profile assignment logic
+            // For now, return success message
+            
+            Log::info('Profile assignment requested', [
+                'profile_id' => $request->profile_id,
+                'other_site_member_id' => $request->other_site_member_id,
+                'user' => Auth::user()->first_name ?? 'Unknown'
+            ]);
+
+            // Check if it's an AJAX request
+            if ($request->ajax() || $request->expectsJson()) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Profile assigned successfully!',
+                    'data' => [
+                        'profile_id' => $request->profile_id,
+                        'other_site_member_id' => $request->other_site_member_id,
+                        'assigned_by' => Auth::user()->first_name ?? 'Unknown',
+                        'assigned_at' => now()->format('Y-m-d H:i:s')
+                    ]
+                ]);
+            }
+
+            // Regular form submission - redirect back with success
+            return redirect()->back()->with('success', 'Profile assigned successfully! Profile ID: ' . $request->profile_id . ' has been assigned from other site.');
+
+        } catch (\Exception $e) {
+            Log::error('Error in assignProfile', [
+                'error' => $e->getMessage(),
+                'data' => $request->all()
+            ]);
+
+            // Check if it's an AJAX request
+            if ($request->ajax() || $request->expectsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Assignment failed: ' . $e->getMessage()
+                ], 500);
+            }
+
+            // Regular form submission - redirect back with error
+            return redirect()->back()->withErrors(['error' => 'Assignment failed: ' . $e->getMessage()])->withInput();
+        }
+    }
 }

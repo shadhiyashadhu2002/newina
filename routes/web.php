@@ -60,6 +60,25 @@ Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard
         request()->session()->regenerateToken();
         return redirect('/login');
     })->name('logout');
+
+    // Shortlist routes
+    Route::get('/shortlist-ina/{serviceId}', [ServiceController::class, 'shortlistIna'])->name('shortlist.ina');
+    Route::get('/shortlist-others/{serviceId}', [ServiceController::class, 'shortlistOthers'])->name('shortlist.others');
+
+    // Prospects route
+    Route::get('/view-prospects/{serviceId}', [ServiceController::class, 'viewProspects'])->name('view.prospects');
+
+    // Client details route
+    Route::get('/client-details/{clientId}', [ServiceController::class, 'clientDetails'])->name('client.details');
+
+    // Active Service page route
+    Route::get('/active-service', function () {
+        return view('profile.activeservice');
+    })->name('active.service');
+
+    // Profile search and assignment routes
+    Route::post('/search-profiles', [ServiceController::class, 'searchProfiles'])->name('search.profiles');
+    Route::post('/assign-profile', [ServiceController::class, 'assignProfile'])->name('assign.profile');
 });
 
 // Home route - redirect based on user type
@@ -129,7 +148,3 @@ Route::get('/new-service', function () {
 
 // Store new service (AJAX)
 Route::post('/new-service', [ServiceController::class, 'store'])->name('new.service.store');
-// Active Service page route
-Route::get('/active-service', function () {
-    return view('profile.activeservice');
-})->name('active.service');

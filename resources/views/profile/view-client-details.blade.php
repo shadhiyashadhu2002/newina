@@ -14,7 +14,7 @@
 
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background: linear-gradient(135deg, #ac0742 0%, #9d1955 100%);
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: #333;
             min-height: 100vh;
             padding: 20px;
@@ -51,7 +51,7 @@
         .page-title {
             font-size: 36px;
             font-weight: 700;
-            background: linear-gradient(135deg, #ac0742, #9d1955);
+            background: linear-gradient(135deg, #4a69bd, #5a4fcf);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             background-clip: text;
@@ -66,13 +66,9 @@
 
         .details-grid {
             display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            grid-template-rows: repeat(2, 1fr);
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
             gap: 20px;
             margin-bottom: 30px;
-            max-width: 1000px;
-            margin-left: auto;
-            margin-right: auto;
         }
 
         .detail-card {
@@ -83,9 +79,6 @@
             backdrop-filter: blur(10px);
             border: 1px solid rgba(255, 255, 255, 0.3);
             transition: all 0.3s ease;
-            min-height: 400px;
-            display: flex;
-            flex-direction: column;
         }
 
         .detail-card:hover {
@@ -99,12 +92,6 @@
             margin-bottom: 20px;
             padding-bottom: 15px;
             border-bottom: 2px solid #f0f0f0;
-            flex-shrink: 0;
-        }
-
-        .card-content {
-            flex: 1;
-            overflow-y: auto;
         }
 
         .card-icon {
@@ -215,7 +202,6 @@
         @media (max-width: 768px) {
             .details-grid {
                 grid-template-columns: 1fr;
-                grid-template-rows: auto;
             }
             
             .page-title {
@@ -230,18 +216,6 @@
             
             .detail-value {
                 text-align: left;
-            }
-        }
-
-        @media (max-width: 1024px) and (min-width: 769px) {
-            .details-grid {
-                grid-template-columns: repeat(2, 1fr);
-                grid-template-rows: auto;
-                max-width: 800px;
-            }
-            
-            .detail-card {
-                min-height: 350px;
             }
         }
     </style>
@@ -260,35 +234,33 @@
                     <span class="card-icon">⚙️</span>
                     <h3 class="card-title">Service Details</h3>
                 </div>
-                <div class="card-content">
-                    <div class="detail-item">
-                        <span class="detail-label">Profile ID:</span>
-                        <span class="detail-value">38584</span>
-                    </div>
-                    <div class="detail-item">
-                        <span class="detail-label">Service Name:</span>
-                        <span class="detail-value">Elite</span>
-                    </div>
-                    <div class="detail-item">
-                        <span class="detail-label">Price:</span>
-                        <span class="detail-value">50000.00</span>
-                    </div>
-                    <div class="detail-item">
-                        <span class="detail-label">Success Fee:</span>
-                        <span class="detail-value">0.00</span>
-                    </div>
-                    <div class="detail-item">
-                        <span class="detail-label">Start Date:</span>
-                        <span class="detail-value">03-10-2025</span>
-                    </div>
-                    <div class="detail-item">
-                        <span class="detail-label">Expiry Date:</span>
-                        <span class="detail-value">03-10-2026</span>
-                    </div>
-                    <div class="detail-item">
-                        <span class="detail-label">Description:</span>
-                        <span class="detail-value">Royal service 7 months</span>
-                    </div>
+                <div class="detail-item">
+                    <span class="detail-label">Profile ID:</span>
+                    <span class="detail-value">38584</span>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">Service Name:</span>
+                    <span class="detail-value">Elite</span>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">Price:</span>
+                    <span class="detail-value">50000.00</span>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">Success Fee:</span>
+                    <span class="detail-value">0.00</span>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">Start Date:</span>
+                    <span class="detail-value">03-10-2025</span>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">Expiry Date:</span>
+                    <span class="detail-value">03-10-2026</span>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">Description:</span>
+                    <span class="detail-value">Royal service 7 months</span>
                 </div>
             </div>
 
@@ -298,55 +270,53 @@
                     <span class="card-icon">👤</span>
                     <h3 class="card-title">Member Info</h3>
                 </div>
-                <div class="card-content">
-                    <div class="detail-item">
-                        <span class="detail-label">Name:</span>
-                        <span class="detail-value">Musthafiz</span>
-                    </div>
-                    <div class="detail-item">
-                        <span class="detail-label">Age:</span>
-                        <span class="detail-value">30</span>
-                    </div>
-                    <div class="detail-item">
-                        <span class="detail-label">Education:</span>
-                        <span class="detail-value">B TECH</span>
-                    </div>
-                    <div class="detail-item">
-                        <span class="detail-label">Occupation:</span>
-                        <span class="detail-value">BUSINESS</span>
-                    </div>
-                    <div class="detail-item">
-                        <span class="detail-label">Annual Income:</span>
-                        <span class="detail-value">200000</span>
-                    </div>
-                    <div class="detail-item">
-                        <span class="detail-label">Marital Status:</span>
-                        <span class="detail-value">Never Married</span>
-                    </div>
-                    <div class="detail-item">
-                        <span class="detail-label">Family Status:</span>
-                        <span class="detail-value">Wealthy</span>
-                    </div>
-                    <div class="detail-item">
-                        <span class="detail-label">Father Details:</span>
-                        <span class="detail-value">Owner afkunjini</span>
-                    </div>
-                    <div class="detail-item">
-                        <span class="detail-label">Mother Details:</span>
-                        <span class="detail-value">suj</span>
-                    </div>
-                    <div class="detail-item">
-                        <span class="detail-label">Sibling Details:</span>
-                        <span class="detail-value">Or mouhukihean</span>
-                    </div>
-                    <div class="detail-item">
-                        <span class="detail-label">Caste:</span>
-                        <span class="detail-value">Anquellen</span>
-                    </div>
-                    <div class="detail-item">
-                        <span class="detail-label">Subcaste:</span>
-                        <span class="detail-value">muslim</span>
-                    </div>
+                <div class="detail-item">
+                    <span class="detail-label">Name:</span>
+                    <span class="detail-value">Musthafiz</span>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">Age:</span>
+                    <span class="detail-value">30</span>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">Education:</span>
+                    <span class="detail-value">B TECH</span>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">Occupation:</span>
+                    <span class="detail-value">BUSINESS</span>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">Annual Income:</span>
+                    <span class="detail-value">200000</span>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">Marital Status:</span>
+                    <span class="detail-value">Never Married</span>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">Family Status:</span>
+                    <span class="detail-value">Wealthy</span>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">Father Details:</span>
+                    <span class="detail-value">Owner afkunjini</span>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">Mother Details:</span>
+                    <span class="detail-value">suj</span>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">Sibling Details:</span>
+                    <span class="detail-value">Or mouhukihean</span>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">Caste:</span>
+                    <span class="detail-value">Anquellen</span>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">Subcaste:</span>
+                    <span class="detail-value">muslim</span>
                 </div>
             </div>
 
@@ -356,55 +326,53 @@
                     <span class="card-icon">💕</span>
                     <h3 class="card-title">Partner Preference</h3>
                 </div>
-                <div class="card-content">
-                    <div class="detail-item">
-                        <span class="detail-label">Preferred Age:</span>
-                        <span class="detail-value">22 - 27</span>
-                    </div>
-                    <div class="detail-item">
-                        <span class="detail-label">Preferred Height:</span>
-                        <span class="detail-value">160 - 168</span>
-                    </div>
-                    <div class="detail-item">
-                        <span class="detail-label">Preferred Weight:</span>
-                        <span class="detail-value">50 - 65</span>
-                    </div>
-                    <div class="detail-item">
-                        <span class="detail-label">Preferred Education:</span>
-                        <span class="detail-value">ANY</span>
-                    </div>
-                    <div class="detail-item">
-                        <span class="detail-label">Preferred Religion:</span>
-                        <span class="detail-value">Islam</span>
-                    </div>
-                    <div class="detail-item">
-                        <span class="detail-label">Preferred Caste:</span>
-                        <span class="detail-value">ANY</span>
-                    </div>
-                    <div class="detail-item">
-                        <span class="detail-label">Preferred Sub Caste:</span>
-                        <span class="detail-value">ANY</span>
-                    </div>
-                    <div class="detail-item">
-                        <span class="detail-label">Preferred Marital Status:</span>
-                        <span class="detail-value">Never Married</span>
-                    </div>
-                    <div class="detail-item">
-                        <span class="detail-label">Preferred Annual Income:</span>
-                        <span class="detail-value">0</span>
-                    </div>
-                    <div class="detail-item">
-                        <span class="detail-label">Preferred Occupation:</span>
-                        <span class="detail-value">ANY</span>
-                    </div>
-                    <div class="detail-item">
-                        <span class="detail-label">Preferred Family Status:</span>
-                        <span class="detail-value">Wealthy</span>
-                    </div>
-                    <div class="detail-item">
-                        <span class="detail-label">Preferred Eating Habits:</span>
-                        <span class="detail-value">ALL</span>
-                    </div>
+                <div class="detail-item">
+                    <span class="detail-label">Preferred Age:</span>
+                    <span class="detail-value">22 - 27</span>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">Preferred Height:</span>
+                    <span class="detail-value">160 - 168</span>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">Preferred Weight:</span>
+                    <span class="detail-value">50 - 65</span>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">Preferred Education:</span>
+                    <span class="detail-value">ANY</span>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">Preferred Religion:</span>
+                    <span class="detail-value">Islam</span>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">Preferred Caste:</span>
+                    <span class="detail-value">ANY</span>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">Preferred Sub Caste:</span>
+                    <span class="detail-value">ANY</span>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">Preferred Marital Status:</span>
+                    <span class="detail-value">Never Married</span>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">Preferred Annual Income:</span>
+                    <span class="detail-value">0</span>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">Preferred Occupation:</span>
+                    <span class="detail-value">ANY</span>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">Preferred Family Status:</span>
+                    <span class="detail-value">Wealthy</span>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">Preferred Eating Habits:</span>
+                    <span class="detail-value">ALL</span>
                 </div>
             </div>
 
@@ -414,31 +382,29 @@
                     <span class="card-icon">📞</span>
                     <h3 class="card-title">Contact Details</h3>
                 </div>
-                <div class="card-content">
-                    <div class="detail-item">
-                        <span class="detail-label">Customer Name:</span>
-                        <span class="detail-value">Musthafiz</span>
-                    </div>
-                    <div class="detail-item">
-                        <span class="detail-label">Mobile No:</span>
-                        <span class="detail-value">+971506668472</span>
-                    </div>
-                    <div class="detail-item">
-                        <span class="detail-label">WhatsApp No:</span>
-                        <span class="detail-value">+971506668472</span>
-                    </div>
-                    <div class="detail-item">
-                        <span class="detail-label">Email:</span>
-                        <span class="detail-value">preshmaragen@gmail.com</span>
-                    </div>
-                    <div class="detail-item">
-                        <span class="detail-label">Alternate Contact:</span>
-                        <span class="detail-value">+971535151021</span>
-                    </div>
-                    <div class="detail-item">
-                        <span class="detail-label">Client:</span>
-                        <span class="detail-value">Father</span>
-                    </div>
+                <div class="detail-item">
+                    <span class="detail-label">Customer Name:</span>
+                    <span class="detail-value">Musthafiz</span>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">Mobile No:</span>
+                    <span class="detail-value">+971506668472</span>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">WhatsApp No:</span>
+                    <span class="detail-value">+971506668472</span>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">Email:</span>
+                    <span class="detail-value">preshmaragen@gmail.com</span>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">Alternate Contact:</span>
+                    <span class="detail-value">+971535151021</span>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">Client:</span>
+                    <span class="detail-value">Father</span>
                 </div>
             </div>
         </div>
