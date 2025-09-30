@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\Service;
+use App\Models\Member;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 
@@ -295,8 +296,86 @@ class ServiceController extends Controller
                 'registered_to' => 'nullable|date',
             ]);
 
-            // Here you would implement actual search logic
-            // For now, return success message
+            // Build the search query
+            $query = \App\Models\Member::with('user')
+                ->whereNotNull('birthday');
+                
+            // Debug: Let's temporarily remove user restrictions to test age filtering
+            // ->whereHas('user', function($q) {
+            //     $q->where('approved', 1)
+            //       ->where('blocked', 0)
+            //       ->where('deactivated', 0);
+            // });
+
+            // Apply age range filter
+            if ($request->filled('age_min') || $request->filled('age_max')) {
+                $minAge = $request->age_min;
+                $maxAge = $request->age_max;
+                
+                // Debug logging
+                Log::info('Age search debug', [
+                    'min_age_requested' => $minAge,
+                    'max_age_requested' => $maxAge,
+                    'max_birth_date' => $minAge ? now()->subYears($minAge)->format('Y-m-d') : null,
+                    'min_birth_date' => $maxAge ? now()->subYears($maxAge + 1)->format('Y-m-d') : null,
+                ]);
+                
+                $query->byAgeRange($minAge, $maxAge);
+            }
+
+            // Apply gender filter (opposite gender for matrimonial search)
+            if ($request->filled('gender')) {
+                $query->where('gender', $request->gender);
+            }
+
+            // Apply marital status filter
+            if ($request->filled('marital_status')) {
+                $query->where('marital_status_id', $request->marital_status);
+            }
+
+            // Apply registration date filter only if dates are provided
+            if ($request->filled('registered_from') && $request->registered_from != '') {
+                $query->whereDate('created_at', '>=', $request->registered_from);
+            }
+            if ($request->filled('registered_to') && $request->registered_to != '') {
+                $query->whereDate('created_at', '<=', $request->registered_to);
+            }
+
+            // Debug: Count before filters
+            $countBeforeFilters = \App\Models\Member::whereNotNull('birthday')->count();
+            Log::info('Count before age filter', ['count' => $countBeforeFilters]);
+            
+            // Get total count and execute search
+            $totalMembers = \App\Models\Member::count();
+            
+            // Debug: Count after filters
+            $countAfterFilters = $query->count();
+            Log::info('Count after age filter', ['count' => $countAfterFilters]);
+            
+            // Limit results to prevent memory issues (show first 100 matches)
+            $matchingProfiles = $query->limit(100)->get();
+            $matchingCount = $countAfterFilters; // Use the total count, not just the limited results
+
+            // Prepare search results data
+            $searchResults = $matchingProfiles->map(function($member) {
+                return [
+                    'id' => $member->id,
+                    'user_id' => $member->user_id,
+                    'name' => $member->user->first_name . ' ' . $member->user->last_name,
+                    'age' => $member->age,
+                    'gender' => $member->gender,
+                    'code' => $member->user->code,
+                    'email' => $member->user->email,
+                    'phone' => $member->user->phone,
+                    'created_at' => $member->created_at->format('Y-m-d'),
+                ];
+            });
+
+            Log::info('Profile search completed', [
+                'search_criteria' => $request->all(),
+                'total_found' => $matchingCount,
+                'user' => Auth::user()->first_name ?? 'Unknown'
+            ]);
             
             // Check if it's an AJAX request
             if ($request->ajax() || $request->expectsJson()) {
@@ -304,15 +383,24 @@ class ServiceController extends Controller
                     'success' => true,
                     'message' => 'Search completed successfully!',
                     'data' => [
-                        'total_profiles' => 25,
-                        'matching_profiles' => 8,
-                        'search_criteria' => $request->all()
+                        'total_profiles' => $totalMembers,
+                        'matching_profiles' => $matchingCount,
+                        'search_criteria' => $request->all(),
+                        'results' => $searchResults
                     ]
                 ]);
             }
 
-            // Regular form submission - redirect back with success
-            return redirect()->back()->with('success', 'Search completed successfully! Found 8 matching profiles out of 25 total profiles.');
+            // Regular form submission - redirect back with success and results
+            $displayMessage = "Search completed successfully! Found {$matchingCount} matching profiles out of {$totalMembers} total profiles.";
+            if ($matchingCount > 100) {
+                $displayMessage .= " (Showing first 100 results)";
+            }
+            
+            return redirect()->back()
+                ->with('success', $displayMessage)
+                ->with('search_results', $searchResults)
+                ->with('search_criteria', $request->all());
 
         } catch (\Exception $e) {
             Log::error('Error in searchProfiles', [

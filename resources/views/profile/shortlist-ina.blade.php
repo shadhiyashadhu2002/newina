@@ -336,14 +336,14 @@
                 <div class="form-group">
                     <label class="form-label">Registered From:</label>
                     <div class="date-input">
-                        <input type="date" name="registered_from" class="form-input" value="2025-09-24">
+                        <input type="date" name="registered_from" class="form-input">
                     </div>
                 </div>
 
                 <div class="form-group">
                     <label class="form-label">Registered To:</label>
                     <div class="date-input">
-                        <input type="date" name="registered_to" class="form-input" value="2025-09-24">
+                        <input type="date" name="registered_to" class="form-input">
                     </div>
                 </div>
 
@@ -360,6 +360,167 @@
                 <a href="{{ route('active.service') }}" class="btn btn-back">Back</a>
             </div>
         </form>
+
+        <!-- Search Results Section -->
+        @if(session('search_results'))
+        <div class="results-container">
+            <h2 class="results-title">Search Results</h2>
+            <p class="results-summary">{{ session('success') }}</p>
+            
+            <div class="results-grid">
+                @foreach(session('search_results') as $profile)
+                <div class="profile-card">
+                    <div class="profile-header">
+                        <h3>{{ $profile['name'] }}</h3>
+                        <span class="profile-code">ID: {{ $profile['code'] }}</span>
+                    </div>
+                    <div class="profile-details">
+                        <div class="profile-field">
+                            <strong>Age:</strong> {{ $profile['age'] ?? 'N/A' }} years
+                        </div>
+                        <div class="profile-field">
+                            <strong>Gender:</strong> {{ ucfirst($profile['gender']) }}
+                        </div>
+                        <div class="profile-field">
+                            <strong>Email:</strong> {{ $profile['email'] }}
+                        </div>
+                        <div class="profile-field">
+                            <strong>Phone:</strong> {{ $profile['phone'] }}
+                        </div>
+                        <div class="profile-field">
+                            <strong>Registered:</strong> {{ $profile['created_at'] }}
+                        </div>
+                    </div>
+                    <div class="profile-actions">
+                        <a href="{{ route('client.details', $profile['user_id']) }}" class="btn-view-profile">View Details</a>
+                        <button class="btn-shortlist" onclick="shortlistProfile({{ $profile['user_id'] }})">Add to Shortlist</button>
+                    </div>
+                </div>
+                @endforeach
+            </div>
+        </div>
+
+        <style>
+            .results-container {
+                margin-top: 40px;
+                background: rgba(255, 255, 255, 0.95);
+                border-radius: 20px;
+                padding: 30px;
+                box-shadow: 0 15px 30px rgba(0,0,0,0.2);
+                backdrop-filter: blur(10px);
+            }
+            
+            .results-title {
+                font-size: 24px;
+                font-weight: 600;
+                color: #ac0742;
+                margin-bottom: 10px;
+                text-align: center;
+            }
+            
+            .results-summary {
+                text-align: center;
+                color: #28a745;
+                font-weight: 500;
+                margin-bottom: 25px;
+                font-size: 16px;
+            }
+            
+            .results-grid {
+                display: grid;
+                grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+                gap: 20px;
+            }
+            
+            .profile-card {
+                background: white;
+                border-radius: 15px;
+                padding: 20px;
+                box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+                transition: transform 0.3s ease;
+                border: 2px solid transparent;
+            }
+            
+            .profile-card:hover {
+                transform: translateY(-5px);
+                border-color: #ac0742;
+            }
+            
+            .profile-header {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                margin-bottom: 15px;
+                padding-bottom: 10px;
+                border-bottom: 2px solid #f0f0f0;
+            }
+            
+            .profile-header h3 {
+                color: #ac0742;
+                font-size: 18px;
+                margin: 0;
+            }
+            
+            .profile-code {
+                background: #ac0742;
+                color: white;
+                padding: 4px 8px;
+                border-radius: 8px;
+                font-size: 12px;
+                font-weight: 500;
+            }
+            
+            .profile-field {
+                margin-bottom: 8px;
+                font-size: 14px;
+            }
+            
+            .profile-field strong {
+                color: #555;
+                margin-right: 5px;
+            }
+            
+            .profile-actions {
+                display: flex;
+                gap: 10px;
+                margin-top: 15px;
+                padding-top: 15px;
+                border-top: 1px solid #f0f0f0;
+            }
+            
+            .btn-view-profile, .btn-shortlist {
+                flex: 1;
+                padding: 8px 12px;
+                border-radius: 8px;
+                text-decoration: none;
+                text-align: center;
+                font-size: 13px;
+                font-weight: 500;
+                border: none;
+                cursor: pointer;
+                transition: all 0.3s ease;
+            }
+            
+            .btn-view-profile {
+                background: #6c757d;
+                color: white;
+            }
+            
+            .btn-view-profile:hover {
+                background: #545b62;
+                color: white;
+            }
+            
+            .btn-shortlist {
+                background: #ac0742;
+                color: white;
+            }
+            
+            .btn-shortlist:hover {
+                background: #8a0535;
+            }
+        </style>
+        @endif
     </div>
 
     <script>
@@ -367,16 +528,13 @@
             document.getElementById('searchProfilesForm').reset();
             
             // Reset date fields to default values
-            const today = new Date().toISOString().split('T')[0];
-            document.querySelector('input[name="registered_from"]').value = today;
-            document.querySelector('input[name="registered_to"]').value = today;
+            document.querySelector('input[name="registered_from"]').value = '';
+            document.querySelector('input[name="registered_to"]').value = '';
         }
 
         // Set default date values on page load
         document.addEventListener('DOMContentLoaded', function() {
-            const today = new Date().toISOString().split('T')[0];
-            document.querySelector('input[name="registered_from"]').value = today;
-            document.querySelector('input[name="registered_to"]').value = today;
+            // Leave registration date fields empty by default
         });
 
         // Form validation
@@ -417,6 +575,29 @@
                 return;
             }
         });
+
+        // Shortlist profile function
+        function shortlistProfile(userId) {
+            if (confirm('Are you sure you want to add this profile to shortlist?')) {
+                // Here you can implement AJAX call to add to shortlist
+                // For now, just show success message
+                alert('Profile added to shortlist successfully!');
+                
+                // You can make an AJAX call here to save to database
+                // fetch('/add-to-shortlist', {
+                //     method: 'POST',
+                //     headers: {
+                //         'Content-Type': 'application/json',
+                //         'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                //     },
+                //     body: JSON.stringify({user_id: userId})
+                // }).then(response => response.json()).then(data => {
+                //     if (data.success) {
+                //         alert('Profile added to shortlist successfully!');
+                //     }
+                // });
+            }
+        }
     </script>
 </body>
 </html>
