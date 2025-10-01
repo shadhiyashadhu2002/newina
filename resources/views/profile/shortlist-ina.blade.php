@@ -379,16 +379,25 @@
                             <strong>Age:</strong> {{ $profile['age'] ?? 'N/A' }} years
                         </div>
                         <div class="profile-field">
-                            <strong>Gender:</strong> {{ ucfirst($profile['gender']) }}
+                            <strong>Height:</strong> {{ $profile['height'] ?? 'Not specified' }}
                         </div>
                         <div class="profile-field">
-                            <strong>Email:</strong> {{ $profile['email'] }}
+                            <strong>Weight:</strong> {{ $profile['weight'] ?? 'Not specified' }}
                         </div>
                         <div class="profile-field">
-                            <strong>Phone:</strong> {{ $profile['phone'] }}
+                            <strong>Religion:</strong> {{ $profile['religion'] ?? 'Not specified' }}
                         </div>
                         <div class="profile-field">
-                            <strong>Registered:</strong> {{ $profile['created_at'] }}
+                            <strong>Caste:</strong> {{ $profile['caste'] ?? 'Not specified' }}
+                        </div>
+                        <div class="profile-field">
+                            <strong>Marital Status:</strong> {{ $profile['marital_status'] ?? 'Not specified' }}
+                        </div>
+                        <div class="profile-field">
+                            <strong>Career:</strong> {{ $profile['career'] ?? 'Not specified' }}
+                        </div>
+                        <div class="profile-field">
+                            <strong>Location:</strong> {{ $profile['location'] ?? 'Not specified' }}
                         </div>
                     </div>
                     <div class="profile-actions">

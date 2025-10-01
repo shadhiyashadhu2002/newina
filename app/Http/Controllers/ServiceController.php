@@ -296,9 +296,15 @@ class ServiceController extends Controller
                 'registered_to' => 'nullable|date',
             ]);
 
-            // Build the search query
-            $query = \App\Models\Member::with('user')
-                ->whereNotNull('birthday');
+            // Build the search query with all related data
+            $query = \App\Models\Member::with([
+                'user',
+                'user.physicalAttribute',
+                'user.spiritualBackground.religion',
+                'user.spiritualBackground.caste', 
+                'user.career',
+                'maritalStatus'
+            ])->whereNotNull('birthday');
                 
             // Debug: Let's temporarily remove user restrictions to test age filtering
             // ->whereHas('user', function($q) {
@@ -356,19 +362,64 @@ class ServiceController extends Controller
             $matchingProfiles = $query->limit(100)->get();
             $matchingCount = $countAfterFilters; // Use the total count, not just the limited results
 
-            // Prepare search results data
+            // Prepare search results data with detailed profile information
             $searchResults = $matchingProfiles->map(function($member) {
-                return [
-                    'id' => $member->id,
-                    'user_id' => $member->user_id,
-                    'name' => $member->user->first_name . ' ' . $member->user->last_name,
-                    'age' => $member->age,
-                    'gender' => $member->gender,
-                    'code' => $member->user->code,
-                    'email' => $member->user->email,
-                    'phone' => $member->user->phone,
-                    'created_at' => $member->created_at->format('Y-m-d'),
-                ];
+                try {
+                    $physicalAttr = $member->user->physicalAttribute ?? null;
+                    $spiritualBg = $member->user->spiritualBackground ?? null;
+                    $career = $member->user->career ?? null;
+                    
+                    return [
+                        'id' => $member->id,
+                        'user_id' => $member->user_id,
+                        'name' => $member->user->first_name . ' ' . $member->user->last_name,
+                        'age' => $member->age,
+                        'gender' => $member->gender,
+                        'code' => $member->user->code,
+                        'email' => $member->user->email,
+                        'phone' => $member->user->phone,
+                        'created_at' => $member->created_at->format('Y-m-d'),
+                        
+                        // Physical attributes
+                        'height' => $physicalAttr ? $physicalAttr->height : 'Not specified',
+                        'weight' => $physicalAttr ? $physicalAttr->weight : 'Not specified',
+                        
+                        // Spiritual background
+                        'religion' => $spiritualBg && $spiritualBg->religion ? $spiritualBg->religion->name : 'Not specified',
+                        'caste' => $spiritualBg && $spiritualBg->caste ? $spiritualBg->caste->name : 'Not specified',
+                        
+                        // Marital status
+                        'marital_status' => $member->maritalStatus ? $member->maritalStatus->name : 'Not specified',
+                        
+                        // Career information
+                        'designation' => $career && $career->designation ? $career->designation : 'Not specified',
+                        'company' => $career && $career->company ? $career->company : 'Not specified',
+                        'career' => $career ? trim(($career->designation ?? '') . ' ' . ($career->company ? 'at ' . $career->company : '')) : 'Not specified',
+                        
+                        // Location (assuming it's in user table, adjust if needed)
+                        'location' => $member->user->district ?? $member->user->city ?? 'Not specified',
+                    ];
+                } catch (\Exception $e) {
+                    // Fallback if relationships don't exist
+                    return [
+                        'id' => $member->id,
+                        'user_id' => $member->user_id,
+                        'name' => $member->user->first_name . ' ' . $member->user->last_name,
+                        'age' => $member->age,
+                        'gender' => $member->gender,
+                        'code' => $member->user->code,
+                        'email' => $member->user->email,
+                        'phone' => $member->user->phone,
+                        'created_at' => $member->created_at->format('Y-m-d'),
+                        'height' => 'Not available',
+                        'weight' => 'Not available',
+                        'religion' => 'Not available',
+                        'caste' => 'Not available',
+                        'marital_status' => 'Not available',
+                        'career' => 'Not available',
+                        'location' => 'Not available',
+                    ];
+                }
             });
 
             Log::info('Profile search completed', [

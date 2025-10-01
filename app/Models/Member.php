@@ -50,6 +50,11 @@ class Member extends Model
         return $this->belongsTo(User::class, 'user_id', 'id');
     }
 
+    public function maritalStatus()
+    {
+        return $this->belongsTo(MaritalStatus::class, 'marital_status_id');
+    }
+
     // Calculate age from birthday
     public function getAgeAttribute()
     {

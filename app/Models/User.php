@@ -52,5 +52,26 @@ class User extends Authenticatable
             'password' => 'hashed',
         ];
     }
+
+    // Relationships
+    public function member()
+    {
+        return $this->hasOne(Member::class);
+    }
+
+    public function physicalAttribute()
+    {
+        return $this->hasOne(PhysicalAttribute::class);
+    }
+
+    public function spiritualBackground()
+    {
+        return $this->hasOne(SpiritualBackground::class);
+    }
+
+    public function career()
+    {
+        return $this->hasOne(Career::class);
+    }
     
 }
