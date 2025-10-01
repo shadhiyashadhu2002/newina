@@ -371,8 +371,19 @@
                 @foreach(session('search_results') as $profile)
                 <div class="profile-card">
                     <div class="profile-header">
-                        <h3>{{ $profile['name'] }}</h3>
-                        <span class="profile-code">ID: {{ $profile['code'] }}</span>
+                        <div class="header-left">
+                            <h3>{{ $profile['name'] }}</h3>
+                            <span class="profile-code">ID: {{ $profile['code'] }}</span>
+                        </div>
+                        <div class="profile-photo-container">
+                            @if(isset($profile['has_photo']) && $profile['has_photo'] && $profile['photo_url'])
+                                <img src="{{ $profile['photo_url'] }}" alt="{{ $profile['name'] }}'s photo" class="profile-photo-small">
+                            @else
+                                <div class="no-photo-small">
+                                    <i class="fas fa-user"></i>
+                                </div>
+                            @endif
+                        </div>
                     </div>
                     <div class="profile-details">
                         <div class="profile-field">
@@ -462,6 +473,40 @@
                 margin-bottom: 15px;
                 padding-bottom: 10px;
                 border-bottom: 2px solid #f0f0f0;
+            }
+            
+            .header-left {
+                flex: 1;
+            }
+            
+            .profile-photo-container {
+                flex-shrink: 0;
+                margin-left: 15px;
+            }
+            
+            .profile-photo-small {
+                width: 60px;
+                height: 60px;
+                border-radius: 50%;
+                object-fit: cover;
+                border: 2px solid #ac0742;
+                box-shadow: 0 2px 8px rgba(172, 7, 66, 0.3);
+            }
+            
+            .no-photo-small {
+                width: 60px;
+                height: 60px;
+                border-radius: 50%;
+                background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                border: 2px solid #dee2e6;
+                color: #6c757d;
+            }
+            
+            .no-photo-small i {
+                font-size: 20px;
             }
             
             .profile-header h3 {

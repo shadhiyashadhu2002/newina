@@ -303,6 +303,7 @@ class ServiceController extends Controller
                 'user.spiritualBackground.religion',
                 'user.spiritualBackground.caste', 
                 'user.career',
+                'user.profilePhoto',
                 'maritalStatus'
             ])->whereNotNull('birthday');
                 
@@ -368,6 +369,9 @@ class ServiceController extends Controller
                     $physicalAttr = $member->user->physicalAttribute ?? null;
                     $spiritualBg = $member->user->spiritualBackground ?? null;
                     $career = $member->user->career ?? null;
+                    $profilePhoto = $member->user->profilePhoto ?? null;
+                    
+
                     
                     return [
                         'id' => $member->id,
@@ -398,6 +402,11 @@ class ServiceController extends Controller
                         
                         // Location (assuming it's in user table, adjust if needed)
                         'location' => $member->user->district ?? $member->user->city ?? 'Not specified',
+                        
+                        // Profile image - try multiple possible paths
+                        'photo_url' => $member->user->photo ? $this->getPhotoUrl($member->user->photo) : null,
+                        'has_photo' => $member->user->photo ? true : false,
+
                     ];
                 } catch (\Exception $e) {
                     // Fallback if relationships don't exist
@@ -418,6 +427,9 @@ class ServiceController extends Controller
                         'marital_status' => 'Not available',
                         'career' => 'Not available',
                         'location' => 'Not available',
+                        'photo_url' => null,
+                        'has_photo' => false,
+
                     ];
                 }
             });
@@ -473,6 +485,27 @@ class ServiceController extends Controller
     }
 
     // Assign profile from other sources (for shortlist-others)
+    // Helper method to get photo URL from uploads table
+    private function getPhotoUrl($photoId)
+    {
+        if (!$photoId) return null;
+        
+        try {
+            $upload = \App\Models\Upload::find($photoId);
+            if ($upload && $upload->file_name) {
+                // Check if file exists
+                $filePath = public_path($upload->file_name);
+                if (file_exists($filePath)) {
+                    return asset($upload->file_name);
+                }
+            }
+        } catch (\Exception $e) {
+            Log::error('Error getting photo URL for ID ' . $photoId, ['error' => $e->getMessage()]);
+        }
+        
+        return null;
+    }
+
     public function assignProfile(Request $request)
     {
         try {

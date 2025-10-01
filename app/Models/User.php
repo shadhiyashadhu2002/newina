@@ -73,5 +73,10 @@ class User extends Authenticatable
     {
         return $this->hasOne(Career::class);
     }
+
+    public function profilePhoto()
+    {
+        return $this->belongsTo(Upload::class, 'photo', 'id');
+    }
     
 }
