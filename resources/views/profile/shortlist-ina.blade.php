@@ -14,7 +14,7 @@
 
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #ac0742 0%, #d63384 100%);
             color: #333;
             min-height: 100vh;
             display: flex;
@@ -377,6 +377,8 @@
                 <button type="button" class="btn btn-clear" onclick="clearForm()">Clear</button>
                 <a href="{{ route('active.service') }}" class="btn btn-back">Back</a>
             </div>
+
+
         </form>
 
         <!-- Search Results Section -->
@@ -723,49 +725,141 @@
             if (photoContainer) {
                 const img = photoContainer.querySelector('img');
                 if (img) {
-                    photoHtml = `<img src="${img.src}" alt="${name}'s photo" style="width: 150px; height: 150px; border-radius: 15px; object-fit: cover; border: 3px solid #ac0742;">`;
+                    photoHtml = `<img src="${img.src}" alt="${name}'s photo" style="width: 300px; height: 300px; border-radius: 20px; object-fit: cover; border: 4px solid #ac0742; box-shadow: 0 8px 30px rgba(172, 7, 66, 0.3); display: block; margin: 0 auto;">`;
                 } else {
-                    photoHtml = `<div style="width: 150px; height: 150px; border-radius: 15px; background: #f8f9fa; display: flex; align-items: center; justify-content: center; border: 3px solid #dee2e6; color: #6c757d;"><span>No Photo Available</span></div>`;
+                    photoHtml = `<div style="width: 300px; height: 300px; border-radius: 20px; background: linear-gradient(135deg, #f8f9fa, #e9ecef); display: flex; flex-direction: column; align-items: center; justify-content: center; border: 4px solid #dee2e6; margin: 0 auto; box-shadow: 0 8px 30px rgba(0, 0, 0, 0.1); color: #6c757d;"><i style="font-size: 80px; margin-bottom: 20px;">👤</i><span style="font-size: 18px; font-weight: 500;">No Photo Available</span></div>`;
                 }
             }
             
             // Create the print content
+           // Create the print content
             const printContent = `
                 <!DOCTYPE html>
                 <html>
                 <head>
-                    <title>Profile - ${name} (${code})</title>
+                    <title></title>
                     <style>
-                        body { font-family: Arial, sans-serif; padding: 20px; }
-                        .print-header { text-align: center; margin-bottom: 30px; border-bottom: 2px solid #ac0742; padding-bottom: 15px; }
-                        .print-header h1 { color: #ac0742; margin: 0; }
-                        .print-header p { margin: 5px 0; color: #666; }
-                        .print-content { display: flex; gap: 30px; align-items: flex-start; }
-                        .print-details { flex: 1; }
-                        .print-photo { flex-shrink: 0; }
-                        .profile-field { margin-bottom: 10px; font-size: 14px; }
-                        .profile-field strong { color: #333; margin-right: 10px; }
-                        @media print { body { margin: 0; } }
+                        @page {
+                            size: A4;
+                            margin: 10mm;
+                        }
+                        html {
+                            margin: 0;
+                            padding: 0;
+                        }
+                        body { 
+                            font-family: Arial, sans-serif; 
+                            padding: 15px; 
+                            max-width: 100%; 
+                            margin: 0 auto; 
+                            background: white;
+                            border: 1px solid #ddd;
+                            box-sizing: border-box;
+                            overflow: hidden;
+                        }
+                        @media print {
+                            @page {
+                                margin: 0;
+                            }
+                            html, body {
+                                margin: 0 !important;
+                                padding: 0 !important;
+                                height: auto !important;
+                                overflow: visible !important;
+                            }
+                            body {
+                                padding: 15px !important;
+                                margin: 10mm !important;
+                                page-break-after: avoid;
+                                page-break-inside: avoid;
+                            }
+                        }
+                        .print-header { 
+                            text-align: center; 
+                            margin-bottom: 15px; 
+                            border-bottom: 3px solid #ac0742; 
+                            padding-bottom: 12px; 
+                        }
+                        .print-header h1 { 
+                            color: #ac0742; 
+                            margin: 0; 
+                            font-size: 24px; 
+                            font-weight: bold;
+                        }
+                        .print-header p { 
+                            margin: 6px 0; 
+                            color: #666; 
+                            font-size: 14px;
+                        }
+                        .print-photo-container {
+                            text-align: center;
+                            margin-bottom: 18px;
+                            padding: 8px;
+                        }
+                        .print-photo-container img,
+                        .print-photo-container > div {
+                            width: 320px !important;
+                            height: 320px !important;
+                        }
+                        .print-details { 
+                            background: #f8f9fa;
+                            padding: 15px;
+                            border-radius: 15px;
+                            border: 2px solid #e9ecef;
+                        }
+                        .profile-field { 
+                            margin-bottom: 8px; 
+                            font-size: 14px; 
+                            line-height: 1.4;
+                            padding: 5px 0;
+                            border-bottom: 1px solid #e9ecef;
+                        }
+                        .profile-field:last-child {
+                            border-bottom: none;
+                        }
+                        .profile-field strong { 
+                            color: #ac0742; 
+                            margin-right: 15px; 
+                            font-weight: bold;
+                            display: inline-block;
+                            min-width: 110px;
+                        }
+                        .details-title {
+                            text-align: center;
+                            color: #ac0742;
+                            font-size: 18px;
+                            font-weight: bold;
+                            margin-bottom: 15px;
+                            border-bottom: 2px solid #ac0742;
+                            padding-bottom: 8px;
+                        }
+                        @media print { 
+                            body { 
+                                margin: 0; 
+                                padding: 10px;
+                                -webkit-print-color-adjust: exact;
+                                color-adjust: exact;
+                            }
+                        }
                     </style>
                 </head>
                 <body>
                     <div class="print-header">
                         <h1>${name}</h1>
-                        <p>Profile ID: ${code}</p>
-                        <p>Printed on: ${new Date().toLocaleString()}</p>
+                        <p><strong>Profile ID:</strong> ${code}</p>
                     </div>
-                    <div class="print-content">
-                        <div class="print-details">
-                            ${profileDetails}
-                        </div>
-                        <div class="print-photo">
-                            ${photoHtml}
-                        </div>
+                    
+                    <div class="print-photo-container">
+                        ${photoHtml}
+                    </div>
+                    
+                    <div class="print-details">
+                        <div class="details-title">Profile Details</div>
+                        ${profileDetails}
                     </div>
                 </body>
                 </html>
             `;
-            
             // Write content to the new window and print
             printWindow.document.write(printContent);
             printWindow.document.close();

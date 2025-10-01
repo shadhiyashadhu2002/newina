@@ -14,13 +14,19 @@
 
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #ac0742 0%, #9d1955 100%);
             color: #333;
             min-height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
             padding: 20px;
+        }
+
+        .page-wrapper {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-start;
+            min-height: 100vh;
+            gap: 20px;
         }
 
         .form-container {
@@ -206,7 +212,8 @@
     </style>
 </head>
 <body>
-    <div class="form-container">
+    <div class="page-wrapper">
+        <div class="form-container">
         <h1 class="form-title">Assign Profile from Other Sources</h1>
         
         <!-- Success Message -->
@@ -410,5 +417,6 @@
             }
         });
     </script>
+    </div>
 </body>
 </html>
