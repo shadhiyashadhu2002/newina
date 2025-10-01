@@ -3,6 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="csrf-token" content="{{ csrf_token() }}">
   <title>INA Dashboard - Active Service Profiles</title>
   <style>
     * {
@@ -462,7 +463,21 @@
     // Logout functionality
     document.querySelector('.logout-btn').addEventListener('click', function() {
       if(confirm('Are you sure you want to logout?')) {
-        alert('Logging out...');
+        // Create a form and submit it to the logout route
+        const form = document.createElement('form');
+        form.method = 'POST';
+        form.action = '{{ route('logout') }}';
+        
+        // Add CSRF token from meta tag
+        const csrfToken = document.createElement('input');
+        csrfToken.type = 'hidden';
+        csrfToken.name = '_token';
+        csrfToken.value = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+        form.appendChild(csrfToken);
+        
+        // Add the form to the document and submit it
+        document.body.appendChild(form);
+        form.submit();
       }
     });
 

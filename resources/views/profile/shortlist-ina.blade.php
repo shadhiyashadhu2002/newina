@@ -198,6 +198,26 @@
                 width: 100%;
                 max-width: 200px;
             }
+            
+            .results-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .profile-content {
+                flex-direction: column;
+                align-items: center;
+                text-align: center;
+            }
+            
+            .profile-photo-container {
+                order: -1;
+                margin-bottom: 15px;
+            }
+            
+            .profile-photo, .no-photo {
+                width: 100px;
+                height: 100px;
+            }
         }
 
         .two-column {
@@ -308,16 +328,14 @@
                     </select>
                 </div>
 
-                <!-- Caste -->
+                <!-- Religion -->
                 <div class="form-group">
-                    <label class="form-label">Caste:</label>
+                    <label class="form-label">Religion:</label>
                     <select name="caste" class="form-select">
-                        <option value="">-- Select Caste --</option>
-                        <option value="general">General</option>
-                        <option value="obc">OBC</option>
-                        <option value="sc">SC</option>
-                        <option value="st">ST</option>
-                        <option value="other">Other</option>
+                        <option value="">-- Select Religion --</option>
+                        <option value="hindu">Hindu</option>
+                        <option value="muslim">Muslim</option>
+                        <option value="christian">Christian</option>
                     </select>
                 </div>
 
@@ -375,40 +393,49 @@
                             <h3>{{ $profile['name'] }}</h3>
                             <span class="profile-code">ID: {{ $profile['code'] }}</span>
                         </div>
-                        <div class="profile-photo-container">
-                            @if(isset($profile['has_photo']) && $profile['has_photo'] && $profile['photo_url'])
-                                <img src="{{ $profile['photo_url'] }}" alt="{{ $profile['name'] }}'s photo" class="profile-photo-small">
-                            @else
-                                <div class="no-photo-small">
-                                    <i class="fas fa-user"></i>
-                                </div>
-                            @endif
+                        <div class="header-right">
+                            <button class="btn-print" onclick="printProfile({{ $profile['user_id'] }}, '{{ $profile['name'] }}', '{{ $profile['code'] }}')">
+                                <i class="fas fa-print"></i>
+                                Print
+                            </button>
                         </div>
                     </div>
-                    <div class="profile-details">
-                        <div class="profile-field">
-                            <strong>Age:</strong> {{ $profile['age'] ?? 'N/A' }} years
+                    <div class="profile-content">
+                        <div class="profile-details">
+                            <div class="profile-field">
+                                <strong>Age:</strong> {{ $profile['age'] ?? 'N/A' }} years
+                            </div>
+                            <div class="profile-field">
+                                <strong>Height:</strong> {{ $profile['height'] ?? 'Not specified' }}
+                            </div>
+                            <div class="profile-field">
+                                <strong>Weight:</strong> {{ $profile['weight'] ?? 'Not specified' }}
+                            </div>
+                            <div class="profile-field">
+                                <strong>Religion:</strong> {{ $profile['religion'] ?? 'Not specified' }}
+                            </div>
+                            <div class="profile-field">
+                                <strong>Caste:</strong> {{ $profile['caste'] ?? 'Not specified' }}
+                            </div>
+                            <div class="profile-field">
+                                <strong>Marital Status:</strong> {{ $profile['marital_status'] ?? 'Not specified' }}
+                            </div>
+                            <div class="profile-field">
+                                <strong>Career:</strong> {{ $profile['career'] ?? 'Not specified' }}
+                            </div>
+                            <div class="profile-field">
+                                <strong>Location:</strong> {{ $profile['location'] ?? 'Not specified' }}
+                            </div>
                         </div>
-                        <div class="profile-field">
-                            <strong>Height:</strong> {{ $profile['height'] ?? 'Not specified' }}
-                        </div>
-                        <div class="profile-field">
-                            <strong>Weight:</strong> {{ $profile['weight'] ?? 'Not specified' }}
-                        </div>
-                        <div class="profile-field">
-                            <strong>Religion:</strong> {{ $profile['religion'] ?? 'Not specified' }}
-                        </div>
-                        <div class="profile-field">
-                            <strong>Caste:</strong> {{ $profile['caste'] ?? 'Not specified' }}
-                        </div>
-                        <div class="profile-field">
-                            <strong>Marital Status:</strong> {{ $profile['marital_status'] ?? 'Not specified' }}
-                        </div>
-                        <div class="profile-field">
-                            <strong>Career:</strong> {{ $profile['career'] ?? 'Not specified' }}
-                        </div>
-                        <div class="profile-field">
-                            <strong>Location:</strong> {{ $profile['location'] ?? 'Not specified' }}
+                        <div class="profile-photo-container">
+                            @if(isset($profile['has_photo']) && $profile['has_photo'] && $profile['photo_url'])
+                                <img src="{{ $profile['photo_url'] }}" alt="{{ $profile['name'] }}'s photo" class="profile-photo">
+                            @else
+                                <div class="no-photo">
+                                    <i class="fas fa-user"></i>
+                                    <span>No Photo</span>
+                                </div>
+                            @endif
                         </div>
                     </div>
                     <div class="profile-actions">
@@ -479,34 +506,86 @@
                 flex: 1;
             }
             
-            .profile-photo-container {
+            .header-right {
                 flex-shrink: 0;
-                margin-left: 15px;
             }
             
-            .profile-photo-small {
-                width: 60px;
-                height: 60px;
-                border-radius: 50%;
+            .profile-content {
+                display: flex;
+                gap: 20px;
+                align-items: flex-start;
+            }
+            
+            .profile-details {
+                flex: 1;
+            }
+            
+            .profile-photo-container {
+                flex-shrink: 0;
+            }
+            
+            .profile-photo {
+                width: 120px;
+                height: 120px;
+                border-radius: 15px;
                 object-fit: cover;
-                border: 2px solid #ac0742;
+                border: 3px solid #ac0742;
+                box-shadow: 0 4px 15px rgba(172, 7, 66, 0.3);
+                transition: transform 0.3s ease;
+            }
+            
+            .profile-photo:hover {
+                transform: scale(1.05);
+            }
+            
+            .no-photo {
+                width: 120px;
+                height: 120px;
+                border-radius: 15px;
+                background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                justify-content: center;
+                border: 3px solid #dee2e6;
+                color: #6c757d;
+                text-align: center;
+            }
+            
+            .no-photo i {
+                font-size: 30px;
+                margin-bottom: 8px;
+            }
+            
+            .no-photo span {
+                font-size: 12px;
+                font-weight: 500;
+            }
+            
+            .btn-print {
+                background: linear-gradient(135deg, #ac0742, #d63384);
+                color: white;
+                border: none;
+                padding: 8px 12px;
+                border-radius: 8px;
+                font-size: 12px;
+                font-weight: 500;
+                cursor: pointer;
+                display: flex;
+                align-items: center;
+                gap: 5px;
+                transition: all 0.3s ease;
                 box-shadow: 0 2px 8px rgba(172, 7, 66, 0.3);
             }
             
-            .no-photo-small {
-                width: 60px;
-                height: 60px;
-                border-radius: 50%;
-                background: linear-gradient(135deg, #f8f9fa, #e9ecef);
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                border: 2px solid #dee2e6;
-                color: #6c757d;
+            .btn-print:hover {
+                background: linear-gradient(135deg, #8a0534, #b02a5b);
+                transform: translateY(-2px);
+                box-shadow: 0 4px 12px rgba(172, 7, 66, 0.4);
             }
             
-            .no-photo-small i {
-                font-size: 20px;
+            .btn-print i {
+                font-size: 14px;
             }
             
             .profile-header h3 {
@@ -629,6 +708,74 @@
                 return;
             }
         });
+
+        // Print profile function
+        function printProfile(userId, name, code) {
+            // Create a new window for printing
+            const printWindow = window.open('', '_blank');
+            
+            // Get the profile data from the current card
+            const profileCard = event.target.closest('.profile-card');
+            const profileDetails = profileCard.querySelector('.profile-details').innerHTML;
+            const photoContainer = profileCard.querySelector('.profile-photo-container');
+            let photoHtml = '';
+            
+            if (photoContainer) {
+                const img = photoContainer.querySelector('img');
+                if (img) {
+                    photoHtml = `<img src="${img.src}" alt="${name}'s photo" style="width: 150px; height: 150px; border-radius: 15px; object-fit: cover; border: 3px solid #ac0742;">`;
+                } else {
+                    photoHtml = `<div style="width: 150px; height: 150px; border-radius: 15px; background: #f8f9fa; display: flex; align-items: center; justify-content: center; border: 3px solid #dee2e6; color: #6c757d;"><span>No Photo Available</span></div>`;
+                }
+            }
+            
+            // Create the print content
+            const printContent = `
+                <!DOCTYPE html>
+                <html>
+                <head>
+                    <title>Profile - ${name} (${code})</title>
+                    <style>
+                        body { font-family: Arial, sans-serif; padding: 20px; }
+                        .print-header { text-align: center; margin-bottom: 30px; border-bottom: 2px solid #ac0742; padding-bottom: 15px; }
+                        .print-header h1 { color: #ac0742; margin: 0; }
+                        .print-header p { margin: 5px 0; color: #666; }
+                        .print-content { display: flex; gap: 30px; align-items: flex-start; }
+                        .print-details { flex: 1; }
+                        .print-photo { flex-shrink: 0; }
+                        .profile-field { margin-bottom: 10px; font-size: 14px; }
+                        .profile-field strong { color: #333; margin-right: 10px; }
+                        @media print { body { margin: 0; } }
+                    </style>
+                </head>
+                <body>
+                    <div class="print-header">
+                        <h1>${name}</h1>
+                        <p>Profile ID: ${code}</p>
+                        <p>Printed on: ${new Date().toLocaleString()}</p>
+                    </div>
+                    <div class="print-content">
+                        <div class="print-details">
+                            ${profileDetails}
+                        </div>
+                        <div class="print-photo">
+                            ${photoHtml}
+                        </div>
+                    </div>
+                </body>
+                </html>
+            `;
+            
+            // Write content to the new window and print
+            printWindow.document.write(printContent);
+            printWindow.document.close();
+            
+            // Wait for the content to load, then print
+            printWindow.onload = function() {
+                printWindow.print();
+                printWindow.close();
+            };
+        }
 
         // Shortlist profile function
         function shortlistProfile(userId) {

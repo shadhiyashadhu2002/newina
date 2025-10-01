@@ -122,6 +122,7 @@ Route::get('/csrf-token', function() {
 })->name('csrf.token');
 
 use App\Models\Service;
+// Service Details routes - Available to all authenticated users
 Route::get('/service-details/{id}/{name}', function ($id, $name) {
     $service = Service::where('profile_id', $id)->first();
     if (!$service) {

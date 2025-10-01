@@ -398,6 +398,13 @@
       text-decoration: underline;
     }
 
+    .no-access {
+      color: #dc3545;
+      font-style: italic;
+      font-size: 12px;
+      font-weight: 500;
+    }
+
     /* Responsive design */
     @media (max-width: 768px) {
       .main-content {

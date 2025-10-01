@@ -413,15 +413,20 @@
           </div>
           <div>
             @if(isset($service))
-              <button type="button" class="btn btn-info" id="edit-service-btn" style="margin-right: 10px;">Edit Service</button>
+              <button type="button" class="btn btn-info" id="edit-service-btn" style="margin-right: 10px;" onclick="enableEditMode()">Edit Service</button>
+              <button type="button" class="btn btn-success" id="save-service-btn" style="margin-right: 10px; display: none;" onclick="saveAllChanges()">Save Changes</button>
+            @else
+              <button type="button" class="btn btn-info" id="test-edit-btn" style="margin-right: 10px;" onclick="enableEditMode()">Test Edit</button>
             @endif
             <a href="/new-service" class="btn btn-secondary">Back to Services</a>
           </div>
         </div>
         <!-- Tab Navigation -->
         <div class="tab-nav">
+          @if(Auth::check() && Auth::user()->is_admin)
           <button id="tab-service" class="active" type="button"><span>📋</span>Service</button>
-          <button id="tab-member" type="button"><span>👤</span>Member Info</button>
+          @endif
+          <button id="tab-member" type="button" @if(!Auth::check() || !Auth::user()->is_admin) class="active" @endif><span>👤</span>Member Info</button>
           <button id="tab-partner" type="button"><span>💝</span>Partner Preference</button>
           <button id="tab-contact" type="button"><span>📞</span>Contact Details</button>
         </div>
@@ -431,6 +436,7 @@
           @if(isset($service))
             @method('PUT')
           @endif
+          @if(Auth::check() && Auth::user()->is_admin)
           <div id="step-1" class="wizard-step">
             <h3>Service Details</h3>
             <div class="profile-id-section">
@@ -489,7 +495,7 @@
               </div>
               <div class="form-group">
                 <label>Expiry Date</label>
-                <input type="date" name="expiry_date" id="expiry-date-input" 
+                <input type="date" name="expiry-date-input" 
                        value="{{ isset($service) ? $service->expiry_date : '' }}" 
                        {{ isset($service) ? 'readonly' : 'required' }}>
               </div>
@@ -505,8 +511,9 @@
               <button type="button" class="btn btn-primary" id="save-next-1">Save & Next</button>
             </div>
           </div>
+          @endif
 
-          <div id="step-2" class="wizard-step" style="display:none;">
+          <div id="step-2" class="wizard-step" style="@if(!Auth::check() || !Auth::user()->is_admin) display:block; @else display:none; @endif">
             <h3>Member Info</h3>
             <div class="form-row">
               <div class="form-group">
@@ -749,20 +756,41 @@
       // Initialize form validations
       setupFormValidations();
       
+      // Check if user is admin
+      const isAdmin = {{ Auth::check() && Auth::user()->is_admin ? 'true' : 'false' }};
+      
       if (!isViewMode) {
-        // Set default profile ID for new services
-        document.getElementById('profile-id-input').value = 'INA001';
+        // Set default profile ID for new services (only for admin)
+        if (isAdmin && document.getElementById('profile-id-input')) {
+          document.getElementById('profile-id-input').value = 'INA001';
+        }
         
         // Set up form navigation for new services
         setupFormNavigation();
+        
+        // If not admin, start from Member Info tab
+        if (!isAdmin) {
+          showStep(2);
+          setActiveTab('tab-member');
+        }
       } else {
         // Set up tab navigation for viewing existing services
         setupTabNavigation();
         
+        // If not admin, start from Member Info tab in view mode too
+        if (!isAdmin) {
+          showStep(2);
+          setActiveTab('tab-member');
+        }
+        
         // Set up edit button functionality
-        document.getElementById('edit-service-btn').onclick = function() {
-          enableEditMode();
-        };
+        const editBtn = document.getElementById('edit-service-btn');
+        if (editBtn) {
+          editBtn.onclick = function() {
+            alert('Edit button clicked!');
+            enableEditMode();
+          };
+        }
       }
     }
 
@@ -833,12 +861,12 @@
     // Enable edit mode
     function enableEditMode() {
       // Remove readonly from all form inputs and enable selects
-      const inputs = document.querySelectorAll('#unified-service-form input, #unified-service-form textarea');
+      const inputs = document.querySelectorAll('#addServiceForm input, #addServiceForm textarea');
       inputs.forEach(input => {
         input.removeAttribute('readonly');
       });
       
-      const selects = document.querySelectorAll('#unified-service-form select');
+      const selects = document.querySelectorAll('#addServiceForm select');
       selects.forEach(select => {
         select.removeAttribute('disabled');
       });
@@ -849,13 +877,25 @@
         action.style.display = 'flex';
       });
       
-      // Update the status badge
+      // Update the status badge (if it exists)
       const badge = document.querySelector('.status-badge');
-      badge.textContent = 'Editing Service';
-      badge.className = 'status-badge edit-mode';
+      if (badge) {
+        badge.textContent = 'Editing Service';
+        badge.className = 'status-badge edit-mode';
+      }
       
       // Hide edit button, show save button
-      document.getElementById('edit-service-btn').style.display = 'none';
+      const editBtn = document.getElementById('edit-service-btn');
+      const saveBtn = document.getElementById('save-service-btn');
+      if (editBtn) {
+        editBtn.style.display = 'none';
+      }
+      if (saveBtn) {
+        saveBtn.style.display = 'inline-block';
+        saveBtn.onclick = function() {
+          saveAllChanges();
+        };
+      }
       
       // Re-setup form validations for edit mode
       setupFormValidations();
@@ -864,22 +904,85 @@
       setupFormNavigation();
     }
 
+    // Save all changes function
+    function saveAllChanges() {
+      const form = document.getElementById('addServiceForm');
+      if (!form) {
+        alert('Form not found');
+        return;
+      }
+
+      // Create FormData object to collect all form data
+      const formData = new FormData(form);
+
+      // Add CSRF token
+      const csrfToken = document.querySelector('input[name="_token"]').value;
+      formData.append('_token', csrfToken);
+      formData.append('_method', 'PUT');
+
+      // Show loading state
+      const saveBtn = document.getElementById('save-service-btn');
+      if (saveBtn) {
+        saveBtn.textContent = 'Saving...';
+        saveBtn.disabled = true;
+      }
+
+      // Submit the form data
+      fetch(form.action, {
+        method: 'POST',
+        body: formData,
+        headers: {
+          'X-CSRF-TOKEN': csrfToken
+        }
+      })
+      .then(response => {
+        if (response.ok) {
+          alert('Changes saved successfully!');
+          location.reload(); // Reload to show updated data
+        } else {
+          throw new Error('Failed to save changes');
+        }
+      })
+      .catch(error => {
+        console.error('Error:', error);
+        alert('Error saving changes: ' + error.message);
+      })
+      .finally(() => {
+        // Reset button state
+        if (saveBtn) {
+          saveBtn.textContent = 'Save Changes';
+          saveBtn.disabled = false;
+        }
+      });
+    }
+
     // Set up tab navigation (for viewing mode)
     function setupTabNavigation() {
       const tabs = ['tab-service', 'tab-member', 'tab-partner', 'tab-contact'];
       const steps = ['step-1', 'step-2', 'step-3', 'step-4'];
       
       tabs.forEach((tabId, index) => {
-        document.getElementById(tabId).onclick = function() {
-          // Remove active from all tabs
-          tabs.forEach(id => document.getElementById(id).classList.remove('active'));
-          // Hide all steps
-          steps.forEach(id => document.getElementById(id).style.display = 'none');
-          
-          // Show selected tab and step
-          this.classList.add('active');
-          document.getElementById(steps[index]).style.display = 'block';
-        };
+        const tabElement = document.getElementById(tabId);
+        const stepElement = document.getElementById(steps[index]);
+        
+        if (tabElement && stepElement) {
+          tabElement.onclick = function() {
+            // Remove active from all tabs
+            tabs.forEach(id => {
+              const tab = document.getElementById(id);
+              if (tab) tab.classList.remove('active');
+            });
+            // Hide all steps
+            steps.forEach(id => {
+              const step = document.getElementById(id);
+              if (step) step.style.display = 'none';
+            });
+            
+            // Show selected tab and step
+            this.classList.add('active');
+            stepElement.style.display = 'block';
+          };
+        }
       });
     }
 
@@ -890,32 +993,50 @@
       const steps = ['step-1', 'step-2', 'step-3', 'step-4'];
       
       tabs.forEach((tabId, index) => {
-        document.getElementById(tabId).onclick = function() {
-          showStep(index + 1);
-        };
+        const tabElement = document.getElementById(tabId);
+        if (tabElement) {
+          tabElement.onclick = function() {
+            showStep(index + 1);
+          };
+        }
       });
 
       // Save & Next buttons
-      document.getElementById('save-next-1').onclick = function() {
-        saveCurrentSection(1);
-      };
+      const saveNext1 = document.getElementById('save-next-1');
+      if (saveNext1) {
+        saveNext1.onclick = function() {
+          saveCurrentSection(1);
+        };
+      }
 
-      document.getElementById('save-next-2').onclick = function() {
-        saveCurrentSection(2);
-      };
+      const saveNext2 = document.getElementById('save-next-2');
+      if (saveNext2) {
+        saveNext2.onclick = function() {
+          saveCurrentSection(2);
+        };
+      }
 
-      document.getElementById('save-next-3').onclick = function() {
-        saveCurrentSection(3);
-      };
+      const saveNext3 = document.getElementById('save-next-3');
+      if (saveNext3) {
+        saveNext3.onclick = function() {
+          saveCurrentSection(3);
+        };
+      }
 
       // Back buttons
-      document.getElementById('back-2').onclick = function() {
-        showStep(1);
-      };
+      const back2 = document.getElementById('back-2');
+      if (back2) {
+        back2.onclick = function() {
+          showStep(1);
+        };
+      }
 
-      document.getElementById('back-3').onclick = function() {
-        showStep(2);
-      };
+      const back3 = document.getElementById('back-3');
+      if (back3) {
+        back3.onclick = function() {
+          showStep(2);
+        };
+      }
 
       document.getElementById('back-4').onclick = function() {
         showStep(3);

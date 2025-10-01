@@ -286,6 +286,11 @@
       text-decoration: underline;
     }
 
+    .profile-id {
+      color: #666;
+      font-weight: 600;
+    }
+
     /* Action buttons */
     .btn-add {
       background: linear-gradient(135deg, #4CAF50, #45a049);

@@ -106,40 +106,62 @@ class ServiceController extends Controller
     // Service Dashboard with dynamic counts
     public function servicesDashboard()
     {
-        $user = Auth::user();
-        
-        if ($user && $user->is_admin) {
-            // Admin sees all services across all staff
-            $totalServices = Service::count();
-            $newServices = Service::where('status', 'new')->count();
-            $activeServices = Service::where('status', 'active')->count();
-            $completedServices = Service::where('status', 'completed')->count();
+        try {
+            $user = Auth::user();
             
-            // Get recent services for all staff (last 15 for admin)
-            $recentServices = Service::orderBy('created_at', 'desc')
-                                    ->limit(15)
-                                    ->get();
-        } else {
-            // Staff sees only their assigned services
-            $totalServices = Service::where('service_executive', $user->first_name)->count();
-            $newServices = Service::where('service_executive', $user->first_name)
-                                 ->where('status', 'new')
-                                 ->count();
-            $activeServices = Service::where('service_executive', $user->first_name)
-                                    ->where('status', 'active')
-                                    ->count();
-            $completedServices = Service::where('service_executive', $user->first_name)
-                                       ->where('status', 'completed')
-                                       ->count();
+            if (!$user) {
+                return redirect()->route('login');
+            }
+            
+            if ($user->is_admin) {
+                // Admin sees all services across all staff
+                $totalServices = Service::count();
+                $newServices = Service::where('status', 'new')->count();
+                $activeServices = Service::where('status', 'active')->count();
+                $completedServices = Service::where('status', 'completed')->count();
+                
+                // Get recent services for all staff (last 15 for admin)
+                $recentServices = Service::orderBy('created_at', 'desc')
+                                        ->limit(15)
+                                        ->get();
+            } else {
+                // Staff sees only their assigned services
+                // Use first_name, or fallback to username/email prefix if first_name is null
+                $executiveName = $user->first_name ?? explode('@', $user->email)[0] ?? 'Unknown';
+                
+                $totalServices = Service::where('service_executive', $executiveName)->count();
+                $newServices = Service::where('service_executive', $executiveName)
+                                     ->where('status', 'new')
+                                     ->count();
+                $activeServices = Service::where('service_executive', $executiveName)
+                                        ->where('status', 'active')
+                                        ->count();
+                $completedServices = Service::where('service_executive', $executiveName)
+                                           ->where('status', 'completed')
+                                           ->count();
 
-            // Get recent services for current service executive (last 10)
-            $recentServices = Service::where('service_executive', $user->first_name)
-                                    ->orderBy('created_at', 'desc')
-                                    ->limit(10)
-                                    ->get();
+                // Get recent services for current service executive (last 10)
+                $recentServices = Service::where('service_executive', $executiveName)
+                                        ->orderBy('created_at', 'desc')
+                                        ->limit(10)
+                                        ->get();
+            }
+
+            return view('profile.services', compact('totalServices', 'newServices', 'activeServices', 'completedServices', 'recentServices'));
+            
+        } catch (\Exception $e) {
+            // Log the error and return a fallback response
+            Log::error('Services Dashboard Error: ' . $e->getMessage());
+            
+            // Return with default values if there's an error
+            $totalServices = 0;
+            $newServices = 0;
+            $activeServices = 0;
+            $completedServices = 0;
+            $recentServices = collect([]);
+            
+            return view('profile.services', compact('totalServices', 'newServices', 'activeServices', 'completedServices', 'recentServices'));
         }
-
-        return view('profile.services', compact('totalServices', 'newServices', 'activeServices', 'completedServices', 'recentServices'));
     }
 
     // Update service status
@@ -288,12 +310,14 @@ class ServiceController extends Controller
                 'weight_max' => 'nullable|integer|min:30|max:200',
                 'religion' => 'nullable|string',
                 'caste' => 'nullable|string',
+                'district' => 'nullable|string',
                 'education' => 'nullable|string',
                 'occupation' => 'nullable|string',
                 'location' => 'nullable|string',
                 'marital_status' => 'nullable|string',
                 'registered_from' => 'nullable|date',
                 'registered_to' => 'nullable|date',
+                'profile_id' => 'nullable|string',
             ]);
 
             // Build the search query with all related data
@@ -330,9 +354,56 @@ class ServiceController extends Controller
                 $query->byAgeRange($minAge, $maxAge);
             }
 
-            // Apply gender filter (opposite gender for matrimonial search)
+            // Apply height range filter
+            if ($request->filled('height_min') || $request->filled('height_max')) {
+                Log::info('Height filter applied', [
+                    'height_min' => $request->height_min,
+                    'height_max' => $request->height_max
+                ]);
+                
+                $query->whereHas('user.physicalAttribute', function($q) use ($request) {
+                    if ($request->filled('height_min')) {
+                        $q->where('height', '>=', $request->height_min);
+                    }
+                    if ($request->filled('height_max')) {
+                        $q->where('height', '<=', $request->height_max);
+                    }
+                });
+            }
+
+            // Apply weight range filter
+            if ($request->filled('weight_min') || $request->filled('weight_max')) {
+                Log::info('Weight filter applied', [
+                    'weight_min' => $request->weight_min,
+                    'weight_max' => $request->weight_max
+                ]);
+                
+                $query->whereHas('user.physicalAttribute', function($q) use ($request) {
+                    if ($request->filled('weight_min')) {
+                        $q->where('weight', '>=', $request->weight_min);
+                    }
+                    if ($request->filled('weight_max')) {
+                        $q->where('weight', '<=', $request->weight_max);
+                    }
+                });
+            }
+
+            // Apply gender filter (convert text to numeric: male=1, female=2)
             if ($request->filled('gender')) {
-                $query->where('gender', $request->gender);
+                $genderValue = null;
+                if (strtolower($request->gender) === 'male') {
+                    $genderValue = 1;
+                } elseif (strtolower($request->gender) === 'female') {
+                    $genderValue = 2;
+                }
+                
+                if ($genderValue) {
+                    Log::info('Gender filter applied', [
+                        'requested_gender' => $request->gender,
+                        'database_value' => $genderValue
+                    ]);
+                    $query->where('gender', $genderValue);
+                }
             }
 
             // Apply marital status filter
@@ -340,24 +411,97 @@ class ServiceController extends Controller
                 $query->where('marital_status_id', $request->marital_status);
             }
 
-            // Apply registration date filter only if dates are provided
-            if ($request->filled('registered_from') && $request->registered_from != '') {
-                $query->whereDate('created_at', '>=', $request->registered_from);
-            }
-            if ($request->filled('registered_to') && $request->registered_to != '') {
-                $query->whereDate('created_at', '<=', $request->registered_to);
+            // Apply user-related filters (district and registration dates)
+            if ($request->filled('district') || 
+                ($request->filled('registered_from') && $request->registered_from != '') || 
+                ($request->filled('registered_to') && $request->registered_to != '')) {
+                
+                $query->whereHas('user', function($q) use ($request) {
+                    // District filter
+                    if ($request->filled('district')) {
+                        Log::info('District filter applied', ['district' => $request->district]);
+                        $district = $request->district;
+                        $q->where(function($subQ) use ($district) {
+                            $subQ->where('district', 'like', '%' . $district . '%')
+                                 ->orWhere('city', 'like', '%' . $district . '%')
+                                 ->orWhere('district', strtolower($district))
+                                 ->orWhere('city', strtolower($district))
+                                 ->orWhere('district', ucfirst(strtolower($district)))
+                                 ->orWhere('city', ucfirst(strtolower($district)));
+                        });
+                    }
+                    
+                    // Registration date filters
+                    $fromDate = $request->registered_from;
+                    $toDate = $request->registered_to;
+                    
+                    if (($fromDate && $fromDate != '') || ($toDate && $toDate != '')) {
+                        Log::info('Registration date range filter applied', [
+                            'from_date' => $fromDate,
+                            'to_date' => $toDate
+                        ]);
+                        
+                        if ($fromDate && $fromDate != '') {
+                            $q->whereDate('created_at', '>=', $fromDate);
+                        }
+                        if ($toDate && $toDate != '') {
+                            $q->whereDate('created_at', '<=', $toDate);
+                        }
+                    }
+                    
+
+                });
             }
 
-            // Debug: Count before filters
+            // Apply caste filter (actually religion filter through spiritual_background -> religions)
+            if ($request->filled('caste')) {
+                Log::info('Religion filter applied', ['religion' => $request->caste]);
+                
+                $query->whereHas('user.spiritualBackground.religion', function($q) use ($request) {
+                    $religion = $request->caste;
+                    $q->where('name', 'like', '%' . $religion . '%')
+                      ->orWhere('name', strtolower($religion))
+                      ->orWhere('name', strtoupper($religion))
+                      ->orWhere('name', ucfirst(strtolower($religion)));
+                });
+            }
+
+            // Apply profile ID filter (search by users.code field)
+            if ($request->filled('profile_id')) {
+                Log::info('Profile ID filter applied', ['profile_id' => $request->profile_id]);
+                $profileId = $request->profile_id;
+                
+                $query->whereHas('user', function($userQ) use ($profileId) {
+                    $userQ->where('code', $profileId)
+                          ->orWhere('code', 'like', '%' . $profileId . '%');
+                });
+                
+                Log::info('Profile ID search completed', [
+                    'profile_id' => $profileId,
+                    'search_method' => 'users.code_field'
+                ]);
+            }
+
+
+
+            // Debug: Count before final execution
             $countBeforeFilters = \App\Models\Member::whereNotNull('birthday')->count();
-            Log::info('Count before age filter', ['count' => $countBeforeFilters]);
+            Log::info('Count before all filters', ['count' => $countBeforeFilters]);
+            
+            // Debug: Check some sample user creation dates
+            $sampleUsers = \App\Models\User::select('id', 'created_at')->orderBy('created_at', 'desc')->limit(5)->get();
+            Log::info('Sample user creation dates', [
+                'users' => $sampleUsers->map(function($user) {
+                    return ['id' => $user->id, 'created_at' => $user->created_at->format('Y-m-d H:i:s')];
+                })->toArray()
+            ]);
             
             // Get total count and execute search
             $totalMembers = \App\Models\Member::count();
             
-            // Debug: Count after filters
+            // Debug: Count after all filters
             $countAfterFilters = $query->count();
-            Log::info('Count after age filter', ['count' => $countAfterFilters]);
+            Log::info('Count after all filters', ['count' => $countAfterFilters]);
             
             // Limit results to prevent memory issues (show first 100 matches)
             $matchingProfiles = $query->limit(100)->get();
@@ -378,11 +522,11 @@ class ServiceController extends Controller
                         'user_id' => $member->user_id,
                         'name' => $member->user->first_name . ' ' . $member->user->last_name,
                         'age' => $member->age,
-                        'gender' => $member->gender,
+                        'gender' => $member->gender == 1 ? 'Male' : ($member->gender == 2 ? 'Female' : 'Not specified'),
                         'code' => $member->user->code,
                         'email' => $member->user->email,
                         'phone' => $member->user->phone,
-                        'created_at' => $member->created_at->format('Y-m-d'),
+                        'created_at' => $member->user->created_at->format('Y-m-d'),
                         
                         // Physical attributes
                         'height' => $physicalAttr ? $physicalAttr->height : 'Not specified',
@@ -415,11 +559,11 @@ class ServiceController extends Controller
                         'user_id' => $member->user_id,
                         'name' => $member->user->first_name . ' ' . $member->user->last_name,
                         'age' => $member->age,
-                        'gender' => $member->gender,
+                        'gender' => $member->gender == 1 ? 'Male' : ($member->gender == 2 ? 'Female' : 'Not specified'),
                         'code' => $member->user->code,
                         'email' => $member->user->email,
                         'phone' => $member->user->phone,
-                        'created_at' => $member->created_at->format('Y-m-d'),
+                        'created_at' => $member->user->created_at->format('Y-m-d'),
                         'height' => 'Not available',
                         'weight' => 'Not available',
                         'religion' => 'Not available',
