@@ -55,15 +55,7 @@
     });
     </script>
 
-    @if(config('app.debug'))
-    <div style="margin-top: 20px; padding: 10px; background: #f8f9fa; border-radius: 5px; font-size: 12px;">
-        <strong>Debug Info:</strong><br>
-        Form Action: {{ route('login') }}<br>
-        CSRF Token: {{ csrf_token() }}<br>
-        Current URL: {{ request()->url() }}<br>
-        Session ID: {{ session()->getId() }}
-    </div>
-    @endif
+
 </div>
 <style>
 .login-container {
