@@ -11,8 +11,8 @@ class UserController extends Controller
     {
         $user = Auth::user();
         
-        // If user is admin, redirect to admin dashboard
-        if ($user->is_admin) {
+        // If user is admin or staff, redirect to main dashboard
+        if ($user->is_admin || $user->user_type === 'staff') {
             return redirect()->route('dashboard'); 
         }
         

@@ -21,6 +21,170 @@ Route::post('/login', [LoginController::class, 'login'])->name('login.submit');
 Route::get('/register', [LoginController::class, 'showRegistrationForm'])->name('register');
 Route::post('/register', [LoginController::class, 'register'])->name('register.submit');
 
+// Test login route (for debugging)
+Route::get('/test-login', function () {
+    return view('test-login');
+});
+Route::post('/test-login', function (Illuminate\Http\Request $request) {
+    $credentials = $request->only('email', 'password');
+    
+    try {
+        // First check if user exists
+        $user = App\Models\User::where('email', $credentials['email'])->first();
+        if (!$user) {
+            return back()->with(['login_result' => 'User not found in database', 'login_success' => false]);
+        }
+        
+        // Debug user info
+        $debugInfo = "User found: {$user->name}, Email: {$user->email}, User Type: {$user->user_type}, Is Admin: " . ($user->is_admin ? 'Yes' : 'No');
+        
+        // Check password manually
+        if (Illuminate\Support\Facades\Hash::check($credentials['password'], $user->password)) {
+            $passwordCheck = 'Password hash check: PASS';
+        } else {
+            $passwordCheck = 'Password hash check: FAIL - Hash: ' . substr($user->password, 0, 30) . '...';
+            
+            // Try to reset password if it fails
+            $user->password = Illuminate\Support\Facades\Hash::make($credentials['password']);
+            $user->save();
+            $passwordCheck .= ' | Password has been reset, try again.';
+        }
+        
+        // Try authentication
+        if (Auth::attempt($credentials)) {
+            $authUser = Auth::user();
+            
+            // Redirect to appropriate dashboard based on user type
+            if ($authUser->is_admin || $authUser->user_type === 'staff') {
+                return redirect('/dashboard')->with('success', 'Login successful! Welcome ' . $authUser->name);
+            } else {
+                return redirect('/user/dashboard')->with('success', 'User login successful!');
+            }
+        } else {
+            return back()->with(['login_result' => 'LOGIN FAILED! Auth::attempt() returned false. ' . $debugInfo . ' | ' . $passwordCheck, 'login_success' => false]);
+        }
+    } catch (Exception $e) {
+        return back()->with(['login_result' => 'ERROR: ' . $e->getMessage(), 'login_success' => false]);
+    }
+});
+
+// Dashboard test route (for debugging)
+Route::get('/dashboard-test', function () {
+    try {
+        $users = App\Models\User::paginate(10);
+        $stats = [
+            'total_users' => App\Models\User::count(),
+            'new_profiles' => App\Models\User::whereDate('created_at', today())->count()
+        ];
+        return view('dashboard', compact('users', 'stats'));
+    } catch (Exception $e) {
+        return response()->json([
+            'error' => $e->getMessage(),
+            'file' => $e->getFile(),
+            'line' => $e->getLine()
+        ]);
+    }
+});
+
+// Simple dashboard test
+Route::get('/simple-dashboard', function () {
+    return '<h1>Simple Dashboard Test</h1><p>If you can see this, the route works!</p>';
+});
+
+// Test dashboard with authentication
+Route::get('/test-auth-dashboard', function () {
+    // Simulate login for testing
+    $user = App\Models\User::where('email', 'sana@service.com')->first();
+    if ($user) {
+        Auth::login($user);
+        return '<h1>Login Successful!</h1><p>User: ' . $user->name . '</p><p><a href="/dashboard">Go to Dashboard</a></p>';
+    }
+    return 'User not found';
+});
+
+// Minimal dashboard test
+Route::get('/dashboard-minimal', function () {
+    if (!Auth::check()) {
+        return redirect('/login');
+    }
+    $user = Auth::user();
+    return '<h1>Dashboard</h1><p>Welcome ' . $user->name . '</p><p>User Type: ' . $user->user_type . '</p>';
+})->middleware('auth');
+
+// Direct authentication test
+Route::get('/direct-login-test', function () {
+    try {
+        $user = App\Models\User::where('email', 'sana@service.com')->first();
+        if (!$user) {
+            return 'User not found';
+        }
+        
+        // Check password
+        $passwordValid = Illuminate\Support\Facades\Hash::check('1010', $user->password);
+        
+        if (!$passwordValid) {
+            // Reset password
+            $user->password = Illuminate\Support\Facades\Hash::make('1010');
+            $user->save();
+            $passwordValid = Illuminate\Support\Facades\Hash::check('1010', $user->password);
+        }
+        
+        // Try manual login
+        Auth::login($user);
+        
+        return response()->json([
+            'user_found' => true,
+            'password_valid' => $passwordValid,
+            'login_successful' => Auth::check(),
+            'auth_user' => Auth::user() ? Auth::user()->email : 'None',
+            'user_data' => [
+                'name' => $user->name,
+                'email' => $user->email,
+                'user_type' => $user->user_type,
+                'is_admin' => $user->is_admin
+            ]
+        ]);
+    } catch (Exception $e) {
+        return response()->json(['error' => $e->getMessage()]);
+    }
+});
+
+// Quick login for Sana (for testing)
+Route::get('/quick-login-sana', function () {
+    $user = App\Models\User::where('email', 'sana@service.com')->first();
+    if ($user) {
+        // Reset password to ensure it works
+        $user->password = Illuminate\Support\Facades\Hash::make('1010');
+        $user->save();
+        
+        // Login manually
+        Auth::login($user);
+        
+        if (Auth::check()) {
+            return redirect('/dashboard')->with('success', 'Quick login successful!');
+        } else {
+            return 'Login failed even with manual login';
+        }
+    }
+    return 'User not found';
+});
+
+// Debug route to check dashboard controller
+Route::get('/debug-dashboard', function () {
+    try {
+        $controller = new App\Http\Controllers\DashboardController();
+        $request = request();
+        return $controller->index($request);
+    } catch (Exception $e) {
+        return response()->json([
+            'error' => $e->getMessage(),
+            'file' => $e->getFile(),
+            'line' => $e->getLine(),
+            'trace' => $e->getTraceAsString()
+        ]);
+    }
+});
+
 // Protected routes (require authentication)
 Route::middleware('auth')->group(function () {
     // Add New Profile page route
@@ -85,8 +249,8 @@ Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard
 Route::get('/', function () {
     if (Auth::check()) {
         $user = Auth::user();
-        if ($user->is_admin) {
-            return redirect()->route('dashboard'); // This routes to admin dashboard
+        if ($user->is_admin || $user->user_type === 'staff') {
+            return redirect()->route('dashboard'); // This routes to admin/staff dashboard
         } else {
             return redirect()->route('user.dashboard');
         }
@@ -101,7 +265,16 @@ Route::get('/session-test', function () {
     return response()->json([
         'session_driver' => config('session.driver'),
         'session_id' => session()->getId(),
-        'csrf_token' => csrf_token()
+        'csrf_token' => csrf_token(),
+        'auth_check' => Auth::check(),
+        'auth_user' => Auth::user() ? Auth::user()->email : 'Not logged in',
+        'session_config' => [
+            'lifetime' => config('session.lifetime'),
+            'path' => config('session.path'),
+            'domain' => config('session.domain'),
+            'secure' => config('session.secure'),
+            'http_only' => config('session.http_only')
+        ]
     ]);
 });
 

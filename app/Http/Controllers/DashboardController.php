@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use App\Models\User;
 
 class DashboardController extends Controller
@@ -15,6 +16,9 @@ class DashboardController extends Controller
         // Get users with pagination
         $users = User::paginate($perPage);
         
+        // Get current user
+        $currentUser = Auth::user();
+        
         // You might also want to get some statistics for the dashboard
         $stats = [
             'total_users' => User::count(),
@@ -22,6 +26,6 @@ class DashboardController extends Controller
             // Add other stats as needed
         ];
         
-        return view('dashboard', compact('users', 'stats'));
+        return view('dashboard', compact('users', 'stats', 'currentUser'));
     }
 }
