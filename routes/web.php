@@ -111,6 +111,39 @@ Route::get('/dashboard-minimal', function () {
     return '<h1>Dashboard</h1><p>Welcome ' . $user->name . '</p><p>User Type: ' . $user->user_type . '</p>';
 })->middleware('auth');
 
+// Server dashboard debug route
+Route::get('/server-debug', function () {
+    try {
+        // Check if user is authenticated
+        $authStatus = Auth::check() ? 'YES' : 'NO';
+        $currentUser = Auth::user();
+        
+        // Count staff users
+        $staffCount = App\Models\User::where('user_type', 'staff')->count();
+        
+        return [
+            'authenticated' => $authStatus,
+            'current_user' => $currentUser ? [
+                'id' => $currentUser->id,
+                'name' => $currentUser->name,
+                'email' => $currentUser->email,
+                'user_type' => $currentUser->user_type
+            ] : null,
+            'staff_users_count' => $staffCount,
+            'dashboard_view_exists' => view()->exists('dashboard'),
+            'session_driver' => config('session.driver'),
+            'app_env' => config('app.env'),
+            'debug_mode' => config('app.debug'),
+        ];
+    } catch (Exception $e) {
+        return [
+            'error' => $e->getMessage(),
+            'file' => $e->getFile(),
+            'line' => $e->getLine()
+        ];
+    }
+});
+
 // Direct authentication test
 Route::get('/direct-login-test', function () {
     try {
