@@ -641,3 +641,38 @@ Route::get('/test-login-and-redirect', function () {
         ];
     }
 });
+
+// Check if Sajna's data exists in user table
+Route::get('/check-sajna', function () {
+    try {
+        // Look for Sajna by email
+        $sajnaByEmail = \App\Models\User::where('email', 'sajna@service.com')->first();
+        
+        // Look for Sajna by name
+        $sajnaByName = \App\Models\User::where('name', 'like', '%Sajna%')->get();
+        
+        // Look for all staff users
+        $allStaff = \App\Models\User::where('user_type', 'staff')->get(['id', 'name', 'email', 'user_type']);
+        
+        return [
+            'sajna_by_email' => $sajnaByEmail ? [
+                'id' => $sajnaByEmail->id,
+                'name' => $sajnaByEmail->name,
+                'email' => $sajnaByEmail->email,
+                'user_type' => $sajnaByEmail->user_type,
+                'code' => $sajnaByEmail->code ?? 'No code',
+                'created_at' => $sajnaByEmail->created_at
+            ] : null,
+            'sajna_by_name_search' => $sajnaByName->toArray(),
+            'total_staff_count' => $allStaff->count(),
+            'all_staff_emails' => $allStaff->pluck('email')->toArray(),
+            'sajna_exists' => $sajnaByEmail ? true : false,
+        ];
+    } catch (Exception $e) {
+        return [
+            'error' => $e->getMessage(),
+            'file' => $e->getFile(),
+            'line' => $e->getLine()
+        ];
+    }
+});
