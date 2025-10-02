@@ -70,11 +70,23 @@ Route::post('/login', function (Request $request) {
             
             Log::info('Login successful', ['user_id' => $user->id, 'user_type' => $user->user_type]);
             
-            // Force redirect with full URL
-            if ($user->is_admin || $user->user_type === 'staff') {
-                return redirect()->away(url('/dashboard'));
-            } else {
-                return redirect()->away(url('/user/dashboard'));
+            // Test if we can access dashboard directly
+            try {
+                if ($user->is_admin || $user->user_type === 'staff') {
+                    $dashboardUrl = url('/dashboard');
+                    Log::info('Redirecting to dashboard', ['url' => $dashboardUrl]);
+                    
+                    // Force a simple redirect
+                    return redirect($dashboardUrl)->with('login_success', 'Welcome ' . $user->name . '!');
+                } else {
+                    $dashboardUrl = url('/user/dashboard');
+                    Log::info('Redirecting to user dashboard', ['url' => $dashboardUrl]);
+                    return redirect($dashboardUrl)->with('login_success', 'Welcome ' . $user->name . '!');
+                }
+            } catch (Exception $redirectException) {
+                Log::error('Redirect failed', ['error' => $redirectException->getMessage()]);
+                // If redirect fails, show success message instead
+                return back()->with('success', 'Login successful! Please navigate to dashboard manually.');
             }
         }
         
@@ -605,3 +617,27 @@ Route::get('/new-service', function () {
 
 // Store new service (AJAX)
 Route::post('/new-service', [ServiceController::class, 'store'])->name('new.service.store');
+
+// Test login and immediate dashboard access
+Route::get('/test-login-and-redirect', function () {
+    try {
+        // Login the user
+        $user = \App\Models\User::where('email', 'sana@service.com')->first();
+        Auth::login($user);
+        
+        return [
+            'login_success' => Auth::check(),
+            'user' => Auth::user() ? Auth::user()->name : null,
+            'dashboard_url' => url('/dashboard'),
+            'current_url' => request()->url(),
+            'test_redirect_target' => redirect('/dashboard')->getTargetUrl(),
+            'session_regenerated' => session()->regenerate(),
+        ];
+    } catch (Exception $e) {
+        return [
+            'error' => $e->getMessage(),
+            'file' => $e->getFile(),
+            'line' => $e->getLine()
+        ];
+    }
+});
