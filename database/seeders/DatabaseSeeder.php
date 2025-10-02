@@ -34,5 +34,8 @@ class DatabaseSeeder extends Seeder
             'is_admin' => 1,
             'phone2' => '8888888888',
         ]);
+
+        // Call the StaffUsersSeeder to create staff users
+        $this->call(StaffUsersSeeder::class);
     }
 }
