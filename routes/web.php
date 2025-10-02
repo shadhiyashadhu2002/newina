@@ -8,6 +8,8 @@ use App\Http\Controllers\ServiceController;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Http\Request;
 use App\Http\Controllers\FreshDataController;
 
 // Admin routes (no auth middleware needed for login form)
@@ -16,7 +18,50 @@ Route::post('/admin/login', [AdminController::class, 'login'])->name('admin.logi
 
 // Regular user authentication routes
 Route::get('/login', [LoginController::class, 'showLoginForm'])->name('login');
-Route::post('/login', [LoginController::class, 'login'])->name('login.submit');
+
+// Temporary debug login route
+Route::post('/login', function (Request $request) {
+    try {
+        // Log the attempt
+        Log::info('Login attempt received', [
+            'email' => $request->input('email'),
+            'has_password' => $request->has('password'),
+            'csrf_token_match' => $request->input('_token') === session()->token(),
+        ]);
+        
+        // Validate the request
+        $request->validate([
+            'email' => 'required|email',
+            'password' => 'required|string',
+        ]);
+        
+        $credentials = $request->only('email', 'password');
+        
+        // Attempt authentication
+        if (Auth::attempt($credentials)) {
+            $user = Auth::user();
+            
+            // Regenerate session for security
+            $request->session()->regenerate();
+            
+            Log::info('Login successful', ['user_id' => $user->id, 'user_type' => $user->user_type]);
+            
+            // Force redirect with full URL
+            if ($user->is_admin || $user->user_type === 'staff') {
+                return redirect()->away(url('/dashboard'));
+            } else {
+                return redirect()->away(url('/user/dashboard'));
+            }
+        }
+        
+        Log::error('Login failed for email: ' . $request->input('email'));
+        return back()->withErrors(['email' => 'Authentication failed. Please check your credentials.'])->withInput();
+        
+    } catch (Exception $e) {
+        Log::error('Login exception: ' . $e->getMessage());
+        return back()->withErrors(['email' => 'An error occurred: ' . $e->getMessage()])->withInput();
+    }
+})->name('login.submit');
 
 // Registration routes (if needed)
 Route::get('/register', [LoginController::class, 'showRegistrationForm'])->name('register');
@@ -225,6 +270,60 @@ Route::get('/test-auth-attempt', function () {
             'line' => $e->getLine()
         ];
     }
+});
+
+// Debug login form submission
+Route::post('/debug-login', function (Request $request) {
+    try {
+        return [
+            'form_submitted' => true,
+            'request_method' => $request->method(),
+            'has_email' => $request->has('email'),
+            'has_password' => $request->has('password'),
+            'email_value' => $request->input('email'),
+            'password_length' => strlen($request->input('password', '')),
+            'all_inputs' => $request->all(),
+            'csrf_token' => $request->input('_token'),
+            'session_token' => session()->token(),
+            'tokens_match' => $request->input('_token') === session()->token(),
+        ];
+    } catch (Exception $e) {
+        return [
+            'error' => $e->getMessage(),
+            'file' => $e->getFile(),
+            'line' => $e->getLine()
+        ];
+    }
+});
+
+// Simple login test form
+Route::get('/simple-login-form', function () {
+    return '
+    <!DOCTYPE html>
+    <html>
+    <head><title>Simple Login Test</title></head>
+    <body>
+        <h2>Simple Login Test</h2>
+        <form method="POST" action="/login" style="max-width:300px; margin:50px auto;">
+            <input type="hidden" name="_token" value="' . csrf_token() . '">
+            <div style="margin-bottom:10px;">
+                <label>Email:</label><br>
+                <input type="email" name="email" value="sana@service.com" style="width:100%; padding:8px;" required>
+            </div>
+            <div style="margin-bottom:10px;">
+                <label>Password:</label><br>
+                <input type="password" name="password" value="sana123" style="width:100%; padding:8px;" required>
+            </div>
+            <button type="submit" style="width:100%; padding:10px; background:#4CAF50; color:white; border:none;">Login</button>
+        </form>
+        
+        <hr>
+        <p><strong>Debug Info:</strong></p>
+        <p>CSRF Token: ' . csrf_token() . '</p>
+        <p>Login Route: ' . route('login') . '</p>
+        <p>Current URL: ' . request()->url() . '</p>
+    </body>
+    </html>';
 });
 
 // Direct authentication test
