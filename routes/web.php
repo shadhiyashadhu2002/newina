@@ -19,21 +19,45 @@ Route::post('/admin/login', [AdminController::class, 'login'])->name('admin.logi
 // Regular user authentication routes
 Route::get('/login', [LoginController::class, 'showLoginForm'])->name('login');
 
-// Temporary debug login route
+// Temporary debug login route with detailed debugging
 Route::post('/login', function (Request $request) {
     try {
-        // Log the attempt
-        Log::info('Login attempt received', [
-            'email' => $request->input('email'),
-            'has_password' => $request->has('password'),
-            'csrf_token_match' => $request->input('_token') === session()->token(),
-        ]);
+        // Get credentials
+        $email = $request->input('email');
+        $password = $request->input('password');
+        
+        // Find user
+        $user = \App\Models\User::where('email', $email)->first();
+        
+        // Detailed debug info
+        $debugInfo = [
+            'email_provided' => $email,
+            'password_length' => strlen($password),
+            'user_found' => $user ? true : false,
+            'user_id' => $user ? $user->id : null,
+            'user_type' => $user ? $user->user_type : null,
+            'password_hash_exists' => $user ? (!empty($user->password)) : false,
+            'password_check' => $user ? Hash::check($password, $user->password) : false,
+        ];
+        
+        // Log the detailed attempt
+        Log::info('Detailed login attempt', $debugInfo);
         
         // Validate the request
         $request->validate([
             'email' => 'required|email',
             'password' => 'required|string',
         ]);
+        
+        // Show detailed error if user not found
+        if (!$user) {
+            return back()->withErrors(['email' => 'No user found with email: ' . $email])->withInput();
+        }
+        
+        // Show detailed error if password is wrong
+        if (!Hash::check($password, $user->password)) {
+            return back()->withErrors(['password' => 'Password is incorrect for: ' . $email])->withInput();
+        }
         
         $credentials = $request->only('email', 'password');
         
@@ -54,12 +78,12 @@ Route::post('/login', function (Request $request) {
             }
         }
         
-        Log::error('Login failed for email: ' . $request->input('email'));
-        return back()->withErrors(['email' => 'Authentication failed. Please check your credentials.'])->withInput();
+        Log::error('Auth::attempt failed despite password check passing', $debugInfo);
+        return back()->withErrors(['email' => 'Authentication system error. Debug info logged.'])->withInput();
         
     } catch (Exception $e) {
         Log::error('Login exception: ' . $e->getMessage());
-        return back()->withErrors(['email' => 'An error occurred: ' . $e->getMessage()])->withInput();
+        return back()->withErrors(['email' => 'System error: ' . $e->getMessage()])->withInput();
     }
 })->name('login.submit');
 
@@ -324,6 +348,50 @@ Route::get('/simple-login-form', function () {
         <p>Current URL: ' . request()->url() . '</p>
     </body>
     </html>';
+});
+
+// Debug: Compare working vs non-working credentials
+Route::get('/debug-credentials', function () {
+    try {
+        $email = 'sana@service.com';
+        $password = 'sana123';
+        
+        $user = \App\Models\User::where('email', $email)->first();
+        
+        if (!$user) {
+            return ['error' => 'User not found'];
+        }
+        
+        // Test both ways
+        $manualCheck = Hash::check($password, $user->password);
+        $authAttempt = Auth::attempt(['email' => $email, 'password' => $password]);
+        
+        return [
+            'user_found' => true,
+            'user_data' => [
+                'id' => $user->id,
+                'email' => $user->email,
+                'name' => $user->name,
+                'user_type' => $user->user_type,
+                'password_hash_length' => strlen($user->password),
+                'password_starts_with' => substr($user->password, 0, 10),
+            ],
+            'manual_password_check' => $manualCheck,
+            'auth_attempt_result' => $authAttempt,
+            'is_authenticated_after' => Auth::check(),
+            'test_password_variations' => [
+                'original' => Hash::check($password, $user->password),
+                'trimmed' => Hash::check(trim($password), $user->password),
+                'lowercase' => Hash::check(strtolower($password), $user->password),
+            ]
+        ];
+    } catch (Exception $e) {
+        return [
+            'error' => $e->getMessage(),
+            'file' => $e->getFile(),
+            'line' => $e->getLine()
+        ];
+    }
 });
 
 // Direct authentication test
