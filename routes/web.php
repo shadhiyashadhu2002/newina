@@ -6,6 +6,7 @@ use App\Http\Controllers\UserController;
 use App\Http\Controllers\Auth\LoginController; // Add this import
 use App\Http\Controllers\ServiceController;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\FreshDataController;
 
@@ -134,6 +135,88 @@ Route::get('/server-debug', function () {
             'session_driver' => config('session.driver'),
             'app_env' => config('app.env'),
             'debug_mode' => config('app.debug'),
+        ];
+    } catch (Exception $e) {
+        return [
+            'error' => $e->getMessage(),
+            'file' => $e->getFile(),
+            'line' => $e->getLine()
+        ];
+    }
+});
+
+// Force login test for debugging authentication
+Route::get('/force-login-sana', function () {
+    try {
+        $user = App\Models\User::where('email', 'sana@service.com')->first();
+        
+        if (!$user) {
+            return ['error' => 'User sana@service.com not found'];
+        }
+        
+        // Force login using Auth::login
+        Auth::login($user);
+        
+        // Check if login worked
+        $isLoggedIn = Auth::check();
+        $loggedUser = Auth::user();
+        
+        return [
+            'login_attempted' => true,
+            'user_found' => true,
+            'auth_login_called' => true,
+            'is_logged_in_now' => $isLoggedIn,
+            'logged_user' => $loggedUser ? [
+                'id' => $loggedUser->id,
+                'name' => $loggedUser->name,
+                'email' => $loggedUser->email,
+                'user_type' => $loggedUser->user_type
+            ] : null,
+            'session_id' => session()->getId(),
+            'redirect_url' => $user->user_type === 'staff' || $user->is_admin ? '/dashboard' : '/user/dashboard'
+        ];
+    } catch (Exception $e) {
+        return [
+            'error' => $e->getMessage(),
+            'file' => $e->getFile(),
+            'line' => $e->getLine()
+        ];
+    }
+});
+
+// Test manual login with Auth::attempt
+Route::get('/test-auth-attempt', function () {
+    try {
+        $credentials = [
+            'email' => 'sana@service.com',
+            'password' => 'sana123'
+        ];
+        
+        // Get user first to verify it exists
+        $user = App\Models\User::where('email', 'sana@service.com')->first();
+        
+        if (!$user) {
+            return ['error' => 'User not found'];
+        }
+        
+        // Check password manually
+        $passwordCheck = Hash::check('sana123', $user->password);
+        
+        // Try Auth::attempt
+        $authResult = Auth::attempt($credentials);
+        
+        return [
+            'user_exists' => true,
+            'password_correct' => $passwordCheck,
+            'auth_attempt_result' => $authResult,
+            'is_authenticated_after' => Auth::check(),
+            'session_driver' => config('session.driver'),
+            'user_data' => [
+                'id' => $user->id,
+                'email' => $user->email,
+                'name' => $user->name,
+                'user_type' => $user->user_type
+            ]
         ];
     } catch (Exception $e) {
         return [
