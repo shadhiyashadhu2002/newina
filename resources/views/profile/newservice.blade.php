@@ -508,7 +508,21 @@
           <div class="modal-form-row">
             <div class="modal-form-group">
               <label>Service Executive</label>
-              <input type="text" name="service_executive" placeholder="Enter service executive name" required>
+              <select name="service_executive" required>
+                <option value="">Select Service Executive</option>
+                @if(isset($staffUsers))
+                  @foreach($staffUsers as $staff)
+                    <option value="{{ $staff->first_name }}" 
+                            {{ (Auth::user()->first_name == $staff->first_name) ? 'selected' : '' }}>
+                      {{ $staff->first_name }}
+                    </option>
+                  @endforeach
+                @else
+                  <option value="{{ Auth::user()->first_name ?? 'admin' }}" selected>
+                    {{ Auth::user()->first_name ?? 'admin' }}
+                  </option>
+                @endif
+              </select>
             </div>
           </div>
           <div class="modal-actions">

@@ -93,14 +93,26 @@ class ServiceController extends Controller
     {
         $user = Auth::user();
         $services = Service::where('service_executive', $user->first_name)->orderByDesc('created_at')->get();
-        return view('profile.newservice', compact('services'));
+        
+        // Get all staff users for dropdown
+        $staffUsers = \App\Models\User::where('user_type', 'staff')
+                                     ->orderBy('first_name')
+                                     ->get(['id', 'first_name', 'name']);
+        
+        return view('profile.newservice', compact('services', 'staffUsers'));
     }
 
     // List all services (admin view)
     public function allServices()
     {
         $services = Service::orderByDesc('created_at')->get();
-        return view('profile.newservice', compact('services'));
+        
+        // Get all staff users for dropdown
+        $staffUsers = \App\Models\User::where('user_type', 'staff')
+                                     ->orderBy('first_name')
+                                     ->get(['id', 'first_name', 'name']);
+        
+        return view('profile.newservice', compact('services', 'staffUsers'));
     }
 
     // Service Dashboard with dynamic counts
@@ -147,7 +159,12 @@ class ServiceController extends Controller
                                         ->get();
             }
 
-            return view('profile.services', compact('totalServices', 'newServices', 'activeServices', 'completedServices', 'recentServices'));
+            // Get all staff users for dropdown
+            $staffUsers = \App\Models\User::where('user_type', 'staff')
+                                         ->orderBy('first_name')
+                                         ->get(['id', 'first_name', 'name']);
+
+            return view('profile.services', compact('totalServices', 'newServices', 'activeServices', 'completedServices', 'recentServices', 'staffUsers'));
             
         } catch (\Exception $e) {
             // Log the error and return a fallback response
@@ -160,7 +177,12 @@ class ServiceController extends Controller
             $completedServices = 0;
             $recentServices = collect([]);
             
-            return view('profile.services', compact('totalServices', 'newServices', 'activeServices', 'completedServices', 'recentServices'));
+            // Get all staff users for dropdown even in error case
+            $staffUsers = \App\Models\User::where('user_type', 'staff')
+                                         ->orderBy('first_name')
+                                         ->get(['id', 'first_name', 'name']);
+            
+            return view('profile.services', compact('totalServices', 'newServices', 'activeServices', 'completedServices', 'recentServices', 'staffUsers'));
         }
     }
 

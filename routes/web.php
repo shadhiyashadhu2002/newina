@@ -642,31 +642,31 @@ Route::get('/test-login-and-redirect', function () {
     }
 });
 
-// Check if Sajna's data exists in user table
-Route::get('/check-sajna', function () {
+// Check staff users for dropdown debug
+Route::get('/debug-staff-dropdown', function () {
     try {
-        // Look for Sajna by email
-        $sajnaByEmail = \App\Models\User::where('email', 'sajna@service.com')->first();
+        // Get all users with user_type = 'staff'
+        $staffUsers = \App\Models\User::where('user_type', 'staff')
+                                     ->orderBy('first_name')
+                                     ->get(['id', 'first_name', 'name', 'email', 'user_type']);
         
-        // Look for Sajna by name
-        $sajnaByName = \App\Models\User::where('name', 'like', '%Sajna%')->get();
+        // Get all users to see what user_types exist
+        $allUsers = \App\Models\User::select('id', 'name', 'first_name', 'email', 'user_type')
+                                   ->orderBy('name')
+                                   ->get();
         
-        // Look for all staff users
-        $allStaff = \App\Models\User::where('user_type', 'staff')->get(['id', 'name', 'email', 'user_type']);
+        // Count by user_type
+        $userTypeCounts = \App\Models\User::selectRaw('user_type, COUNT(*) as count')
+                                         ->groupBy('user_type')
+                                         ->get();
         
         return [
-            'sajna_by_email' => $sajnaByEmail ? [
-                'id' => $sajnaByEmail->id,
-                'name' => $sajnaByEmail->name,
-                'email' => $sajnaByEmail->email,
-                'user_type' => $sajnaByEmail->user_type,
-                'code' => $sajnaByEmail->code ?? 'No code',
-                'created_at' => $sajnaByEmail->created_at
-            ] : null,
-            'sajna_by_name_search' => $sajnaByName->toArray(),
-            'total_staff_count' => $allStaff->count(),
-            'all_staff_emails' => $allStaff->pluck('email')->toArray(),
-            'sajna_exists' => $sajnaByEmail ? true : false,
+            'staff_users_count' => $staffUsers->count(),
+            'staff_users' => $staffUsers->toArray(),
+            'all_users_count' => $allUsers->count(),
+            'user_type_counts' => $userTypeCounts->toArray(),
+            'staff_names_for_dropdown' => $staffUsers->pluck('first_name')->toArray(),
+            'all_user_types' => $allUsers->pluck('user_type')->unique()->values()->toArray(),
         ];
     } catch (Exception $e) {
         return [
