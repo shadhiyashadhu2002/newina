@@ -84,5 +84,15 @@ class User extends Authenticatable
     {
         return $this->belongsTo(Upload::class, 'photo', 'id');
     }
+
+    public function addresses()
+    {
+        return $this->hasMany(Address::class);
+    }
+
+    public function primaryAddress()
+    {
+        return $this->hasOne(Address::class)->orderByRaw("CASE WHEN type = 'present' THEN 1 WHEN type = 'permanent' THEN 2 ELSE 3 END")->orderBy('created_at', 'asc');
+    }
     
 }

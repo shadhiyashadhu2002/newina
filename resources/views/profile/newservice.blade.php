@@ -502,7 +502,11 @@
             </div>
             <div class="modal-form-group">
               <label>Mobile Number</label>
-              <input type="tel" name="member_mobile" placeholder="Enter mobile number" required>
+              <input type="tel" name="contact_mobile_no" placeholder="Enter mobile number" required>
+            </div>
+            <div class="modal-form-group">
+              <label>Alternative Contact Number</label>
+              <input type="tel" name="contact_alternate" placeholder="Enter alternative contact number">
             </div>
           </div>
           <div class="modal-form-row">

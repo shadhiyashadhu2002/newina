@@ -350,6 +350,7 @@ class ServiceController extends Controller
                 'user.spiritualBackground.caste', 
                 'user.career',
                 'user.profilePhoto',
+                'user.primaryAddress.city',
                 'maritalStatus'
             ])->whereNotNull('birthday');
                 
@@ -433,45 +434,44 @@ class ServiceController extends Controller
                 $query->where('marital_status_id', $request->marital_status);
             }
 
-            // Apply user-related filters (district and registration dates)
-            if ($request->filled('district') || 
-                ($request->filled('registered_from') && $request->registered_from != '') || 
+            // Apply district filter using address/city relationships
+            if ($request->filled('district')) {
+                Log::info('District filter applied', ['district' => $request->district]);
+                $district = $request->district;
+                
+                $query->where(function($mainQ) use ($district) {
+                    // Search in all addresses
+                    $mainQ->whereHas('user.addresses.city', function($q) use ($district) {
+                        $q->where(function($subQ) use ($district) {
+                            $subQ->where('name', 'like', '%' . $district . '%')
+                                 ->orWhere('name', strtolower($district))
+                                 ->orWhere('name', strtoupper($district))
+                                 ->orWhere('name', ucfirst(strtolower($district)))
+                                 ->orWhere('name', ucwords(strtolower($district)));
+                        });
+                    });
+                });
+            }
+
+            // Apply registration date filters
+            if (($request->filled('registered_from') && $request->registered_from != '') || 
                 ($request->filled('registered_to') && $request->registered_to != '')) {
                 
-                $query->whereHas('user', function($q) use ($request) {
-                    // District filter
-                    if ($request->filled('district')) {
-                        Log::info('District filter applied', ['district' => $request->district]);
-                        $district = $request->district;
-                        $q->where(function($subQ) use ($district) {
-                            $subQ->where('district', 'like', '%' . $district . '%')
-                                 ->orWhere('city', 'like', '%' . $district . '%')
-                                 ->orWhere('district', strtolower($district))
-                                 ->orWhere('city', strtolower($district))
-                                 ->orWhere('district', ucfirst(strtolower($district)))
-                                 ->orWhere('city', ucfirst(strtolower($district)));
-                        });
+                $fromDate = $request->registered_from;
+                $toDate = $request->registered_to;
+                
+                Log::info('Registration date range filter applied', [
+                    'from_date' => $fromDate,
+                    'to_date' => $toDate
+                ]);
+                
+                $query->whereHas('user', function($q) use ($fromDate, $toDate) {
+                    if ($fromDate && $fromDate != '') {
+                        $q->whereDate('created_at', '>=', $fromDate);
                     }
-                    
-                    // Registration date filters
-                    $fromDate = $request->registered_from;
-                    $toDate = $request->registered_to;
-                    
-                    if (($fromDate && $fromDate != '') || ($toDate && $toDate != '')) {
-                        Log::info('Registration date range filter applied', [
-                            'from_date' => $fromDate,
-                            'to_date' => $toDate
-                        ]);
-                        
-                        if ($fromDate && $fromDate != '') {
-                            $q->whereDate('created_at', '>=', $fromDate);
-                        }
-                        if ($toDate && $toDate != '') {
-                            $q->whereDate('created_at', '<=', $toDate);
-                        }
+                    if ($toDate && $toDate != '') {
+                        $q->whereDate('created_at', '<=', $toDate);
                     }
-                    
-
                 });
             }
 
@@ -502,6 +502,19 @@ class ServiceController extends Controller
                     'profile_id' => $profileId,
                     'search_method' => 'users.code_field'
                 ]);
+            }
+
+            // Apply location filter (search by city name through addresses)
+            if ($request->filled('location')) {
+                Log::info('Location filter applied', ['location' => $request->location]);
+                $location = $request->location;
+                
+                $query->whereHas('user.primaryAddress.city', function($q) use ($location) {
+                    $q->where('name', 'like', '%' . $location . '%')
+                      ->orWhere('name', strtolower($location))
+                      ->orWhere('name', strtoupper($location))
+                      ->orWhere('name', ucfirst(strtolower($location)));
+                });
             }
 
 
@@ -566,8 +579,10 @@ class ServiceController extends Controller
                         'company' => $career && $career->company ? $career->company : 'Not specified',
                         'career' => $career ? trim(($career->designation ?? '') . ' ' . ($career->company ? 'at ' . $career->company : '')) : 'Not specified',
                         
-                        // Location (assuming it's in user table, adjust if needed)
-                        'location' => $member->user->district ?? $member->user->city ?? 'Not specified',
+                        // Location from addresses table via city relationship
+                        'location' => ($member->user->primaryAddress && $member->user->primaryAddress->city) 
+                            ? $member->user->primaryAddress->city->name 
+                            : ($member->user->district ?? $member->user->city ?? 'Not specified'),
                         
                         // Profile image - try multiple possible paths
                         'photo_url' => $member->user->photo ? $this->getPhotoUrl($member->user->photo) : null,
@@ -592,7 +607,7 @@ class ServiceController extends Controller
                         'caste' => 'Not available',
                         'marital_status' => 'Not available',
                         'career' => 'Not available',
-                        'location' => 'Not available',
+                        'location' => $member->user->district ?? $member->user->city ?? 'Not available',
                         'photo_url' => null,
                         'has_photo' => false,
 

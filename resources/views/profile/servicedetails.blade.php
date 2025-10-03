@@ -285,12 +285,12 @@
     .btn-info {
       background: linear-gradient(135deg, #17a2b8, #138496);
       color: white;
-      box-shadow: 0 4px 15px rgba(23, 162, 184, 0.4);
+      box-shadow: 0 4px 15px rgba(23,162,184,0.4);
     }
 
     .btn-info:hover {
       transform: translateY(-2px);
-      box-shadow: 0 6px 20px rgba(23, 162, 184, 0.6);
+      box-shadow: 0 6px 20px rgba(23,162,184,0.6);
     }
 
     /* Profile ID Section */
@@ -423,10 +423,8 @@
         </div>
         <!-- Tab Navigation -->
         <div class="tab-nav">
-          @if(Auth::check() && Auth::user()->is_admin)
           <button id="tab-service" class="active" type="button"><span>📋</span>Service</button>
-          @endif
-          <button id="tab-member" type="button" @if(!Auth::check() || !Auth::user()->is_admin) class="active" @endif><span>👤</span>Member Info</button>
+          <button id="tab-member" type="button"><span>👤</span>Member Info</button>
           <button id="tab-partner" type="button"><span>💝</span>Partner Preference</button>
           <button id="tab-contact" type="button"><span>📞</span>Contact Details</button>
         </div>
@@ -436,7 +434,6 @@
           @if(isset($service))
             @method('PUT')
           @endif
-          @if(Auth::check() && Auth::user()->is_admin)
           <div id="step-1" class="wizard-step">
             <h3>Service Details</h3>
             <div class="profile-id-section">
@@ -451,7 +448,7 @@
                 <div class="form-group">
                   <input type="text" name="profile_id" id="profile-id-input" placeholder="Profile ID" 
                          value="{{ isset($service) ? $service->profile_id : 'INA001' }}" 
-                         {{ isset($service) ? 'readonly' : 'readonly' }}>
+                         {{ isset($service) ? 'readonly' : '' }} required>
                 </div>
               </div>
             </div>
@@ -471,7 +468,7 @@
                 <label>Service Price</label>
                 <input type="number" name="service_price" id="service-price-input" placeholder="18000.00" step="0.01" 
                        value="{{ isset($service) ? $service->service_price : '' }}" 
-                       {{ isset($service) ? 'readonly' : 'required' }}>
+                       {{ isset($service) ? 'readonly' : '' }} required>
               </div>
             </div>
             <div class="form-row">
@@ -479,55 +476,54 @@
                 <label>Paid Amount</label>
                 <input type="number" name="amount_paid" id="amount-paid-input" placeholder="0.00" step="0.01" 
                        value="{{ isset($service) ? $service->amount_paid : '' }}" 
-                       {{ isset($service) ? 'readonly' : '' }}>
+                       {{ isset($service) ? 'readonly' : '' }} required>
               </div>
               <div class="form-group">
                 <label>Success Fee</label>
                 <input type="number" name="success_fee" id="success-fee-input" placeholder="0" step="0.01" 
                        value="{{ isset($service) ? $service->success_fee : '' }}" 
-                       {{ isset($service) ? 'readonly' : '' }} readonly>
+                       {{ isset($service) ? 'readonly' : '' }} readonly required>
               </div>
               <div class="form-group">
                 <label>Start Date</label>
                 <input type="date" name="start_date" id="start-date-input" 
                        value="{{ isset($service) ? $service->start_date : '' }}" 
-                       {{ isset($service) ? 'readonly' : 'required' }}>
+                       {{ isset($service) ? 'readonly' : '' }} required>
               </div>
               <div class="form-group">
                 <label>Expiry Date</label>
                 <input type="date" name="expiry-date-input" 
                        value="{{ isset($service) ? $service->expiry_date : '' }}" 
-                       {{ isset($service) ? 'readonly' : 'required' }}>
+                       {{ isset($service) ? 'readonly' : '' }} required>
               </div>
             </div>
             <div class="form-row">
               <div class="form-group" style="width:100%">
                 <label>Description</label>
                 <textarea name="service_details" id="service-details-input" placeholder="Enter detailed service information" 
-                          {{ isset($service) ? 'readonly' : '' }}>{{ isset($service) ? $service->service_details : '' }}</textarea>
+                          {{ isset($service) ? 'readonly' : '' }} required>{{ isset($service) ? $service->service_details : '' }}</textarea>
               </div>
             </div>
             <div class="form-actions" style="{{ isset($service) ? 'display: none;' : '' }}">
               <button type="button" class="btn btn-primary" id="save-next-1">Save & Next</button>
             </div>
           </div>
-          @endif
 
-          <div id="step-2" class="wizard-step" style="@if(!Auth::check() || !Auth::user()->is_admin) display:block; @else display:none; @endif">
+          <div id="step-2" class="wizard-step" style="display:none;">
             <h3>Member Info</h3>
             <div class="form-row">
               <div class="form-group">
                 <label>Name</label>
                 <input type="text" name="member_name" id="member-name-input" placeholder="Name" 
                        value="{{ isset($service) ? $service->member_name : '' }}" 
-                       {{ isset($service) ? 'readonly' : '' }}>
+                       {{ isset($service) ? 'readonly' : '' }} required>
               </div>
               <div class="form-group">
                 <label>Age</label>
                 <input type="number" name="member_age" id="member-age-input" placeholder="Age" 
                        value="{{ isset($service) ? $service->member_age : '' }}" 
                        maxlength="2" max="99" min="18"
-                       {{ isset($service) ? 'readonly' : '' }}>
+                       {{ isset($service) ? 'readonly' : '' }} required>
               </div>
             </div>
             <div class="form-row">
@@ -535,13 +531,13 @@
                 <label>Education</label>
                 <input type="text" name="member_education" id="member-education-input" placeholder="Education" 
                        value="{{ isset($service) ? $service->member_education : '' }}" 
-                       {{ isset($service) ? 'readonly' : '' }}>
+                       {{ isset($service) ? 'readonly' : '' }} required>
               </div>
               <div class="form-group">
                 <label>Occupation</label>
                 <input type="text" name="member_occupation" id="member-occupation-input" placeholder="Occupation" 
                        value="{{ isset($service) ? $service->member_occupation : '' }}" 
-                       {{ isset($service) ? 'readonly' : '' }}>
+                       {{ isset($service) ? 'readonly' : '' }} required>
               </div>
             </div>
             <div class="form-row">
@@ -549,13 +545,13 @@
                 <label>Annual Income</label>
                 <input type="text" name="member_income" id="member-income-input" placeholder="Annual Income" 
                        value="{{ isset($service) ? $service->member_income : '' }}" 
-                       {{ isset($service) ? 'readonly' : '' }}>
+                       {{ isset($service) ? 'readonly' : '' }} required>
               </div>
               <div class="form-group">
                 <label>Marital Status</label>
                 <input type="text" name="member_marital_status" id="member-marital-status-input" placeholder="Marital Status" 
                        value="{{ isset($service) ? $service->member_marital_status : '' }}" 
-                       {{ isset($service) ? 'readonly' : '' }}>
+                       {{ isset($service) ? 'readonly' : '' }} required>
               </div>
             </div>
             <div class="form-row">
@@ -563,13 +559,13 @@
                 <label>Family Status</label>
                 <input type="text" name="member_family_status" id="member-family-status-input" placeholder="Family Status" 
                        value="{{ isset($service) ? $service->member_family_status : '' }}" 
-                       {{ isset($service) ? 'readonly' : '' }}>
+                       {{ isset($service) ? 'readonly' : '' }} required>
               </div>
               <div class="form-group">
                 <label>Father Details</label>
                 <input type="text" name="member_father_details" id="member-father-details-input" placeholder="Father Details" 
                        value="{{ isset($service) ? $service->member_father_details : '' }}" 
-                       {{ isset($service) ? 'readonly' : '' }}>
+                       {{ isset($service) ? 'readonly' : '' }} required>
               </div>
             </div>
             <div class="form-row">
@@ -577,13 +573,13 @@
                 <label>Mother Details</label>
                 <input type="text" name="member_mother_details" id="member-mother-details-input" placeholder="Mother Details" 
                        value="{{ isset($service) ? $service->member_mother_details : '' }}" 
-                       {{ isset($service) ? 'readonly' : '' }}>
+                       {{ isset($service) ? 'readonly' : '' }} required>
               </div>
               <div class="form-group">
                 <label>Sibling Details</label>
                 <input type="text" name="member_sibling_details" id="member-sibling-details-input" placeholder="Sibling Details" 
                        value="{{ isset($service) ? $service->member_sibling_details : '' }}" 
-                       {{ isset($service) ? 'readonly' : '' }}>
+                       {{ isset($service) ? 'readonly' : '' }} required>
               </div>
             </div>
             <div class="form-row">
@@ -591,13 +587,13 @@
                 <label>Caste</label>
                 <input type="text" name="member_caste" id="member-caste-input" placeholder="Caste" 
                        value="{{ isset($service) ? $service->member_caste : '' }}" 
-                       {{ isset($service) ? 'readonly' : '' }}>
+                       {{ isset($service) ? 'readonly' : '' }} required>
               </div>
               <div class="form-group">
                 <label>Subcaste</label>
                 <input type="text" name="member_subcaste" id="member-subcaste-input" placeholder="Subcaste" 
                        value="{{ isset($service) ? $service->member_subcaste : '' }}" 
-                       {{ isset($service) ? 'readonly' : '' }}>
+                       {{ isset($service) ? 'readonly' : '' }} required>
               </div>
             </div>
             <div class="form-actions" style="{{ isset($service) ? 'display: none;' : '' }}">
@@ -614,13 +610,13 @@
                 <input type="number" name="preferred_age" id="preferred-age-input" placeholder="Preferred Age" 
                        value="{{ isset($service) ? $service->preferred_age : '' }}" 
                        maxlength="2" max="99" min="18"
-                       {{ isset($service) ? 'readonly' : '' }}>
+                       {{ isset($service) ? 'readonly' : '' }} required>
               </div>
               <div class="form-group">
                 <label>Preferred Weight</label>
                 <input type="text" name="preferred_weight" id="preferred-weight-input" placeholder="Preferred Weight" 
                        value="{{ isset($service) ? $service->preferred_weight : '' }}" 
-                       {{ isset($service) ? 'readonly' : '' }}>
+                       {{ isset($service) ? 'readonly' : '' }} required>
               </div>
             </div>
             <div class="form-row">
@@ -628,13 +624,13 @@
                 <label>Preferred Education</label>
                 <input type="text" name="preferred_education" id="preferred-education-input" placeholder="Preferred Education" 
                        value="{{ isset($service) ? $service->preferred_education : '' }}" 
-                       {{ isset($service) ? 'readonly' : '' }}>
+                       {{ isset($service) ? 'readonly' : '' }} required>
               </div>
               <div class="form-group">
                 <label>Preferred Religion</label>
                 <input type="text" name="preferred_religion" id="preferred-religion-input" placeholder="Preferred Religion" 
                        value="{{ isset($service) ? $service->preferred_religion : '' }}" 
-                       {{ isset($service) ? 'readonly' : '' }}>
+                       {{ isset($service) ? 'readonly' : '' }} required>
               </div>
             </div>
             <div class="form-row">
@@ -642,13 +638,13 @@
                 <label>Preferred Caste</label>
                 <input type="text" name="preferred_caste" id="preferred-caste-input" placeholder="Preferred Caste" 
                        value="{{ isset($service) ? $service->preferred_caste : '' }}" 
-                       {{ isset($service) ? 'readonly' : '' }}>
+                       {{ isset($service) ? 'readonly' : '' }} required>
               </div>
               <div class="form-group">
                 <label>Preferred Subcaste</label>
                 <input type="text" name="preferred_subcaste" id="preferred-subcaste-input" placeholder="Preferred Subcaste" 
                        value="{{ isset($service) ? $service->preferred_subcaste : '' }}" 
-                       {{ isset($service) ? 'readonly' : '' }}>
+                       {{ isset($service) ? 'readonly' : '' }} required>
               </div>
             </div>
             <div class="form-row">
@@ -656,13 +652,13 @@
                 <label>Preferred Marital Status</label>
                 <input type="text" name="preferred_marital_status" id="preferred-marital-status-input" placeholder="Preferred Marital Status" 
                        value="{{ isset($service) ? $service->preferred_marital_status : '' }}" 
-                       {{ isset($service) ? 'readonly' : '' }}>
+                       {{ isset($service) ? 'readonly' : '' }} required>
               </div>
               <div class="form-group">
                 <label>Preferred Annual Income</label>
                 <input type="text" name="preferred_annual_income" id="preferred-annual-income-input" placeholder="Preferred Annual Income" 
                        value="{{ isset($service) ? $service->preferred_annual_income : '' }}" 
-                       {{ isset($service) ? 'readonly' : '' }}>
+                       {{ isset($service) ? 'readonly' : '' }} required>
               </div>
             </div>
             <div class="form-row">
@@ -670,13 +666,13 @@
                 <label>Preferred Occupation</label>
                 <input type="text" name="preferred_occupation" id="preferred-occupation-input" placeholder="Preferred Occupation" 
                        value="{{ isset($service) ? $service->preferred_occupation : '' }}" 
-                       {{ isset($service) ? 'readonly' : '' }}>
+                       {{ isset($service) ? 'readonly' : '' }} required>
               </div>
               <div class="form-group">
                 <label>Preferred Family Status</label>
                 <input type="text" name="preferred_family_status" id="preferred-family-status-input" placeholder="Preferred Family Status" 
                        value="{{ isset($service) ? $service->preferred_family_status : '' }}" 
-                       {{ isset($service) ? 'readonly' : '' }}>
+                       {{ isset($service) ? 'readonly' : '' }} required>
               </div>
             </div>
             <div class="form-row">
@@ -684,7 +680,7 @@
                 <label>Preferred Eating Habits</label>
                 <input type="text" name="preferred_eating_habits" id="preferred-eating-habits-input" placeholder="Preferred Eating Habits" 
                        value="{{ isset($service) ? $service->preferred_eating_habits : '' }}" 
-                       {{ isset($service) ? 'readonly' : '' }}>
+                       {{ isset($service) ? 'readonly' : '' }} required>
               </div>
             </div>
             <div class="form-actions" style="{{ isset($service) ? 'display: none;' : '' }}">
@@ -700,13 +696,13 @@
                 <label>Customer Name</label>
                 <input type="text" name="contact_customer_name" id="contact-customer-name-input" placeholder="Customer Name" 
                        value="{{ isset($service) ? $service->contact_customer_name : '' }}" 
-                       {{ isset($service) ? 'readonly' : '' }}>
+                       {{ isset($service) ? 'readonly' : '' }} required>
               </div>
               <div class="form-group">
                 <label>Mobile No</label>
                 <input type="text" name="contact_mobile_no" id="contact-mobile-no-input" placeholder="Mobile No" 
                        value="{{ isset($service) ? $service->contact_mobile_no : '' }}" 
-                       {{ isset($service) ? 'readonly' : '' }}>
+                       {{ isset($service) ? 'readonly' : '' }} required>
               </div>
             </div>
             <div class="form-row">
@@ -714,13 +710,13 @@
                 <label>WhatsApp No</label>
                 <input type="text" name="contact_whatsapp_no" id="contact-whatsapp-no-input" placeholder="WhatsApp No" 
                        value="{{ isset($service) ? $service->contact_whatsapp_no : '' }}" 
-                       {{ isset($service) ? 'readonly' : '' }}>
+                       {{ isset($service) ? 'readonly' : '' }} required>
               </div>
               <div class="form-group">
                 <label>Email</label>
                 <input type="email" name="contact_email" id="contact-email-input" placeholder="Email" 
                        value="{{ isset($service) ? $service->contact_email : '' }}" 
-                       {{ isset($service) ? 'readonly' : '' }}>
+                       {{ isset($service) ? 'readonly' : '' }} required>
               </div>
             </div>
             <div class="form-row">
@@ -728,13 +724,13 @@
                 <label>Alternate Contact</label>
                 <input type="text" name="contact_alternate" id="contact-alternate-input" placeholder="Alternate Contact" 
                        value="{{ isset($service) ? $service->contact_alternate : '' }}" 
-                       {{ isset($service) ? 'readonly' : '' }}>
+                       {{ isset($service) ? 'readonly' : '' }} required>
               </div>
               <div class="form-group">
                 <label>Client</label>
                 <input type="text" name="contact_client" id="contact-client-input" placeholder="Client" 
                        value="{{ isset($service) ? $service->contact_client : '' }}" 
-                       {{ isset($service) ? 'readonly' : '' }}>
+                       {{ isset($service) ? 'readonly' : '' }} required>
               </div>
             </div>
             <div class="form-actions" style="{{ isset($service) ? 'display: none;' : '' }}">
@@ -760,37 +756,32 @@
       const isAdmin = {{ Auth::check() && Auth::user()->is_admin ? 'true' : 'false' }};
       
       if (!isViewMode) {
-        // Set default profile ID for new services (only for admin)
-        if (isAdmin && document.getElementById('profile-id-input')) {
+        // Set default profile ID for new services
+        if (document.getElementById('profile-id-input')) {
           document.getElementById('profile-id-input').value = 'INA001';
         }
         
         // Set up form navigation for new services
         setupFormNavigation();
         
-        // If not admin, start from Member Info tab
-        if (!isAdmin) {
-          showStep(2);
-          setActiveTab('tab-member');
-        }
+        // Start from Service Details tab for all users
+        showStep(1);
+        setActiveTab('tab-service');
       } else {
         // Set up tab navigation for viewing existing services
         setupTabNavigation();
         
-        // If not admin, start from Member Info tab in view mode too
-        if (!isAdmin) {
-          showStep(2);
-          setActiveTab('tab-member');
-        }
+        // Start from Service Details tab in view mode for all users
+        showStep(1);
+        setActiveTab('tab-service');
+      }
         
-        // Set up edit button functionality
-        const editBtn = document.getElementById('edit-service-btn');
-        if (editBtn) {
-          editBtn.onclick = function() {
-            alert('Edit button clicked!');
-            enableEditMode();
-          };
-        }
+      // Set up edit button functionality
+      const editBtn = document.getElementById('edit-service-btn');
+      if (editBtn) {
+        editBtn.onclick = function() {
+          enableEditMode();
+        };
       }
     }
 
@@ -799,63 +790,64 @@
       // Date validation: Expiry date should not be before start date
       const startDateInput = document.getElementById('start-date-input');
       const expiryDateInput = document.getElementById('expiry-date-input');
-      
       if (startDateInput && expiryDateInput) {
         startDateInput.addEventListener('change', function() {
           const startDate = this.value;
           if (startDate) {
-            // Set minimum date for expiry date to be the start date
             expiryDateInput.setAttribute('min', startDate);
-            
-            // If expiry date is already set and is before start date, clear it
             if (expiryDateInput.value && expiryDateInput.value < startDate) {
               expiryDateInput.value = '';
               alert('Expiry date cannot be before the start date. Please select a valid expiry date.');
             }
           }
         });
-        
-        // Validate on expiry date change as well
         expiryDateInput.addEventListener('change', function() {
           const startDate = startDateInput.value;
           const expiryDate = this.value;
-          
           if (startDate && expiryDate && expiryDate < startDate) {
             this.value = '';
             alert('Expiry date cannot be before the start date. Please select a valid expiry date.');
           }
         });
       }
-      
       // Age restrictions: Member age - 2 digits max
       const memberAgeInput = document.getElementById('member-age-input');
       if (memberAgeInput) {
         memberAgeInput.setAttribute('maxlength', '2');
         memberAgeInput.setAttribute('max', '99');
         memberAgeInput.addEventListener('input', function() {
-          // Remove any non-numeric characters
           this.value = this.value.replace(/[^0-9]/g, '');
-          // Limit to 2 digits
           if (this.value.length > 2) {
             this.value = this.value.slice(0, 2);
           }
         });
       }
-      
       // Age restrictions: Preferred age - 2 digits max
       const preferredAgeInput = document.getElementById('preferred-age-input');
       if (preferredAgeInput) {
         preferredAgeInput.setAttribute('maxlength', '2');
         preferredAgeInput.setAttribute('max', '99');
         preferredAgeInput.addEventListener('input', function() {
-          // Remove any non-numeric characters
           this.value = this.value.replace(/[^0-9]/g, '');
-          // Limit to 2 digits
           if (this.value.length > 2) {
             this.value = this.value.slice(0, 2);
           }
         });
       }
+    }
+    // Validate all required fields in a step
+    function validateStepFields(stepNum) {
+      const step = document.getElementById('step-' + stepNum);
+      if (!step) return false;
+      const requiredFields = step.querySelectorAll('input[required], select[required], textarea[required]');
+      for (let field of requiredFields) {
+        if (field.offsetParent !== null && !field.value.trim()) {
+          field.focus();
+          alert('Please fill all fields before continuing.');
+          return false;
+        }
+      }
+      return true;
     }
 
     // Enable edit mode
@@ -900,6 +892,9 @@
       // Re-setup form validations for edit mode
       setupFormValidations();
       
+      // Re-setup service pricing for edit mode
+      setupServicePricing();
+      
       // Set up form navigation for editing
       setupFormNavigation();
     }
@@ -911,22 +906,24 @@
         alert('Form not found');
         return;
       }
-
+      // Validate all required fields in all steps before saving
+      for (let i = 1; i <= 4; i++) {
+        if (!validateStepFields(i)) {
+          return;
+        }
+      }
       // Create FormData object to collect all form data
       const formData = new FormData(form);
-
       // Add CSRF token
       const csrfToken = document.querySelector('input[name="_token"]').value;
       formData.append('_token', csrfToken);
       formData.append('_method', 'PUT');
-
       // Show loading state
       const saveBtn = document.getElementById('save-service-btn');
       if (saveBtn) {
         saveBtn.textContent = 'Saving...';
         saveBtn.disabled = true;
       }
-
       // Submit the form data
       fetch(form.action, {
         method: 'POST',
@@ -1077,7 +1074,11 @@
 
     // Save current section and proceed
     function saveCurrentSection(currentStep) {
-      const formData = new FormData(document.getElementById('unified-service-form'));
+      // Validate all required fields in this step
+      if (!validateStepFields(currentStep)) {
+        return;
+      }
+      const formData = new FormData(document.getElementById('addServiceForm'));
       formData.append('current_step', currentStep);
 
       fetch('/save-service', {
@@ -1091,11 +1092,9 @@
       .then(data => {
         if (data.success) {
           console.log('Section saved successfully');
-          
           if (currentStep < 4) {
             showStep(currentStep + 1);
           } else {
-            // Final save - redirect to services list
             alert('Service saved successfully!');
             window.location.href = '/profile';
           }
@@ -1110,22 +1109,56 @@
       });
     }
 
-    // Initialize page when DOM is loaded
-    document.addEventListener('DOMContentLoaded', function() {
-      initializePage();
-      setupServicePricing();
+    // Navigation functionality for header
+    document.querySelectorAll('.header-nav a').forEach(link => {
+      link.addEventListener('click', function(e) {
+        if (!this.getAttribute('href') || this.getAttribute('href') === '#') {
+          e.preventDefault();
+          document.querySelectorAll('.header-nav a').forEach(l => l.classList.remove('active'));
+          this.classList.add('active');
+          const page = this.getAttribute('data-page');
+          console.log('Navigating to:', page);
+        }
+      });
     });
+
+    // Logout functionality - Global function
+    window.confirmLogout = function() {
+      if (confirm('Are you sure you want to logout?')) {
+        document.getElementById('logout-form').submit();
+      }
+    };
+
+    // Redirect to service details page with current profile data
+    function redirectToServiceDetails() {
+      // Get the profile ID from the form
+      const profileId = document.getElementById('profile-id-input').value || 'INA001';
+      const serviceName = document.querySelector('input[name="service_name"]').value || 'Service';
+      
+      // Redirect to the service details route
+      window.location.href = `/service-details/${profileId}/${serviceName}`;
+    }
 
     // Function to setup automatic service pricing and success fee calculation
     function setupServicePricing() {
+      console.log('Setting up service pricing...');
       const serviceNameSelect = document.getElementById('service-name-input');
       const servicePriceInput = document.getElementById('service-price-input');
       const paidAmountInput = document.getElementById('amount-paid-input');
       const successFeeInput = document.getElementById('success-fee-input');
       
+      console.log('Elements found:', {
+        serviceNameSelect: !!serviceNameSelect,
+        servicePriceInput: !!servicePriceInput,
+        paidAmountInput: !!paidAmountInput,
+        successFeeInput: !!successFeeInput
+      });
+      
       // Auto-populate service price based on service name
       if (serviceNameSelect && servicePriceInput) {
+        console.log('Adding change listener to service name select');
         serviceNameSelect.addEventListener('change', function() {
+          console.log('Service name changed to:', this.value);
           const selectedService = this.value;
           let price = '';
           
@@ -1140,6 +1173,7 @@
           
           if (servicePrices[selectedService]) {
             price = servicePrices[selectedService];
+            console.log('Setting price to:', price);
             servicePriceInput.value = price;
             calculateSuccessFee(); // Recalculate success fee when price changes
           }
@@ -1147,8 +1181,11 @@
         
         // Set initial price if service is already selected
         if (serviceNameSelect.value && !servicePriceInput.value) {
+          console.log('Triggering initial change event for:', serviceNameSelect.value);
           serviceNameSelect.dispatchEvent(new Event('change'));
         }
+      } else {
+        console.log('Service name select or price input not found!');
       }
       
       // Calculate success fee when paid amount changes
@@ -1177,26 +1214,16 @@
       calculateSuccessFee();
     }
 
-    // Function to refresh CSRF token
-    function refreshCSRFToken() {
-      return fetch('/csrf-token', {
-        method: 'GET',
-        headers: {
-          'X-Requested-With': 'XMLHttpRequest'
-        }
-      })
-      .then(response => response.json())
-      .then(data => {
-        if (data.csrf_token) {
-          const metaTag = document.querySelector('meta[name="csrf-token"]');
-          if (metaTag) {
-            metaTag.setAttribute('content', data.csrf_token);
-          }
-          return data.csrf_token;
-        }
-        throw new Error('Failed to get CSRF token');
-      });
-    }
+    // Initialize when page loads
+    document.addEventListener('DOMContentLoaded', function() {
+      initializePage();
+      // Add a small delay to ensure all DOM elements are ready
+      setTimeout(function() {
+        setupServicePricing();
+      }, 100);
+    });
+
+
   </script>
 
   <script>
@@ -1304,27 +1331,20 @@
         e.preventDefault();
         console.log('Save & Next 1 clicked');
         
-        // Validate required fields for section 1
-        const profileId = document.getElementById('profile-id-input').value;
-        const serviceName = document.getElementById('service-name-input').value;
-        const servicePrice = document.getElementById('service-price-input').value;
-        const startDate = document.getElementById('start-date-input').value;
-        const expiryDate = document.getElementById('expiry-date-input').value;
-        
-        if (!profileId || !serviceName || !servicePrice || !startDate || !expiryDate) {
-          alert('Please fill in all required fields (Profile ID, Service Name, Service Price, Start Date, Expiry Date)');
+        // Validate all required fields in step 1
+        if (!validateStepFields(1)) {
           return;
         }
         
         saveSection('service', {
-          profile_id: profileId,
-          service_name: serviceName,
-          service_price: servicePrice,
-          amount_paid: document.getElementById('amount-paid-input').value || servicePrice,
-          success_fee: document.getElementById('success-fee-input').value || '0',
-          start_date: startDate,
-          expiry_date: expiryDate,
-          service_details: document.getElementById('service-details-input').value || ''
+          profile_id: document.getElementById('profile-id-input').value,
+          service_name: document.getElementById('service-name-input').value,
+          service_price: document.getElementById('service-price-input').value,
+          amount_paid: document.getElementById('amount-paid-input').value,
+          success_fee: document.getElementById('success-fee-input').value,
+          start_date: document.getElementById('start-date-input').value,
+          expiry_date: document.getElementById('expiry-date-input').value,
+          service_details: document.getElementById('service-details-input').value
         }, function() {
           document.getElementById('step-1').style.display = 'none';
           document.getElementById('step-2').style.display = 'block';
@@ -1341,6 +1361,11 @@
       document.getElementById('save-next-2').onclick = function(e) {
         e.preventDefault();
         console.log('Save & Next 2 clicked');
+        
+        // Validate all required fields in step 2
+        if (!validateStepFields(2)) {
+          return;
+        }
         
         saveSection('member', {
           profile_id: document.getElementById('profile-id-input').value,
@@ -1373,6 +1398,11 @@
         e.preventDefault();
         console.log('Save & Next 3 clicked');
         
+        // Validate all required fields in step 3
+        if (!validateStepFields(3)) {
+          return;
+        }
+        
         saveSection('partner', {
           profile_id: document.getElementById('profile-id-input').value,
           preferred_age: document.getElementById('preferred-age-input').value || '',
@@ -1402,6 +1432,11 @@
       document.getElementById('save-final').onclick = function(e) {
         e.preventDefault();
         console.log('Save & Complete clicked');
+        
+        // Validate all required fields in step 4
+        if (!validateStepFields(4)) {
+          return;
+        }
         
         saveSection('contact', {
           profile_id: document.getElementById('profile-id-input').value,
