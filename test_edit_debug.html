@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Edit Button</title>
+</head>
+<body>
+    <p>Testing edit button functionality...</p>
+    
+    <script>
+        // Test if the page loads and we can access the edit buttons
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('Page loaded, checking for edit buttons...');
+            
+            const editButtons = document.querySelectorAll('.edit-btn');
+            console.log('Found edit buttons:', editButtons.length);
+            
+            editButtons.forEach((btn, index) => {
+                console.log(`Button ${index}:`, btn, 'Service ID:', btn.getAttribute('data-service-id'));
+            });
+            
+            // Test click event
+            document.addEventListener('click', function(e) {
+                console.log('Click detected on:', e.target);
+                if (e.target.classList.contains('edit-btn') || e.target.closest('.edit-btn')) {
+                    console.log('Edit button clicked!');
+                    const editBtn = e.target.classList.contains('edit-btn') ? e.target : e.target.closest('.edit-btn');
+                    const serviceId = editBtn.getAttribute('data-service-id');
+                    console.log('Service ID:', serviceId);
+                    alert('Edit button works! Service ID: ' + serviceId);
+                }
+            });
+        });
+    </script>
+</body>
+</html>

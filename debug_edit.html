@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Edit Functionality</title>
+</head>
+<body>
+    <p>Testing edit functionality...</p>
+    
+    <script>
+        // Test if we can access the page and check elements
+        fetch('http://127.0.0.1:8000/new-service')
+            .then(response => response.text())
+            .then(html => {
+                console.log('Page loaded successfully');
+                
+                // Check for edit modal
+                if (html.includes('edit-modal-overlay')) {
+                    console.log('✓ Edit modal found in HTML');
+                } else {
+                    console.log('✗ Edit modal NOT found in HTML');
+                }
+                
+                // Check for edit buttons
+                if (html.includes('edit-btn')) {
+                    console.log('✓ Edit buttons found in HTML');
+                } else {
+                    console.log('✗ Edit buttons NOT found in HTML');
+                }
+                
+                // Check for admin conditional
+                if (html.includes('@if(Auth::check() && Auth::user()->is_admin)')) {
+                    console.log('! Blade syntax still present - not compiled');
+                }
+            })
+            .catch(error => {
+                console.error('Error loading page:', error);
+            });
+    </script>
+</body>
+</html>

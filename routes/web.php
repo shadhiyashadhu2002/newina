@@ -618,6 +618,18 @@ Route::get('/new-service', function () {
 // Store new service (AJAX)
 Route::post('/new-service', [ServiceController::class, 'store'])->name('new.service.store');
 
+// Get service for editing (AJAX)
+Route::get('/service/{id}/edit', [ServiceController::class, 'edit'])->name('service.edit');
+
+// Update service (AJAX)
+Route::put('/service/{id}', [ServiceController::class, 'update'])->name('service.update');
+
+// Delete service (AJAX) - Soft delete
+Route::delete('/service/{id}', [ServiceController::class, 'destroy'])->name('service.delete');
+
+// Expired services (admin only)
+Route::get('/expired-services', [ServiceController::class, 'expiredServices'])->name('expired.services');
+
 // Test login and immediate dashboard access
 Route::get('/test-login-and-redirect', function () {
     try {

@@ -1513,5 +1513,4 @@
       initializePage();
     });
 
-
   </script>

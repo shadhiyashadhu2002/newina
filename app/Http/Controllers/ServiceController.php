@@ -15,14 +15,7 @@ class ServiceController extends Controller
     public function store(Request $request)
     {
         try {
-            // Log the request for debugging
-            Log::info('ServiceController store called', [
-                'method' => $request->method(),
-                'ajax' => $request->ajax(),
-                'expectsJson' => $request->expectsJson(),
-                'headers' => $request->headers->all(),
-                'data' => $request->all()
-            ]);
+
             
             // Basic validation
             $request->validate([
@@ -59,7 +52,7 @@ class ServiceController extends Controller
                 $data
             );
             
-            Log::info('Service created/updated successfully', ['service_id' => $service->id]);
+
             
             // Check if this is an AJAX request (from admin modal)
             if ($request->expectsJson() || $request->ajax() || $request->header('X-Requested-With') === 'XMLHttpRequest') {
@@ -89,6 +82,165 @@ class ServiceController extends Controller
         }
     }
 
+    // Get service for editing
+    public function edit($id)
+    {
+        try {
+            $service = Service::findOrFail($id);
+            
+            // Check if user has permission to edit this service
+            $user = Auth::user();
+            if (!$user->is_admin && $service->service_executive !== $user->first_name) {
+                return response()->json(['error' => 'Unauthorized'], 403);
+            }
+            
+            return response()->json(['service' => $service]);
+        } catch (\Exception $e) {
+            return response()->json(['error' => 'Service not found'], 404);
+        }
+    }
+
+    // Update service
+    public function update(Request $request, $id)
+    {
+        try {
+            $service = Service::findOrFail($id);
+            
+            // Check if user has permission to edit this service
+            $user = Auth::user();
+            if (!$user->is_admin && $service->service_executive !== $user->first_name) {
+                return response()->json(['error' => 'Unauthorized'], 403);
+            }
+            
+            // Validate request
+            $request->validate([
+                'profile_id' => 'required|string|max:255',
+                'name' => 'required|string|max:255',
+                'member_gender' => 'nullable|in:male,female,other',
+                'contact_mobile_no' => 'required|string|max:20',
+                'contact_alternate' => 'nullable|string|max:20',
+                'service_executive' => 'required|string|max:255',
+                'edit_comment' => 'required|string|min:10|max:500'
+            ]);
+            
+            // Update service
+            $service->update([
+                'profile_id' => $request->profile_id,
+                'name' => $request->name,
+                'member_gender' => $request->member_gender,
+                'contact_mobile_no' => $request->contact_mobile_no,
+                'contact_alternate' => $request->contact_alternate,
+                'service_executive' => $request->service_executive,
+                'edit_comment' => $request->edit_comment,
+                'edit_flag' => 'Y'
+            ]);
+            
+            return response()->json(['success' => true, 'message' => 'Service updated successfully']);
+            
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            $errors = $e->errors();
+            $message = 'Validation failed';
+            
+            // Provide specific message for comment field
+            if (isset($errors['edit_comment'])) {
+                $message = 'Please provide a valid comment (minimum 10 characters) explaining the reason for this edit';
+            }
+            
+            return response()->json(['success' => false, 'message' => $message, 'errors' => $errors], 422);
+        } catch (\Exception $e) {
+            Log::error('Error updating service', ['error' => $e->getMessage()]);
+            return response()->json(['success' => false, 'message' => 'Failed to update service'], 500);
+        }
+    }
+
+    public function destroy(Request $request, $id)
+    {
+        try {
+            $service = Service::findOrFail($id);
+            
+            // Check if user has permission to delete this service
+            $user = Auth::user();
+            if (!$user->is_admin && !($user->user_type === 'staff' && $service->service_executive === $user->first_name)) {
+                return response()->json(['error' => 'Unauthorized'], 403);
+            }
+            
+            // Validate request - require comment for deletion
+            $request->validate([
+                'delete_comment' => 'required|string|min:10|max:500'
+            ]);
+            
+            // Soft delete - update the deleted flag and add comment
+            $service->update([
+                'deleted' => 1,
+                'delete_comment' => $request->delete_comment,
+                'deleted_at' => now(),
+                'deleted_by' => $user->id
+            ]);
+            
+            return response()->json(['success' => true, 'message' => 'Service deleted successfully']);
+            
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            $errors = $e->errors();
+            $message = 'Validation failed';
+            
+            // Provide specific message for comment field
+            if (isset($errors['delete_comment'])) {
+                $message = 'Please provide a valid comment (minimum 10 characters) explaining the reason for deletion';
+            }
+            
+            return response()->json(['success' => false, 'message' => $message, 'errors' => $errors], 422);
+        } catch (\Exception $e) {
+            Log::error('Error deleting service', ['error' => $e->getMessage()]);
+            return response()->json(['success' => false, 'message' => 'Failed to delete service'], 500);
+        }
+    }
+
+    // List expired/deleted services (admin only)
+    public function expiredServices()
+    {
+        $user = Auth::user();
+        
+        // Only admins can view expired services
+        if (!$user->is_admin) {
+            abort(403, 'Unauthorized');
+        }
+        
+        // Get per page count from request, default to 10
+        $perPage = request('per_page', 10);
+        
+        // Validate per page value
+        if (!in_array($perPage, [10, 50, 100])) {
+            $perPage = 10;
+        }
+        
+        // Get search query
+        $search = request('search');
+        
+        // Build query with search functionality for deleted services only
+        $query = Service::where('deleted', 1);
+        
+        if ($search) {
+            $query->where(function($q) use ($search) {
+                $q->where('profile_id', 'LIKE', "%{$search}%")
+                  ->orWhere('name', 'LIKE', "%{$search}%")
+                  ->orWhere('plan_name', 'LIKE', "%{$search}%")
+                  ->orWhere('service_executive', 'LIKE', "%{$search}%")
+                  ->orWhere('contact_mobile_no', 'LIKE', "%{$search}%")
+                  ->orWhere('contact_customer_name', 'LIKE', "%{$search}%");
+            });
+        }
+        
+        // Use dynamic pagination - Latest deleted first
+        $services = $query->orderByDesc('deleted_at')
+                          ->orderByDesc('created_at')
+                          ->paginate($perPage);
+        
+        // Append parameters to pagination links
+        $services->appends(['per_page' => $perPage, 'search' => $search]);
+        
+        return view('profile.expiredservices', compact('services'));
+    }
+
     // List services for the logged-in executive
     public function executiveServices()
     {
@@ -105,8 +257,9 @@ class ServiceController extends Controller
         // Get search query
         $search = request('search');
         
-        // Build query with search functionality for executive services
-        $query = Service::where('service_executive', $user->first_name);
+        // Build query with search functionality for executive services (exclude deleted)
+        $query = Service::where('service_executive', $user->first_name)
+                        ->where('deleted', 0);
         
         if ($search) {
             $query->where(function($q) use ($search) {
@@ -148,8 +301,8 @@ class ServiceController extends Controller
         // Get search query
         $search = request('search');
         
-        // Build query with search functionality
-        $query = Service::query();
+        // Build query with search functionality (exclude deleted)
+        $query = Service::where('deleted', 0);
         
         if ($search) {
             $query->where(function($q) use ($search) {
@@ -189,14 +342,15 @@ class ServiceController extends Controller
             }
             
             if ($user->is_admin) {
-                // Admin sees all services across all staff
-                $totalServices = Service::count();
-                $newServices = Service::where('status', 'new')->count();
-                $activeServices = Service::where('status', 'active')->count();
-                $completedServices = Service::where('status', 'completed')->count();
+                // Admin sees all services across all staff (exclude deleted)
+                $totalServices = Service::where('deleted', 0)->count();
+                $newServices = Service::where('deleted', 0)->where('status', 'new')->count();
+                $activeServices = Service::where('deleted', 0)->where('status', 'active')->count();
+                $completedServices = Service::where('deleted', 0)->where('status', 'completed')->count();
                 
-                // Get recent services for all staff (last 15 for admin)
-                $recentServices = Service::orderBy('created_at', 'desc')
+                // Get recent services for all staff (last 15 for admin, exclude deleted)
+                $recentServices = Service::where('deleted', 0)
+                                        ->orderBy('created_at', 'desc')
                                         ->limit(15)
                                         ->get();
             } else {
@@ -204,19 +358,24 @@ class ServiceController extends Controller
                 // Use first_name, or fallback to username/email prefix if first_name is null
                 $executiveName = $user->first_name ?? explode('@', $user->email)[0] ?? 'Unknown';
                 
-                $totalServices = Service::where('service_executive', $executiveName)->count();
+                $totalServices = Service::where('service_executive', $executiveName)
+                                        ->where('deleted', 0)->count();
                 $newServices = Service::where('service_executive', $executiveName)
+                                     ->where('deleted', 0)
                                      ->where('status', 'new')
                                      ->count();
                 $activeServices = Service::where('service_executive', $executiveName)
+                                        ->where('deleted', 0)
                                         ->where('status', 'active')
                                         ->count();
                 $completedServices = Service::where('service_executive', $executiveName)
+                                           ->where('deleted', 0)
                                            ->where('status', 'completed')
                                            ->count();
 
-                // Get recent services for current service executive (last 10)
+                // Get recent services for current service executive (last 10, exclude deleted)
                 $recentServices = Service::where('service_executive', $executiveName)
+                                        ->where('deleted', 0)
                                         ->orderBy('created_at', 'desc')
                                         ->limit(10)
                                         ->get();
@@ -428,15 +587,6 @@ class ServiceController extends Controller
             if ($request->filled('age_min') || $request->filled('age_max')) {
                 $minAge = $request->age_min;
                 $maxAge = $request->age_max;
-                
-                // Debug logging
-                Log::info('Age search debug', [
-                    'min_age_requested' => $minAge,
-                    'max_age_requested' => $maxAge,
-                    'max_birth_date' => $minAge ? now()->subYears($minAge)->format('Y-m-d') : null,
-                    'min_birth_date' => $maxAge ? now()->subYears($maxAge + 1)->format('Y-m-d') : null,
-                ]);
-                
                 $query->byAgeRange($minAge, $maxAge);
             }
 

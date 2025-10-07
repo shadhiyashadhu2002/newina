@@ -61,5 +61,13 @@ class Service extends Model
         'contact_client',
         'contact_phone',
         'contact_address',
+        // Edit tracking
+        'edit_comment',
+        'edit_flag',
+        // Soft delete tracking
+        'deleted',
+        'delete_comment',
+        'deleted_at',
+        'deleted_by',
     ];
 }

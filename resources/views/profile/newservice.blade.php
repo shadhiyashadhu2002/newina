@@ -111,7 +111,7 @@
 
     /* Add Service Button Styling */
     .add-service-btn-beautiful {
-      background: linear-gradient(135deg, #ac0742 0%, #9d1955 100%);
+      background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
       color: white;
       border: none;
       padding: 15px 30px;
@@ -120,7 +120,7 @@
       font-weight: 600;
       cursor: pointer;
       transition: all 0.3s ease;
-      box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
+      box-shadow: 0 8px 25px rgba(40, 167, 69, 0.4);
       display: flex;
       align-items: center;
       gap: 10px;
@@ -141,7 +141,7 @@
 
     .add-service-btn-beautiful:hover {
       transform: translateY(-3px);
-      box-shadow: 0 12px 35px rgba(102, 126, 234, 0.6);
+      box-shadow: 0 12px 35px rgba(40, 167, 69, 0.6);
     }
 
     .add-service-btn-beautiful:hover:before {
@@ -149,6 +149,51 @@
     }
 
     .add-service-btn-beautiful:active {
+      transform: translateY(-1px);
+    }
+
+    /* Expired Services Button Styling */
+    .expired-services-btn {
+      background: linear-gradient(135deg, #17a2b8 0%, #20c997 100%);
+      color: white;
+      text-decoration: none;
+      padding: 12px 25px;
+      border-radius: 50px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      box-shadow: 0 6px 20px rgba(23, 162, 184, 0.4);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .expired-services-btn:before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+      transition: left 0.5s;
+    }
+
+    .expired-services-btn:hover {
+      color: white;
+      text-decoration: none;
+      transform: translateY(-2px);
+      box-shadow: 0 10px 30px rgba(23, 162, 184, 0.6);
+    }
+
+    .expired-services-btn:hover:before {
+      left: 100%;
+    }
+
+    .expired-services-btn:active {
       transform: translateY(-1px);
     }
 
@@ -175,6 +220,45 @@
       visibility: visible;
     }
 
+    /* Modal (for delete confirmation modals) */
+    .modal {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.7);
+      backdrop-filter: blur(5px);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 2000;
+      opacity: 0;
+      visibility: hidden;
+      transition: all 0.3s ease;
+    }
+
+    .modal.active {
+      opacity: 1;
+      visibility: visible;
+    }
+
+    .modal .modal-content {
+      background: white;
+      padding: 30px;
+      border-radius: 15px;
+      width: 90%;
+      max-width: 600px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+      transform: translateY(-30px) scale(0.95);
+      transition: all 0.3s ease;
+      position: relative;
+    }
+
+    .modal.active .modal-content {
+      transform: translateY(0) scale(1);
+    }
+
     /* Modal Content */
     .modal-content-beautiful {
       background: white;
@@ -182,8 +266,6 @@
       border-radius: 20px;
       width: 90%;
       max-width: 700px;
-      max-height: 90vh;
-      overflow-y: auto;
       box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
       transform: translateY(-30px) scale(0.95);
       transition: all 0.3s ease;
@@ -391,6 +473,65 @@
       font-size: 14px;
     }
 
+    /* Column width adjustments */
+    .services-table th:nth-child(1),
+    .services-table td:nth-child(1) {
+      width: 60px; /* Sl No */
+    }
+
+    .services-table th:nth-child(2),
+    .services-table td:nth-child(2) {
+      width: 120px; /* Profile ID */
+    }
+
+    .services-table th:nth-child(3),
+    .services-table td:nth-child(3) {
+      width: 200px; /* Name - increased length */
+    }
+
+    .services-table th:nth-child(4),
+    .services-table td:nth-child(4) {
+      width: 100px; /* Plan Name - reduced */
+    }
+
+    .services-table th:nth-child(5),
+    .services-table td:nth-child(5) {
+      width: 100px; /* Payment Date - reduced */
+    }
+
+    .services-table th:nth-child(6),
+    .services-table td:nth-child(6) {
+      width: 110px; /* Executive Name - reduced */
+    }
+
+    .services-table th:nth-child(7),
+    .services-table td:nth-child(7) {
+      width: 140px; /* Actions - reduced */
+    }
+
+    /* Text handling for smaller columns */
+    .services-table td:nth-child(4),
+    .services-table td:nth-child(5),
+    .services-table td:nth-child(6) {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      font-size: 13px;
+    }
+
+    /* Name column - allow wrapping for longer names */
+    .services-table td:nth-child(3) {
+      word-wrap: break-word;
+      line-height: 1.4;
+    }
+
+    /* Edit column styling (last column for admin) */
+    .services-table th:last-child,
+    .services-table td:last-child {
+      width: 80px;
+      text-align: center;
+    }
+
     .action-link {
       color: #ac0742;
       text-decoration: none;
@@ -409,6 +550,66 @@
     .action-link:hover {
       color: #9d1955;
       text-decoration: underline;
+    }
+
+    /* Action buttons container */
+    .action-buttons {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    /* Edit button styles */
+    .edit-btn {
+      background: linear-gradient(135deg, #ac0742 0%, #9d1955 100%);
+      color: white;
+      border: none;
+      padding: 5px 10px;
+      border-radius: 12px;
+      cursor: pointer;
+      font-size: 11px;
+      font-weight: 500;
+      transition: all 0.3s ease;
+      display: flex;
+      align-items: center;
+      gap: 3px;
+    }
+
+    .edit-btn:hover {
+      background: linear-gradient(135deg, #9d1955 0%, #ac0742 100%);
+      transform: translateY(-1px);
+      box-shadow: 0 3px 10px rgba(172, 7, 66, 0.3);
+    }
+
+    .edit-btn svg {
+      margin-right: 3px;
+    }
+
+    /* Delete button styles */
+    .delete-btn {
+      background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+      color: white;
+      border: none;
+      padding: 5px 10px;
+      border-radius: 12px;
+      cursor: pointer;
+      font-size: 11px;
+      font-weight: 500;
+      transition: all 0.3s ease;
+      display: flex;
+      align-items: center;
+      gap: 3px;
+    }
+
+    .delete-btn:hover {
+      background: linear-gradient(135deg, #c82333 0%, #dc3545 100%);
+      transform: translateY(-1px);
+      box-shadow: 0 3px 10px rgba(220, 53, 69, 0.3);
+    }
+
+    .delete-btn svg {
+      margin-right: 3px;
     }
 
     .no-access {
@@ -756,9 +957,18 @@
     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px;">
       <h1 class="page-title">New Services</h1>
       @if(Auth::check() && Auth::user()->is_admin)
-        <button id="add-new-service-btn" class="add-service-btn-beautiful">
-          <span>✨</span> Add New Service
-        </button>
+        <div style="display: flex; gap: 15px; align-items: center;">
+          <a href="{{ route('expired.services') }}" class="expired-services-btn">
+            <svg width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+              <path d="M5.5 5.5A.5.5 0 0 1 6 6v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm2.5 0a.5.5 0 0 1 .5.5v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm3 .5a.5.5 0 0 0-1 0v6a.5.5 0 0 0 1 0V6z"/>
+              <path fill-rule="evenodd" d="M14.5 3a1 1 0 0 1-1 1H13v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4h-.5a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1H6a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1h3.5a1 1 0 0 1 1 1v1zM4.118 4 4 4.059V13a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V4.059L11.882 4H4.118zM2.5 3V2h11v1h-11z"/>
+            </svg>
+            Expired Services
+          </a>
+          <button id="add-new-service-btn" class="add-service-btn-beautiful">
+            <span>✨</span> Add New Service
+          </button>
+        </div>
       @endif
     </div>
 
@@ -826,6 +1036,113 @@
     </div>
     @endif
 
+    @if(Auth::check() && Auth::user()->is_admin)
+    <!-- Edit Service Modal -->
+    <div id="edit-modal-overlay" class="modal-overlay">
+      <div class="modal-content-beautiful">
+        <h2>Edit Service</h2>
+        <form id="edit-service-form" method="POST" action="">
+          @csrf
+          @method('PUT')
+          <div class="modal-form-row">
+            <div class="modal-form-group">
+              <label>Profile ID</label>
+              <input type="text" name="profile_id" id="edit_profile_id" placeholder="Enter Profile ID" required>
+            </div>
+            <div class="modal-form-group">
+              <label>Member Name</label>
+              <input type="text" name="name" id="edit_name" placeholder="Enter member name" required>
+            </div>
+          </div>
+          <div class="modal-form-row">
+            <div class="modal-form-group">
+              <label>Gender</label>
+              <select name="member_gender" id="edit_gender">
+                <option value="">Select Gender</option>
+                <option value="male">Male</option>
+                <option value="female">Female</option>
+                <option value="other">Other</option>
+              </select>
+            </div>
+            <div class="modal-form-group">
+              <label>Mobile Number</label>
+              <input type="tel" name="contact_mobile_no" id="edit_mobile" placeholder="Enter mobile number" required>
+            </div>
+            <div class="modal-form-group">
+              <label>Alternative Contact Number</label>
+              <input type="tel" name="contact_alternate" id="edit_contact_alternate" placeholder="Enter alternative contact number">
+            </div>
+          </div>
+          <div class="modal-form-row">
+            <div class="modal-form-group">
+              <label>Service Executive</label>
+              <select name="service_executive" id="edit_service_executive" required>
+                <option value="">Select Service Executive</option>
+                @if(isset($staffUsers))
+                  @foreach($staffUsers as $staff)
+                    <option value="{{ $staff->first_name }}">{{ $staff->first_name }}</option>
+                  @endforeach
+                @endif
+              </select>
+            </div>
+          </div>
+          <div class="modal-form-row">
+            <div class="modal-form-group" style="width: 100%;">
+              <label>Comment (Required for editing) <span style="color: red;">*</span></label>
+              <textarea name="edit_comment" id="edit_comment" placeholder="Please enter a comment explaining the reason for this edit..." required style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px; min-height: 80px; font-family: inherit; resize: vertical;"></textarea>
+              <small style="color: #666; font-size: 12px;">This field is mandatory. Please explain why you are making this edit.</small>
+            </div>
+          </div>
+          <div class="modal-actions">
+            <button type="button" id="close-edit-modal-btn" class="btn btn-secondary">Cancel</button>
+            <button type="submit" class="btn btn-primary">Update Service</button>
+          </div>
+        </form>
+      </div>
+    </div>
+    @endif
+
+    <!-- Delete Confirmation Modal -->
+    <div id="delete-confirmation-modal" class="modal">
+      <div class="modal-content" style="max-width: 500px;">
+        <h2 style="color: #dc3545;">Confirm Deletion</h2>
+        <div class="modal-form">
+          <p style="margin-bottom: 20px; font-size: 16px; line-height: 1.5;">
+            Are you sure you want to delete this service?<br>
+            <strong style="color: #dc3545;">This action cannot be undone.</strong>
+          </p>
+          <div class="modal-actions" style="gap: 10px;">
+            <button type="button" id="cancel-delete-btn" class="btn btn-secondary">No, Cancel</button>
+            <button type="button" id="confirm-delete-btn" class="btn" style="background: #dc3545; color: white;">Yes, Delete</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Delete Comment Modal -->
+    <div id="delete-comment-modal" class="modal">
+      <div class="modal-content" style="max-width: 600px;">
+        <h2 style="color: #dc3545;">Reason for Deletion</h2>
+        <form id="delete-service-form" method="POST" action="">
+          @csrf
+          @method('DELETE')
+          <div class="modal-form">
+            <div class="modal-form-row">
+              <div class="modal-form-group" style="width: 100%;">
+                <label>Comment (Required for deletion) <span style="color: red;">*</span></label>
+                <textarea name="delete_comment" id="delete_comment" placeholder="Please enter a reason for deleting this service..." required style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px; min-height: 100px; font-family: inherit; resize: vertical;"></textarea>
+                <small style="color: #666; font-size: 12px;">This field is mandatory. Please explain why you are deleting this service.</small>
+              </div>
+            </div>
+            <div class="modal-actions">
+              <button type="button" id="cancel-delete-comment-btn" class="btn btn-secondary">Cancel</button>
+              <button type="submit" class="btn" style="background: #dc3545; color: white;">Delete Service</button>
+            </div>
+          </div>
+        </form>
+      </div>
+    </div>
+
     <div class="table-container">
       <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
         <h2 class="table-title">List of New Services
@@ -882,6 +1199,9 @@
             <th>Payment Date</th>
             <th>Executive Name</th>
             <th>Actions</th>
+            @if(Auth::check() && Auth::user()->is_admin)
+            <th>Edit</th>
+            @endif
           </tr>
         </thead>
         <tbody id="services-tbody">
@@ -894,11 +1214,34 @@
                 <td>{{ $service->plan_name }}</td>
                 <td>{{ $service->payment_date ? \Carbon\Carbon::parse($service->payment_date)->format('d-M-Y') : '' }}</td>
                 <td>{{ $service->service_executive }}</td>
-                <td><a href="{{ route('service.details', ['id' => $service->profile_id, 'name' => $service->name]) }}" class="action-link">Service Details</a></td>
+                <td>
+                  <a href="{{ route('service.details', ['id' => $service->profile_id, 'name' => $service->name]) }}" class="action-link">Service Details</a>
+                </td>
+                @if(Auth::check() && (Auth::user()->is_admin || Auth::user()->user_type === 'staff'))
+                <td>
+                  <div style="display: flex; gap: 5px; justify-content: center;">
+                    @if(Auth::user()->is_admin)
+                    <button class="edit-btn" data-service-id="{{ $service->id }}">
+                      <svg width="12" height="12" fill="currentColor" viewBox="0 0 16 16">
+                        <path d="M12.146.146a.5.5 0 0 1 .708 0l3 3a.5.5 0 0 1 0 .708L10.5 8.207l-3-3L12.146.146zM11.207 9l-3-3L2.5 11.707V13.5h1.793L11.207 9z"/>
+                      </svg>
+                      Edit
+                    </button>
+                    @endif
+                    <button class="delete-btn" data-service-id="{{ $service->id }}">
+                      <svg width="12" height="12" fill="currentColor" viewBox="0 0 16 16">
+                        <path d="M5.5 5.5A.5.5 0 0 1 6 6v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm2.5 0a.5.5 0 0 1 .5.5v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm3 .5a.5.5 0 0 0-1 0v6a.5.5 0 0 0 1 0V6z"/>
+                        <path fill-rule="evenodd" d="M14.5 3a1 1 0 0 1-1 1H13v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4h-.5a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1H6a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1h3.5a1 1 0 0 1 1 1v1zM4.118 4 4 4.059V13a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V4.059L11.882 4H4.118zM2.5 3V2h11v1h-11z"/>
+                      </svg>
+                      Delete
+                    </button>
+                  </div>
+                </td>
+                @endif
             </tr>
             @endforeach
         @else
-            <tr><td colspan="7" style="text-align:center;">No services found.</td></tr>
+            <tr><td colspan="{{ Auth::check() && Auth::user()->is_admin ? '8' : '7' }}" style="text-align:center;">No services found.</td></tr>
         @endif
         </tbody>
       </table>
@@ -1028,12 +1371,6 @@
       e.preventDefault();
       const formData = new FormData(this);
       
-      // Add debug logging
-      console.log('Form data being sent:');
-      for (let [key, value] of formData.entries()) {
-        console.log(key, value);
-      }
-      
       fetch("{{ route('new.service.store') }}", {
         method: 'POST',
         headers: {
@@ -1044,25 +1381,13 @@
         body: formData
       })
       .then(response => {
-        console.log('Response status:', response.status);
-        console.log('Response headers:', response.headers);
-        
         if (!response.ok) {
           return response.text().then(text => {
-            console.log('Error response body:', text);
-            throw new Error(`HTTP error! status: ${response.status}, body: ${text.substring(0, 200)}...`);
+            throw new Error(`HTTP error! status: ${response.status}`);
           });
         }
         
-        return response.text().then(text => {
-          console.log('Response body:', text);
-          try {
-            return JSON.parse(text);
-          } catch (e) {
-            console.error('Failed to parse JSON:', e);
-            throw new Error('Response is not valid JSON: ' + text.substring(0, 100));
-          }
-        });
+        return response.json();
       })
       .then(data => {
         if (data.success) {
@@ -1078,8 +1403,7 @@
         }
       })
       .catch(error => {
-        console.error('Error:', error);
-        showNotification('Failed to add service: ' + error.message, 'error');
+        showNotification('Failed to add service', 'error');
       });
     });
 
@@ -1125,7 +1449,6 @@
           document.querySelectorAll('.header-nav a').forEach(l => l.classList.remove('active'));
           this.classList.add('active');
           const page = this.getAttribute('data-page');
-          console.log('Navigating to:', page);
         }
       });
     });
@@ -1136,8 +1459,378 @@
         showNotification('Logging out...', 'info');
         setTimeout(() => {
           // Redirect to login page
-          console.log('Redirecting to login...');
         }, 1500);
+      }
+    });
+
+    // Edit Modal Functionality - Only for Admins
+    const editModal = document.getElementById('edit-modal-overlay');
+    const editForm = document.getElementById('edit-service-form');
+    const closeEditModalBtn = document.getElementById('close-edit-modal-btn');
+    
+    // Only proceed if edit modal elements exist (admin user)
+    if (!editModal || !editForm || !closeEditModalBtn) {
+      // Don't return here, still set up basic click handlers for debugging
+    }
+    
+    // Check for edit buttons on page and add direct listeners
+    const editButtons = document.querySelectorAll('.edit-btn');
+    
+    // Add direct click listeners to each edit button
+    editButtons.forEach((button, index) => {
+      button.addEventListener('click', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        
+        const serviceId = this.getAttribute('data-service-id');
+        
+        if (serviceId) {
+          openEditModal(serviceId);
+        }
+      });
+    });
+    
+    // Add event listeners to all edit buttons using event delegation
+    document.addEventListener('click', function(e) {
+      // Find the edit button, even if clicked on child elements (SVG, path, text)
+      let editBtn = null;
+      
+      if (e.target.classList.contains('edit-btn')) {
+        editBtn = e.target;
+      } else if (e.target.closest('.edit-btn')) {
+        editBtn = e.target.closest('.edit-btn');
+      }
+      
+      if (editBtn) {
+        e.preventDefault();
+        e.stopPropagation();
+        const serviceId = editBtn.getAttribute('data-service-id');
+        
+        if (serviceId) {
+          openEditModal(serviceId);
+        }
+      }
+
+      // Handle delete button clicks
+      let deleteBtn = null;
+      
+      if (e.target.classList.contains('delete-btn')) {
+        deleteBtn = e.target;
+      } else if (e.target.closest('.delete-btn')) {
+        deleteBtn = e.target.closest('.delete-btn');
+      }
+      
+      if (deleteBtn) {
+        e.preventDefault();
+        e.stopPropagation();
+        const serviceId = deleteBtn.getAttribute('data-service-id');
+        
+        if (serviceId) {
+          openDeleteConfirmation(serviceId);
+        }
+      }
+    });
+
+    // Function to open edit modal and load service data
+    function openEditModal(serviceId) {
+      // Check if modal elements are available
+      const currentEditModal = document.getElementById('edit-modal-overlay');
+      if (!currentEditModal) {
+        showNotification('Edit functionality not available', 'error');
+        return;
+      }
+      
+      // Show loading state
+      showNotification('Loading service details...', 'info');
+      
+      // Fetch service data
+      fetch(`/service/${serviceId}/edit`, {
+        headers: {
+          'X-Requested-With': 'XMLHttpRequest',
+          'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+        }
+      })
+      .then(response => {
+        
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        return response.json();
+      })
+      .then(data => {
+        if (data.service) {
+          // Populate form fields
+          document.getElementById('edit_profile_id').value = data.service.profile_id || '';
+          document.getElementById('edit_name').value = data.service.name || '';
+          document.getElementById('edit_gender').value = data.service.member_gender || '';
+          document.getElementById('edit_mobile').value = data.service.contact_mobile_no || '';
+          document.getElementById('edit_contact_alternate').value = data.service.contact_alternate || '';
+          document.getElementById('edit_service_executive').value = data.service.service_executive || '';
+          
+          // Set form action
+          editForm.action = `/service/${serviceId}`;
+          
+          // Show modal
+          editModal.classList.add('active');
+          document.body.style.overflow = 'hidden';
+        } else {
+          showNotification('Failed to load service details', 'error');
+        }
+      })
+      .catch(error => {
+        showNotification('Failed to load service details', 'error');
+      });
+    }
+
+    // Close edit modal
+    closeEditModalBtn.addEventListener('click', function() {
+      editModal.classList.remove('active');
+      document.body.style.overflow = 'auto';
+    });
+
+    // Close modal on outside click
+    editModal.addEventListener('click', function(e) {
+      if (e.target === editModal) {
+        editModal.classList.remove('active');
+        document.body.style.overflow = 'auto';
+      }
+    });
+
+    // Custom ValidationError class
+    class ValidationError extends Error {
+      constructor(message, errors) {
+        super(message);
+        this.name = 'ValidationError';
+        this.errors = errors;
+      }
+    }
+
+    // Delete functionality
+    let currentServiceIdForDeletion = null;
+    const deleteConfirmationModal = document.getElementById('delete-confirmation-modal');
+    const deleteCommentModal = document.getElementById('delete-comment-modal');
+    const deleteForm = document.getElementById('delete-service-form');
+    const cancelDeleteBtn = document.getElementById('cancel-delete-btn');
+    const confirmDeleteBtn = document.getElementById('confirm-delete-btn');
+    const cancelDeleteCommentBtn = document.getElementById('cancel-delete-comment-btn');
+
+    function openDeleteConfirmation(serviceId) {
+      currentServiceIdForDeletion = serviceId;
+      deleteConfirmationModal.classList.add('active');
+      document.body.style.overflow = 'hidden';
+    }
+
+    // Handle confirmation modal buttons
+    confirmDeleteBtn.addEventListener('click', function() {
+      deleteConfirmationModal.classList.remove('active');
+      deleteCommentModal.classList.add('active');
+      // Set form action
+      deleteForm.action = `/service/${currentServiceIdForDeletion}`;
+    });
+
+    cancelDeleteBtn.addEventListener('click', function() {
+      deleteConfirmationModal.classList.remove('active');
+      document.body.style.overflow = 'auto';
+      currentServiceIdForDeletion = null;
+    });
+
+    cancelDeleteCommentBtn.addEventListener('click', function() {
+      deleteCommentModal.classList.remove('active');
+      document.body.style.overflow = 'auto';
+      currentServiceIdForDeletion = null;
+    });
+
+    // Close delete modals on outside click
+    deleteConfirmationModal.addEventListener('click', function(e) {
+      if (e.target === deleteConfirmationModal) {
+        deleteConfirmationModal.classList.remove('active');
+        document.body.style.overflow = 'auto';
+        currentServiceIdForDeletion = null;
+      }
+    });
+
+    deleteCommentModal.addEventListener('click', function(e) {
+      if (e.target === deleteCommentModal) {
+        deleteCommentModal.classList.remove('active');
+        document.body.style.overflow = 'auto';
+        currentServiceIdForDeletion = null;
+      }
+    });
+
+    // Handle delete form submission
+    deleteForm.addEventListener('submit', function(e) {
+      e.preventDefault();
+      
+      // Validate comment field
+      const commentField = document.getElementById('delete_comment');
+      if (!commentField || !commentField.value.trim()) {
+        showNotification('Please enter a reason for deleting this service', 'error');
+        if (commentField) {
+          commentField.focus();
+          commentField.style.border = '2px solid #dc3545';
+        }
+        return;
+      }
+      
+      if (commentField.value.trim().length < 10) {
+        showNotification('Comment must be at least 10 characters long', 'error');
+        commentField.focus();
+        commentField.style.border = '2px solid #dc3545';
+        return;
+      }
+      
+      // Reset border color if validation passes
+      commentField.style.border = '1px solid #ddd';
+      
+      const formData = new FormData(this);
+      
+      fetch(this.action, {
+        method: 'POST',
+        body: formData,
+        headers: {
+          'X-Requested-With': 'XMLHttpRequest',
+          'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+        }
+      })
+      .then(response => {
+        if (!response.ok && response.status === 422) {
+          return response.json().then(data => {
+            throw new ValidationError(data.message, data.errors);
+          });
+        }
+        return response.json();
+      })
+      .then(data => {
+        if (data.success) {
+          showNotification('Service deleted successfully!', 'success');
+          // Close modal and reset form
+          deleteCommentModal.classList.remove('active');
+          document.body.style.overflow = 'auto';
+          currentServiceIdForDeletion = null;
+          // Reload the page to refresh the service list
+          setTimeout(() => window.location.reload(), 1000);
+        } else {
+          showNotification(data.message || 'Failed to delete service', 'error');
+        }
+      })
+      .catch(error => {
+        if (error instanceof ValidationError) {
+          showNotification(error.message, 'error');
+          // Highlight the comment field if it has errors
+          const commentField = document.getElementById('delete_comment');
+          if (error.errors && error.errors.delete_comment && commentField) {
+            commentField.style.border = '2px solid #dc3545';
+            commentField.focus();
+          }
+        } else {
+          showNotification('Failed to delete service', 'error');
+        }
+      });
+    });
+
+    // Handle edit form submission
+    editForm.addEventListener('submit', function(e) {
+      e.preventDefault();
+      
+      // Validate comment field
+      const commentField = document.getElementById('edit_comment');
+      if (!commentField || !commentField.value.trim()) {
+        showNotification('Please enter a comment explaining the reason for this edit', 'error');
+        if (commentField) {
+          commentField.focus();
+          commentField.style.border = '2px solid #dc3545';
+        }
+        return;
+      }
+      
+      if (commentField.value.trim().length < 10) {
+        showNotification('Comment must be at least 10 characters long', 'error');
+        commentField.focus();
+        commentField.style.border = '2px solid #dc3545';
+        return;
+      }
+      
+      // Reset border color if validation passes
+      commentField.style.border = '1px solid #ddd';
+      
+      const formData = new FormData(this);
+      
+      fetch(this.action, {
+        method: 'POST',
+        body: formData,
+        headers: {
+          'X-Requested-With': 'XMLHttpRequest',
+          'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+        }
+      })
+      .then(response => {
+        if (!response.ok && response.status === 422) {
+          return response.json().then(data => {
+            throw new ValidationError(data.message, data.errors);
+          });
+        }
+        return response.json();
+      })
+      .then(data => {
+        if (data.success) {
+          showNotification('Service updated successfully! Edit has been tracked.', 'success');
+          // Close modal and reset form
+          editModal.classList.remove('active');
+          document.body.style.overflow = 'auto';
+          // Reload the page to refresh the service list
+          setTimeout(() => window.location.reload(), 1000);
+        } else {
+          showNotification(data.message || 'Failed to update service', 'error');
+        }
+      })
+      .catch(error => {
+        if (error instanceof ValidationError) {
+          showNotification(error.message, 'error');
+          // Highlight the comment field if it has errors
+          const commentField = document.getElementById('edit_comment');
+          if (error.errors && error.errors.edit_comment && commentField) {
+            commentField.style.border = '2px solid #dc3545';
+            commentField.focus();
+          }
+        } else {
+          showNotification('Failed to update service', 'error');
+        }
+      });
+    });
+
+    // Add real-time validation for comment field
+    document.addEventListener('input', function(e) {
+      if (e.target && (e.target.id === 'edit_comment' || e.target.id === 'delete_comment')) {
+        const comment = e.target.value.trim();
+        const charCount = comment.length;
+        const isDeleteComment = e.target.id === 'delete_comment';
+        
+        // Remove existing feedback
+        const existingFeedback = e.target.parentElement.querySelector('.comment-feedback');
+        if (existingFeedback) {
+          existingFeedback.remove();
+        }
+        
+        // Create feedback element
+        const feedback = document.createElement('div');
+        feedback.className = 'comment-feedback';
+        feedback.style.cssText = 'font-size: 11px; margin-top: 5px;';
+        
+        if (charCount === 0) {
+          feedback.style.color = '#dc3545';
+          feedback.textContent = isDeleteComment ? 'Comment is required for deletion' : 'Comment is required for editing';
+          e.target.style.border = '2px solid #dc3545';
+        } else if (charCount < 10) {
+          feedback.style.color = '#ffc107';
+          feedback.textContent = `Comment must be at least 10 characters (${charCount}/10)`;
+          e.target.style.border = '2px solid #ffc107';
+        } else {
+          feedback.style.color = '#28a745';
+          feedback.textContent = `Valid comment (${charCount} characters)`;
+          e.target.style.border = '2px solid #28a745';
+        }
+        
+        e.target.parentElement.appendChild(feedback);
       }
     });
 
