@@ -378,6 +378,19 @@
       background-color: rgba(74, 105, 189, 0.1);
     }
 
+    /* Serial Number column styling */
+    .services-table th:first-child,
+    .services-table td:first-child {
+      width: 60px;
+      text-align: center;
+      font-weight: 600;
+    }
+
+    .services-table td:first-child {
+      color: #ac0742;
+      font-size: 14px;
+    }
+
     .action-link {
       color: #ac0742;
       text-decoration: none;
@@ -424,6 +437,13 @@
         padding: 10px;
       }
 
+      /* Adjust Sl No column for mobile */
+      .services-table th:first-child,
+      .services-table td:first-child {
+        width: 40px;
+        font-size: 12px;
+      }
+
       .modal-content-beautiful {
         padding: 25px;
         margin: 20px;
@@ -438,6 +458,250 @@
         padding: 12px 24px;
         font-size: 14px;
       }
+    }
+
+    /* Custom Pagination Styles */
+    .pagination-wrapper {
+      margin-top: 40px;
+      padding: 25px 0;
+      border-top: 2px solid #f0f0f0;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 20px;
+    }
+
+    .pagination-info {
+      display: flex;
+      align-items: center;
+    }
+
+    .pagination-text {
+      background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+      color: #495057;
+      padding: 10px 16px;
+      border-radius: 25px;
+      font-size: 14px;
+      font-weight: 500;
+      border: 1px solid #dee2e6;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+
+    .custom-pagination {
+      display: flex;
+      align-items: center;
+    }
+
+    .pagination-container {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: white;
+      padding: 8px;
+      border-radius: 50px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+      border: 1px solid #e9ecef;
+    }
+
+    .pagination-btn {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 10px 16px;
+      border-radius: 25px;
+      text-decoration: none;
+      font-weight: 600;
+      font-size: 14px;
+      transition: all 0.3s ease;
+      border: none;
+      cursor: pointer;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .pagination-btn-active {
+      background: linear-gradient(135deg, #ac0742 0%, #9d1955 100%);
+      color: white;
+      box-shadow: 0 4px 8px rgba(172, 7, 66, 0.3);
+    }
+
+    .pagination-btn-active:hover {
+      background: linear-gradient(135deg, #9d1955 0%, #ac0742 100%);
+      transform: translateY(-1px);
+      box-shadow: 0 6px 12px rgba(172, 7, 66, 0.4);
+      color: white;
+      text-decoration: none;
+    }
+
+    .pagination-btn-disabled {
+      background: #f8f9fa;
+      color: #adb5bd;
+      cursor: not-allowed;
+    }
+
+    .pagination-icon {
+      font-size: 16px;
+      font-weight: bold;
+    }
+
+    .pagination-numbers {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      margin: 0 8px;
+    }
+
+    .pagination-number {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      text-decoration: none;
+      font-weight: 600;
+      font-size: 14px;
+      transition: all 0.3s ease;
+      background: #f8f9fa;
+      color: #495057;
+      border: 1px solid #dee2e6;
+      position: relative;
+    }
+
+    .pagination-number:hover {
+      background: linear-gradient(135deg, #ac0742 0%, #9d1955 100%);
+      color: white;
+      transform: scale(1.1);
+      box-shadow: 0 4px 8px rgba(172, 7, 66, 0.3);
+      text-decoration: none;
+    }
+
+    .pagination-number-current {
+      background: linear-gradient(135deg, #ac0742 0%, #9d1955 100%);
+      color: white;
+      box-shadow: 0 4px 8px rgba(172, 7, 66, 0.4);
+      transform: scale(1.05);
+    }
+
+    /* Responsive Pagination */
+    @media (max-width: 768px) {
+      .pagination-wrapper {
+        flex-direction: column;
+        text-align: center;
+        gap: 15px;
+      }
+      
+      .pagination-container {
+        padding: 6px;
+        gap: 4px;
+      }
+      
+      .pagination-btn {
+        padding: 8px 12px;
+        font-size: 12px;
+      }
+      
+      .pagination-btn span {
+        display: none;
+      }
+      
+      .pagination-number {
+        width: 35px;
+        height: 35px;
+        font-size: 12px;
+      }
+      
+      .pagination-text {
+        padding: 8px 12px;
+        font-size: 12px;
+      }
+    }
+
+    /* Pagination Animation Effects */
+    .pagination-container {
+      animation: fadeInUp 0.5s ease-out;
+    }
+
+    .pagination-btn-active::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+      transition: left 0.5s;
+    }
+
+    .pagination-btn-active:hover::before {
+      left: 100%;
+    }
+
+    .pagination-number::after {
+      content: '';
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      top: 0;
+      left: 0;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #ac0742 0%, #9d1955 100%);
+      opacity: 0;
+      transform: scale(0.8);
+      transition: all 0.3s ease;
+      z-index: -1;
+    }
+
+    .pagination-number:hover::after {
+      opacity: 1;
+      transform: scale(1);
+    }
+
+    /* Pulse animation for current page */
+    .pagination-number-current {
+      animation: pulse 2s infinite;
+    }
+
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(20px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @keyframes pulse {
+      0% {
+        box-shadow: 0 4px 8px rgba(172, 7, 66, 0.4);
+      }
+      50% {
+        box-shadow: 0 4px 8px rgba(172, 7, 66, 0.7), 0 0 0 8px rgba(172, 7, 66, 0.1);
+      }
+      100% {
+        box-shadow: 0 4px 8px rgba(172, 7, 66, 0.4);
+      }
+    }
+
+    /* Per page dropdown styling */
+    #perPageSelect {
+      background-color: white;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      padding: 6px 12px;
+      font-size: 14px;
+      color: #495057;
+      cursor: pointer;
+      transition: border-color 0.15s ease-in-out;
+    }
+
+    #perPageSelect:focus {
+      outline: none;
+      border-color: #ac0742;
+      box-shadow: 0 0 0 0.2rem rgba(172, 7, 66, 0.25);
     }
   </style>
 </head>
@@ -539,11 +803,30 @@
     @endif
 
     <div class="table-container">
-      <h2 class="table-title">List of New Services</h2>
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+        <h2 class="table-title">List of New Services
+          @if(isset($services) && method_exists($services, 'total'))
+          <span style="font-size: 14px; font-weight: normal; color: #666;">
+            ({{ $services->firstItem() ?? 0 }} - {{ $services->lastItem() ?? 0 }} of {{ $services->total() }} services)
+          </span>
+          @endif
+        </h2>
+        
+        <!-- Entries per page dropdown -->
+        <div style="display: flex; align-items: center; gap: 10px;">
+          <label for="perPageSelect" style="font-size: 14px; color: #666;">Show:</label>
+          <select id="perPageSelect" onchange="changePerPage()" style="padding: 5px 10px; border: 1px solid #ddd; border-radius: 4px; font-size: 14px;">
+            <option value="10" {{ (isset($perPage) && $perPage == 10) ? 'selected' : '' }}>10 entries</option>
+            <option value="50" {{ (isset($perPage) && $perPage == 50) ? 'selected' : '' }}>50 entries</option>
+            <option value="100" {{ (isset($perPage) && $perPage == 100) ? 'selected' : '' }}>100 entries</option>
+          </select>
+        </div>
+      </div>
       
       <table class="services-table">
         <thead>
           <tr>
+            <th>Sl No</th>
             <th>Profile ID</th>
             <th>Name</th>
             <th>Plan Name</th>
@@ -554,8 +837,9 @@
         </thead>
         <tbody id="services-tbody">
         @if(isset($services) && count($services))
-            @foreach($services as $service)
+            @foreach($services as $index => $service)
             <tr>
+                <td>{{ ($services->currentPage() - 1) * $services->perPage() + $index + 1 }}</td>
                 <td>{{ $service->profile_id }}</td>
                 <td>{{ $service->name }}</td>
                 <td>{{ $service->plan_name }}</td>
@@ -565,14 +849,78 @@
             </tr>
             @endforeach
         @else
-            <tr><td colspan="6" style="text-align:center;">No services found.</td></tr>
+            <tr><td colspan="7" style="text-align:center;">No services found.</td></tr>
         @endif
         </tbody>
       </table>
+      
+      <!-- Custom Designed Pagination -->
+      @if(isset($services) && method_exists($services, 'links'))
+      <div class="pagination-wrapper">
+        <!-- Pagination info -->
+        <div class="pagination-info">
+          <span class="pagination-text">Showing {{ $services->firstItem() ?? 0 }} to {{ $services->lastItem() ?? 0 }} of {{ $services->total() }} results</span>
+        </div>
+        
+        <!-- Custom Pagination Navigation -->
+        <div class="custom-pagination">
+          @if ($services->hasPages())
+            <div class="pagination-container">
+              {{-- Previous Page Link --}}
+              @if ($services->onFirstPage())
+                <span class="pagination-btn pagination-btn-disabled">
+                  <i class="pagination-icon">‹</i>
+                  <span>Previous</span>
+                </span>
+              @else
+                <a href="{{ $services->previousPageUrl() }}" class="pagination-btn pagination-btn-active">
+                  <i class="pagination-icon">‹</i>
+                  <span>Previous</span>
+                </a>
+              @endif
+
+              {{-- Pagination Elements --}}
+              <div class="pagination-numbers">
+                @foreach ($services->getUrlRange(1, $services->lastPage()) as $page => $url)
+                  @if ($page == $services->currentPage())
+                    <span class="pagination-number pagination-number-current">{{ $page }}</span>
+                  @else
+                    <a href="{{ $url }}" class="pagination-number">{{ $page }}</a>
+                  @endif
+                @endforeach
+              </div>
+
+              {{-- Next Page Link --}}
+              @if ($services->hasMorePages())
+                <a href="{{ $services->nextPageUrl() }}" class="pagination-btn pagination-btn-active">
+                  <span>Next</span>
+                  <i class="pagination-icon">›</i>
+                </a>
+              @else
+                <span class="pagination-btn pagination-btn-disabled">
+                  <span>Next</span>
+                  <i class="pagination-icon">›</i>
+                </span>
+              @endif
+            </div>
+          @endif
+        </div>
+      </div>
+      @endif
     </div>
   </main>
 
   <script>
+    // Function to change per page count - global function
+    function changePerPage() {
+      const select = document.getElementById('perPageSelect');
+      const perPage = select.value;
+      const url = new URL(window.location.href);
+      url.searchParams.set('per_page', perPage);
+      url.searchParams.delete('page'); // Reset to page 1 when changing per page
+      window.location.href = url.toString();
+    }
+
     // Logout functionality
     document.addEventListener('DOMContentLoaded', function() {
       var logoutBtn = document.getElementById('logout-btn');
@@ -585,6 +933,7 @@
         });
       }
     });
+
     // Modal logic for Add New Service
     const addNewServiceBtn = document.getElementById('add-new-service-btn');
     const addServiceModal = document.getElementById('add-service-modal');

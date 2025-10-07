@@ -7,6 +7,7 @@ use App\Models\Service;
 use App\Models\Member;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
+use Exception;
 
 class ServiceController extends Controller
 {
@@ -92,27 +93,54 @@ class ServiceController extends Controller
     public function executiveServices()
     {
         $user = Auth::user();
-        $services = Service::where('service_executive', $user->first_name)->orderByDesc('created_at')->get();
+        
+        // Get per page count from request, default to 10
+        $perPage = request('per_page', 10);
+        
+        // Validate per page value
+        if (!in_array($perPage, [10, 50, 100])) {
+            $perPage = 10;
+        }
+        
+        // Use dynamic pagination for executive services
+        $services = Service::where('service_executive', $user->first_name)
+                          ->orderByDesc('created_at')
+                          ->paginate($perPage);
+        
+        // Append per_page parameter to pagination links
+        $services->appends(['per_page' => $perPage]);
         
         // Get all staff users for dropdown
         $staffUsers = \App\Models\User::where('user_type', 'staff')
                                      ->orderBy('first_name')
                                      ->get(['id', 'first_name', 'name']);
         
-        return view('profile.newservice', compact('services', 'staffUsers'));
+        return view('profile.newservice', compact('services', 'staffUsers', 'perPage'));
     }
 
     // List all services (admin view)
     public function allServices()
     {
-        $services = Service::orderByDesc('created_at')->get();
+        // Get per page count from request, default to 10
+        $perPage = request('per_page', 10);
+        
+        // Validate per page value
+        if (!in_array($perPage, [10, 50, 100])) {
+            $perPage = 10;
+        }
+        
+        // Use dynamic pagination
+        $services = Service::orderByDesc('created_at')->paginate($perPage);
+        
+        // Append per_page parameter to pagination links
+        $services->appends(['per_page' => $perPage]);
         
         // Get all staff users for dropdown
         $staffUsers = \App\Models\User::where('user_type', 'staff')
                                      ->orderBy('first_name')
                                      ->get(['id', 'first_name', 'name']);
         
-        return view('profile.newservice', compact('services', 'staffUsers'));
+        return view('profile.newservice', compact('services', 'staffUsers', 'perPage'));
     }
 
     // Service Dashboard with dynamic counts
