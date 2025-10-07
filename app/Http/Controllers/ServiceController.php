@@ -102,20 +102,36 @@ class ServiceController extends Controller
             $perPage = 10;
         }
         
-        // Use dynamic pagination for executive services
-        $services = Service::where('service_executive', $user->first_name)
-                          ->orderByDesc('created_at')
+        // Get search query
+        $search = request('search');
+        
+        // Build query with search functionality for executive services
+        $query = Service::where('service_executive', $user->first_name);
+        
+        if ($search) {
+            $query->where(function($q) use ($search) {
+                $q->where('profile_id', 'LIKE', "%{$search}%")
+                  ->orWhere('name', 'LIKE', "%{$search}%")
+                  ->orWhere('plan_name', 'LIKE', "%{$search}%")
+                  ->orWhere('contact_mobile_no', 'LIKE', "%{$search}%")
+                  ->orWhere('contact_customer_name', 'LIKE', "%{$search}%");
+            });
+        }
+        
+        // Use dynamic pagination for executive services - Latest first
+        $services = $query->orderByDesc('created_at')
+                          ->orderByDesc('id')
                           ->paginate($perPage);
         
-        // Append per_page parameter to pagination links
-        $services->appends(['per_page' => $perPage]);
+        // Append parameters to pagination links
+        $services->appends(['per_page' => $perPage, 'search' => $search]);
         
         // Get all staff users for dropdown
         $staffUsers = \App\Models\User::where('user_type', 'staff')
                                      ->orderBy('first_name')
                                      ->get(['id', 'first_name', 'name']);
         
-        return view('profile.newservice', compact('services', 'staffUsers', 'perPage'));
+        return view('profile.newservice', compact('services', 'staffUsers', 'perPage', 'search'));
     }
 
     // List all services (admin view)
@@ -146,8 +162,10 @@ class ServiceController extends Controller
             });
         }
         
-        // Use dynamic pagination
-        $services = $query->orderByDesc('created_at')->paginate($perPage);
+        // Use dynamic pagination - Latest services first
+        $services = $query->orderByDesc('created_at')
+                          ->orderByDesc('id')
+                          ->paginate($perPage);
         
         // Append parameters to pagination links
         $services->appends(['per_page' => $perPage, 'search' => $search]);
