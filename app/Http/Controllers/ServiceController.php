@@ -129,18 +129,35 @@ class ServiceController extends Controller
             $perPage = 10;
         }
         
-        // Use dynamic pagination
-        $services = Service::orderByDesc('created_at')->paginate($perPage);
+        // Get search query
+        $search = request('search');
         
-        // Append per_page parameter to pagination links
-        $services->appends(['per_page' => $perPage]);
+        // Build query with search functionality
+        $query = Service::query();
+        
+        if ($search) {
+            $query->where(function($q) use ($search) {
+                $q->where('profile_id', 'LIKE', "%{$search}%")
+                  ->orWhere('name', 'LIKE', "%{$search}%")
+                  ->orWhere('plan_name', 'LIKE', "%{$search}%")
+                  ->orWhere('service_executive', 'LIKE', "%{$search}%")
+                  ->orWhere('contact_mobile_no', 'LIKE', "%{$search}%")
+                  ->orWhere('contact_customer_name', 'LIKE', "%{$search}%");
+            });
+        }
+        
+        // Use dynamic pagination
+        $services = $query->orderByDesc('created_at')->paginate($perPage);
+        
+        // Append parameters to pagination links
+        $services->appends(['per_page' => $perPage, 'search' => $search]);
         
         // Get all staff users for dropdown
         $staffUsers = \App\Models\User::where('user_type', 'staff')
                                      ->orderBy('first_name')
                                      ->get(['id', 'first_name', 'name']);
         
-        return view('profile.newservice', compact('services', 'staffUsers', 'perPage'));
+        return view('profile.newservice', compact('services', 'staffUsers', 'perPage', 'search'));
     }
 
     // Service Dashboard with dynamic counts

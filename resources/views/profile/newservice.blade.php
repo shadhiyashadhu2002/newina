@@ -418,6 +418,30 @@
       font-weight: 500;
     }
 
+    /* Search Functionality Styles */
+    .search-container:focus-within {
+      border-color: #ac0742 !important;
+      box-shadow: 0 4px 15px rgba(172, 7, 66, 0.2) !important;
+      transform: translateY(-1px);
+    }
+
+    .search-input::placeholder {
+      color: #999;
+      font-style: italic;
+    }
+
+    .search-btn:hover {
+      background: linear-gradient(135deg, #9d1955 0%, #ac0742 100%) !important;
+      transform: translateY(-1px);
+      box-shadow: 0 5px 15px rgba(172, 7, 66, 0.3);
+    }
+
+    .clear-search:hover {
+      background: #7f8c8d !important;
+      color: white !important;
+      text-decoration: none !important;
+    }
+
     /* Responsive design */
     @media (max-width: 768px) {
       .main-content {
@@ -812,14 +836,39 @@
           @endif
         </h2>
         
-        <!-- Entries per page dropdown -->
-        <div style="display: flex; align-items: center; gap: 10px;">
-          <label for="perPageSelect" style="font-size: 14px; color: #666;">Show:</label>
-          <select id="perPageSelect" onchange="changePerPage()" style="padding: 5px 10px; border: 1px solid #ddd; border-radius: 4px; font-size: 14px;">
-            <option value="10" {{ (isset($perPage) && $perPage == 10) ? 'selected' : '' }}>10 entries</option>
-            <option value="50" {{ (isset($perPage) && $perPage == 50) ? 'selected' : '' }}>50 entries</option>
-            <option value="100" {{ (isset($perPage) && $perPage == 100) ? 'selected' : '' }}>100 entries</option>
-          </select>
+        <!-- Right side controls: Entries per page dropdown and Search -->
+        <div style="display: flex; flex-direction: column; align-items: flex-end; gap: 10px;">
+          <!-- Entries per page dropdown -->
+          <div style="display: flex; align-items: center; gap: 10px;">
+            <label for="perPageSelect" style="font-size: 14px; color: #666;">Show:</label>
+            <select id="perPageSelect" onchange="changePerPage()" style="padding: 5px 10px; border: 1px solid #ddd; border-radius: 4px; font-size: 14px;">
+              <option value="10" {{ (isset($perPage) && $perPage == 10) ? 'selected' : '' }}>10 entries</option>
+              <option value="50" {{ (isset($perPage) && $perPage == 50) ? 'selected' : '' }}>50 entries</option>
+              <option value="100" {{ (isset($perPage) && $perPage == 100) ? 'selected' : '' }}>100 entries</option>
+            </select>
+          </div>
+          
+          <!-- Search Controls - Positioned below Show entries -->
+          <div class="search-controls" style="display: flex; align-items: center; gap: 10px;">
+            <form method="GET" action="{{ route('new.service') }}" style="display: flex; align-items: center; gap: 10px;">
+              <div class="search-container" style="display: flex; align-items: center; gap: 6px; background: white; padding: 6px 12px; border-radius: 20px; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1); border: 1px solid #e1e5e9; transition: all 0.3s ease;">
+                <input type="text" name="search" class="search-input" placeholder="Search services..." value="{{ $search ?? '' }}" style="border: none; outline: none; padding: 4px 8px; font-size: 13px; width: 200px; background: transparent; color: #333;">
+                <button type="submit" class="search-btn" style="background: linear-gradient(135deg, #ac0742 0%, #9d1955 100%); color: white; border: none; padding: 6px 10px; border-radius: 15px; cursor: pointer; font-size: 12px; font-weight: 500; transition: all 0.3s ease; display: flex; align-items: center; gap: 3px;">
+                  <svg width="14" height="14" fill="currentColor" viewBox="0 0 16 16">
+                    <path d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001c.03.04.062.078.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1.007 1.007 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0z"/>
+                  </svg>
+                  Go
+                </button>
+              </div>
+              
+              @if($search ?? '')
+              <a href="{{ route('new.service') }}?per_page={{ $perPage }}" class="clear-search" style="background: #95a5a6; color: white; border: none; padding: 4px 8px; border-radius: 12px; cursor: pointer; font-size: 11px; text-decoration: none; transition: all 0.3s ease;">Clear</a>
+              @endif
+              
+              <!-- Hidden field to preserve per_page selection -->
+              <input type="hidden" name="per_page" value="{{ $perPage }}">
+            </form>
+          </div>
         </div>
       </div>
       
@@ -918,6 +967,11 @@
       const url = new URL(window.location.href);
       url.searchParams.set('per_page', perPage);
       url.searchParams.delete('page'); // Reset to page 1 when changing per page
+      // Preserve search parameter if it exists
+      const searchInput = document.querySelector('input[name="search"]');
+      if (searchInput && searchInput.value) {
+        url.searchParams.set('search', searchInput.value);
+      }
       window.location.href = url.toString();
     }
 
