@@ -13,6 +13,21 @@ return new class extends Migration
      */
     public function up(): void
     {
+        // Function to find next available staff code
+        $getNextStaffCode = function() {
+            $lastCode = User::where('code', 'LIKE', 'STAFF%')
+                           ->whereNotNull('code')
+                           ->orderBy('code', 'desc')
+                           ->value('code');
+            
+            if ($lastCode) {
+                $number = (int) str_replace('STAFF', '', $lastCode);
+                return 'STAFF' . str_pad($number + 1, 3, '0', STR_PAD_LEFT);
+            }
+            
+            return 'STAFF001';
+        };
+
         // Add 4 new service executives
         $newExecutives = [
             [
@@ -22,7 +37,6 @@ return new class extends Migration
                 'password' => Hash::make('rumsi123'),
                 'user_type' => 'staff',
                 'is_admin' => false,
-                'code' => 'STAFF008',
                 'gender' => 'Female',
                 'phone' => '9876543218',
                 'phone2' => '9876543218',
@@ -41,7 +55,6 @@ return new class extends Migration
                 'password' => Hash::make('thasni123'),
                 'user_type' => 'staff',
                 'is_admin' => false,
-                'code' => 'STAFF009',
                 'gender' => 'Female',
                 'phone' => '9876543219',
                 'phone2' => '9876543219',
@@ -60,7 +73,6 @@ return new class extends Migration
                 'password' => Hash::make('thashfeeha123'),
                 'user_type' => 'staff',
                 'is_admin' => false,
-                'code' => 'STAFF010',
                 'gender' => 'Female',
                 'phone' => '9876543220',
                 'phone2' => '9876543220',
@@ -79,7 +91,6 @@ return new class extends Migration
                 'password' => Hash::make('mufeeda123'),
                 'user_type' => 'staff',
                 'is_admin' => false,
-                'code' => 'STAFF011',
                 'gender' => 'Female',
                 'phone' => '9876543221',
                 'phone2' => '9876543221',
@@ -98,6 +109,8 @@ return new class extends Migration
             $exists = User::where('email', $executive['email'])->exists();
             
             if (!$exists) {
+                // Assign next available staff code
+                $executive['code'] = $getNextStaffCode();
                 User::create($executive);
             }
         }
