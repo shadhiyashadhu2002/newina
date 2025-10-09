@@ -449,6 +449,18 @@
           <p>Completed Services</p>
         </div>
       </div>
+
+      @if(Auth::check() && Auth::user()->is_admin)
+      <a href="{{ route('expired.services') }}" style="text-decoration:none; color:inherit;">
+        <div class="dashboard-card">
+          <div class="card-icon expired" style="background: linear-gradient(135deg, #f44336, #d32f2f);">🗑️</div>
+          <div class="card-content">
+            <h3>{{ $expiredServices }}</h3>
+            <p>Expired Services</p>
+          </div>
+        </div>
+      </a>
+      @endif
     </div>
 
 

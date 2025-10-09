@@ -347,6 +347,7 @@ class ServiceController extends Controller
                 $newServices = Service::where('deleted', 0)->where('status', 'new')->count();
                 $activeServices = Service::where('deleted', 0)->where('status', 'active')->count();
                 $completedServices = Service::where('deleted', 0)->where('status', 'completed')->count();
+                $expiredServices = Service::where('deleted', 1)->count();
                 
                 // Get recent services for all staff (last 15 for admin, exclude deleted)
                 $recentServices = Service::where('deleted', 0)
@@ -372,6 +373,9 @@ class ServiceController extends Controller
                                            ->where('deleted', 0)
                                            ->where('status', 'completed')
                                            ->count();
+                $expiredServices = Service::where('service_executive', $executiveName)
+                                         ->where('deleted', 1)
+                                         ->count();
 
                 // Get recent services for current service executive (last 10, exclude deleted)
                 $recentServices = Service::where('service_executive', $executiveName)
@@ -386,7 +390,7 @@ class ServiceController extends Controller
                                          ->orderBy('first_name')
                                          ->get(['id', 'first_name', 'name']);
 
-            return view('profile.services', compact('totalServices', 'newServices', 'activeServices', 'completedServices', 'recentServices', 'staffUsers'));
+            return view('profile.services', compact('totalServices', 'newServices', 'activeServices', 'completedServices', 'expiredServices', 'recentServices', 'staffUsers'));
             
         } catch (\Exception $e) {
             // Log the error and return a fallback response
@@ -397,6 +401,7 @@ class ServiceController extends Controller
             $newServices = 0;
             $activeServices = 0;
             $completedServices = 0;
+            $expiredServices = 0;
             $recentServices = collect([]);
             
             // Get all staff users for dropdown even in error case
@@ -404,7 +409,7 @@ class ServiceController extends Controller
                                          ->orderBy('first_name')
                                          ->get(['id', 'first_name', 'name']);
             
-            return view('profile.services', compact('totalServices', 'newServices', 'activeServices', 'completedServices', 'recentServices', 'staffUsers'));
+            return view('profile.services', compact('totalServices', 'newServices', 'activeServices', 'completedServices', 'expiredServices', 'recentServices', 'staffUsers'));
         }
     }
 
