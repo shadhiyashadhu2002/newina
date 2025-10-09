@@ -28,26 +28,8 @@ return new class extends Migration
             return 'STAFF001';
         };
 
-        // Add 4 new service executives
+        // Add 3 new service executives
         $newExecutives = [
-            [
-                'name' => 'Ramsi Service',
-                'first_name' => 'Ramsi',
-                'email' => 'ramsi@service.com',
-                'password' => Hash::make('ramsi123'),
-                'user_type' => 'staff',
-                'is_admin' => false,
-                'gender' => 'Female',
-                'phone' => '9876543218',
-                'phone2' => '9876543218',
-                'mobile_number_1' => '9876543218',
-                'whatsapp_number' => '9876543218',
-                'welcome_call_completed' => false,
-                'comments' => 'Service Executive',
-                'created_by' => 1,
-                'created_at' => now(),
-                'updated_at' => now()
-            ],
             [
                 'name' => 'Thasni Service',
                 'first_name' => 'Thasni',
@@ -121,9 +103,8 @@ return new class extends Migration
      */
     public function down(): void
     {
-        // Remove the 4 new executives
+        // Remove the 3 new executives
         $emails = [
-            'ramsi@service.com',
             'thasni@service.com', 
             'thashfeeha@service.com',
             'mufeeda@service.com'

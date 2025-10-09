@@ -13,7 +13,7 @@ $kernel->bootstrap();
 use App\Models\User;
 use Illuminate\Support\Facades\Hash;
 
-echo "Adding 4 new service executives to live server (SAFE VERSION)...\n";
+echo "Adding 3 new service executives to live server (SAFE VERSION)...\n";
 echo "=================================================================\n";
 
 // Function to find next available staff code
@@ -44,22 +44,6 @@ $existingCodes = User::where('code', 'LIKE', 'STAFF%')
 echo "Current staff codes: " . implode(', ', array_slice($existingCodes, 0, 5)) . (count($existingCodes) > 5 ? '...' : '') . "\n";
 
 $newExecutives = [
-    [
-        'name' => 'Ramsi Service',
-        'first_name' => 'Ramsi',
-        'email' => 'ramsi@service.com',
-        'password' => Hash::make('ramsi123'),
-        'user_type' => 'staff',
-        'is_admin' => false,
-        'gender' => 'Female',
-        'phone' => '9876543218',
-        'phone2' => '9876543218',
-        'mobile_number_1' => '9876543218',
-        'whatsapp_number' => '9876543218',
-        'welcome_call_completed' => false,
-        'comments' => 'Service Executive',
-        'created_by' => 1
-    ],
     [
         'name' => 'Thasni Service',
         'first_name' => 'Thasni',
@@ -154,7 +138,7 @@ echo "Skipped: $skipped executives (already exist)\n";
 
 // Verify the executives are now in the database
 echo "\n=== VERIFICATION ===\n";
-$names = ['Ramsi', 'Thasni', 'Thashfeeha', 'Mufeeda'];
+$names = ['Thasni', 'Thashfeeha', 'Mufeeda'];
 foreach($names as $name) {
     $user = User::where('user_type', 'staff')->where('first_name', $name)->first();
     if($user) {
