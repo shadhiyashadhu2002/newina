@@ -64,6 +64,10 @@ class Service extends Model
         // Edit tracking
         'edit_comment',
         'edit_flag',
+        // RM Change tracking
+        'rm_change',
+        'rm_change_history',
+        'previous_service_executive',
         // Soft delete tracking
         'deleted',
         'delete_comment',

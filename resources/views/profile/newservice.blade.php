@@ -1076,15 +1076,42 @@
           <div class="modal-form-row">
             <div class="modal-form-group">
               <label>Service Executive</label>
-              <select name="service_executive" id="edit_service_executive" required>
-                <option value="">Select Service Executive</option>
+              @if(Auth::check() && Auth::user()->is_admin)
+                <select name="service_executive" id="edit_service_executive" required style="display: block;">
+                  <option value="">Select Service Executive</option>
+                  @if(isset($staffUsers))
+                    @foreach($staffUsers as $staff)
+                      <option value="{{ $staff->first_name }}">{{ $staff->first_name }}</option>
+                    @endforeach
+                  @endif
+                </select>
+                <input type="text" id="edit_service_executive_display" readonly style="background-color: #f5f5f5; cursor: not-allowed; display: none;" placeholder="Current Service Executive (Changed via RM)">
+              @else
+                <input type="text" id="edit_service_executive_readonly" readonly style="background-color: #f8f9fa; cursor: not-allowed; border: 1px solid #dee2e6; padding: 8px; border-radius: 4px; color: #6c757d;" placeholder="Service Executive (Admin Only)">
+                <small style="color: #6c757d; font-size: 12px;">Only administrators can modify service executive assignments</small>
+              @endif
+            </div>
+            @if(Auth::check() && Auth::user()->is_admin)
+            <div class="modal-form-group">
+              <label>RM Change</label>
+              <select name="rm_change" id="edit_rm_change">
+                <option value="">Select RM to Change</option>
                 @if(isset($staffUsers))
                   @foreach($staffUsers as $staff)
                     <option value="{{ $staff->first_name }}">{{ $staff->first_name }}</option>
                   @endforeach
                 @endif
               </select>
+              <small style="color: #666; font-size: 12px;">Select this to change the current service executive</small>
+              
+              <!-- RM Change History Box -->
+              <div id="rm_history_box" style="display: none; margin-top: 10px; padding: 12px; background-color: #d4edda; border: 2px solid #28a745; border-radius: 6px;">
+                <div id="rm_history_content" style="color: #dc3545; font-size: 13px; font-weight: 500; line-height: 1.4;">
+                  <!-- History will be populated here -->
+                </div>
+              </div>
             </div>
+            @endif
           </div>
           <div class="modal-form-row">
             <div class="modal-form-group" style="width: 100%;">
@@ -1213,7 +1240,31 @@
                 <td>{{ $service->name }}</td>
                 <td>{{ $service->plan_name }}</td>
                 <td>{{ $service->payment_date ? \Carbon\Carbon::parse($service->payment_date)->format('d-M-Y') : '' }}</td>
-                <td>{{ $service->service_executive }}</td>
+                <td>
+                  @if($service->rm_change_history)
+                    @php
+                      $history = json_decode($service->rm_change_history, true);
+                      $changesCount = is_array($history) ? count($history) : 0;
+                    @endphp
+                    @if($changesCount > 0)
+                      @php
+                        $lastChange = $history[$changesCount-1];
+                        $currentRM = $lastChange['to'] ?? $service->service_executive; // Show the last changed "to" RM
+                        $allChanges = '';
+                        foreach($history as $i => $change) {
+                          $allChanges .= ($i+1) . ". " . ($change['from'] ?? 'Unknown') . " → " . ($change['to'] ?? 'Unknown') . " (by " . ($change['changed_by'] ?? 'Unknown') . " on " . date('d-M-Y', strtotime($change['changed_at'] ?? now())) . ")\n";
+                        }
+                      @endphp
+                      <span title="{{ trim($allChanges) }}" style="cursor: help; font-size: 16px; font-weight: bold;">
+                        {{ $currentRM }}
+                      </span>
+                    @else
+                      <span style="font-size: 16px; font-weight: bold;">{{ $service->service_executive }}</span>
+                    @endif
+                  @else
+                    <span style="font-size: 16px; font-weight: bold;">{{ $service->service_executive }}</span>
+                  @endif
+                </td>
                 <td>
                   <a href="{{ route('service.details', ['id' => $service->profile_id, 'name' => $service->name]) }}" class="action-link">Service Details</a>
                 </td>
@@ -1565,7 +1616,58 @@
           document.getElementById('edit_gender').value = data.service.member_gender || '';
           document.getElementById('edit_mobile').value = data.service.contact_mobile_no || '';
           document.getElementById('edit_contact_alternate').value = data.service.contact_alternate || '';
-          document.getElementById('edit_service_executive').value = data.service.service_executive || '';
+          
+          // Handle Service Executive and RM Change
+          const currentServiceExecutive = data.service.service_executive || '';
+          
+          // Check if user is admin or staff (different elements)
+          const dropdownElement = document.getElementById('edit_service_executive');
+          const displayElement = document.getElementById('edit_service_executive_display');
+          const readonlyElement = document.getElementById('edit_service_executive_readonly');
+          
+          if (dropdownElement) {
+            // Admin user - show dropdown
+            dropdownElement.style.display = 'block';
+            displayElement.style.display = 'none';
+            dropdownElement.value = currentServiceExecutive;
+          } else if (readonlyElement) {
+            // Non-admin user - show readonly field
+            readonlyElement.value = currentServiceExecutive;
+          }
+          
+          // Reset RM change dropdown (if exists - admin only)
+          const rmChangeDropdown = document.getElementById('edit_rm_change');
+          if (rmChangeDropdown) {
+            rmChangeDropdown.value = '';
+          }
+          
+          // Display RM Change History in green box (Admin only)
+          const historyBox = document.getElementById('rm_history_box');
+          const historyContent = document.getElementById('rm_history_content');
+          
+          if (data.service.rm_change_history && historyBox && historyContent) {
+            try {
+              const history = JSON.parse(data.service.rm_change_history);
+              if (history.length > 0) {
+                let historyHtml = `<strong>RM Change History (${history.length} changes):</strong><br>`;
+                history.forEach((change, index) => {
+                  const changeDate = new Date(change.changed_at).toLocaleDateString();
+                  historyHtml += `${index + 1}. ${change.from} → ${change.to} by ${change.changed_by} (${changeDate})<br>`;
+                });
+                
+                historyContent.innerHTML = historyHtml;
+                historyBox.style.display = 'block';
+              } else {
+                historyBox.style.display = 'none';
+              }
+            } catch (e) {
+              // Hide box if JSON parse fails
+              historyBox.style.display = 'none';
+            }
+          } else if (historyBox) {
+            // No history - hide the box
+            historyBox.style.display = 'none';
+          }
           
           // Set form action
           editForm.action = `/service/${serviceId}`;
@@ -1833,6 +1935,58 @@
         e.target.parentElement.appendChild(feedback);
       }
     });
+
+    // RM Change functionality (Admin only)
+    const rmChangeSelect = document.getElementById('edit_rm_change');
+    if (rmChangeSelect) {
+      rmChangeSelect.addEventListener('change', function() {
+        const selectedRM = this.value;
+        const serviceExecutiveDropdown = document.getElementById('edit_service_executive');
+        const serviceExecutiveDisplay = document.getElementById('edit_service_executive_display');
+        
+        // Safety check - these elements only exist for admin users
+        if (!serviceExecutiveDropdown || !serviceExecutiveDisplay) {
+          return;
+        }
+        
+        if (selectedRM && selectedRM !== '') {
+          // Get current executive from dropdown
+          const currentExecutive = serviceExecutiveDropdown.value;
+          
+          // Get the executive name for display
+          const executiveText = serviceExecutiveDropdown.options[serviceExecutiveDropdown.selectedIndex].text;
+          const newExecutiveText = rmChangeSelect.options[rmChangeSelect.selectedIndex].text;
+          
+          // Switch to read-only mode to show the change preview
+          serviceExecutiveDropdown.style.display = 'none';
+          serviceExecutiveDisplay.style.display = 'block';
+          serviceExecutiveDisplay.value = `${executiveText} → ${newExecutiveText} (Changing...)`;
+          
+          // Update the hidden dropdown value to the new RM
+          serviceExecutiveDropdown.value = selectedRM;
+          
+          // Add visual indication of change
+          serviceExecutiveDisplay.style.backgroundColor = '#fff3cd';
+          serviceExecutiveDisplay.style.border = '2px solid #ffc107';
+          serviceExecutiveDisplay.style.color = '#856404';
+          
+          // Show change notification
+          showNotification(`RM will be changed from "${executiveText}" to "${newExecutiveText}" when you save`, 'warning');
+        } else {
+          // RM dropdown is empty - allow normal Service Executive editing
+          serviceExecutiveDropdown.style.display = 'block';
+          serviceExecutiveDisplay.style.display = 'none';
+          
+          // Reset display field styling
+          serviceExecutiveDisplay.style.backgroundColor = '#f5f5f5';
+          serviceExecutiveDisplay.style.border = '1px solid #ddd';
+          serviceExecutiveDisplay.style.color = '#333';
+          
+          // Clear any change notification
+          showNotification('RM change cleared - you can now edit Service Executive normally', 'info');
+        }
+      });
+    }
 
     // Add CSS animation keyframes
     const style = document.createElement('style');

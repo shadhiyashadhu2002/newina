@@ -120,20 +120,45 @@ class ServiceController extends Controller
                 'contact_mobile_no' => 'required|string|max:20',
                 'contact_alternate' => 'nullable|string|max:20',
                 'service_executive' => 'required|string|max:255',
+                'rm_change' => 'nullable|string|max:255',
                 'edit_comment' => 'required|string|min:10|max:500'
             ]);
             
-            // Update service
-            $service->update([
+            // Handle RM Change tracking
+            $updateData = [
                 'profile_id' => $request->profile_id,
                 'name' => $request->name,
                 'member_gender' => $request->member_gender,
                 'contact_mobile_no' => $request->contact_mobile_no,
                 'contact_alternate' => $request->contact_alternate,
-                'service_executive' => $request->service_executive,
                 'edit_comment' => $request->edit_comment,
                 'edit_flag' => 'Y'
-            ]);
+            ];
+
+            // Check if RM is being changed
+            if ($request->rm_change && $request->rm_change !== $service->service_executive) {
+                // Store previous service executive
+                $updateData['previous_service_executive'] = $service->service_executive;
+                $updateData['service_executive'] = $request->rm_change;
+                $updateData['rm_change'] = $request->rm_change;
+
+                // Update RM change history
+                $currentHistory = $service->rm_change_history ? json_decode($service->rm_change_history, true) : [];
+                $currentHistory[] = [
+                    'from' => $service->service_executive,
+                    'to' => $request->rm_change,
+                    'changed_at' => now()->toDateTimeString(),
+                    'changed_by' => $user->first_name ?? $user->name,
+                    'comment' => $request->edit_comment
+                ];
+                $updateData['rm_change_history'] = json_encode($currentHistory);
+            } else {
+                // Regular update without RM change
+                $updateData['service_executive'] = $request->service_executive;
+            }
+
+            // Update service
+            $service->update($updateData);
             
             return response()->json(['success' => true, 'message' => 'Service updated successfully']);
             
