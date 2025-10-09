@@ -33,7 +33,7 @@ This script:
 ## Step 3: Verify Results
 
 After running the script, you should see:
-- ✅ Rumsi added with available staff code
+- ✅ Ramsi added with available staff code
 - ✅ Thasni added with available staff code  
 - ✅ Thashfeeha added with available staff code
 - ✅ Mufeeda added with available staff code
@@ -54,7 +54,7 @@ If executives still don't appear:
 
 ## Login Credentials
 
-- **Rumsi**: rumsi@service.com / rumsi123
+- **Ramsi**: ramsi@service.com / ramsi123
 - **Thasni**: thasni@service.com / thasni123  
 - **Thashfeeha**: thashfeeha@service.com / thashfeeha123
 - **Mufeeda**: mufeeda@service.com / mufeeda123

@@ -49,7 +49,7 @@ After adding the executives, verify they appear by:
 
 ## Login Credentials for New Executives:
 
-- **Rumsi**: rumsi@service.com / rumsi123
+- **Ramsi**: ramsi@service.com / ramsi123
 - **Thasni**: thasni@service.com / thasni123  
 - **Thashfeeha**: thashfeeha@service.com / thashfeeha123
 - **Mufeeda**: mufeeda@service.com / mufeeda123

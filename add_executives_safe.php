@@ -45,10 +45,10 @@ echo "Current staff codes: " . implode(', ', array_slice($existingCodes, 0, 5)) 
 
 $newExecutives = [
     [
-        'name' => 'Rumsi Service',
-        'first_name' => 'Rumsi',
-        'email' => 'rumsi@service.com',
-        'password' => Hash::make('rumsi123'),
+        'name' => 'Ramsi Service',
+        'first_name' => 'Ramsi',
+        'email' => 'ramsi@service.com',
+        'password' => Hash::make('ramsi123'),
         'user_type' => 'staff',
         'is_admin' => false,
         'gender' => 'Female',
@@ -154,7 +154,7 @@ echo "Skipped: $skipped executives (already exist)\n";
 
 // Verify the executives are now in the database
 echo "\n=== VERIFICATION ===\n";
-$names = ['Rumsi', 'Thasni', 'Thashfeeha', 'Mufeeda'];
+$names = ['Ramsi', 'Thasni', 'Thashfeeha', 'Mufeeda'];
 foreach($names as $name) {
     $user = User::where('user_type', 'staff')->where('first_name', $name)->first();
     if($user) {

@@ -31,10 +31,10 @@ return new class extends Migration
         // Add 4 new service executives
         $newExecutives = [
             [
-                'name' => 'Rumsi Service',
-                'first_name' => 'Rumsi',
-                'email' => 'rumsi@service.com',
-                'password' => Hash::make('rumsi123'),
+                'name' => 'Ramsi Service',
+                'first_name' => 'Ramsi',
+                'email' => 'ramsi@service.com',
+                'password' => Hash::make('ramsi123'),
                 'user_type' => 'staff',
                 'is_admin' => false,
                 'gender' => 'Female',
@@ -123,7 +123,7 @@ return new class extends Migration
     {
         // Remove the 4 new executives
         $emails = [
-            'rumsi@service.com',
+            'ramsi@service.com',
             'thasni@service.com', 
             'thashfeeha@service.com',
             'mufeeda@service.com'

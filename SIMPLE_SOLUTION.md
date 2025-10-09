@@ -42,14 +42,14 @@ The safe script will:
 
 ## Expected Result:
 After running the script, your Service Executive dropdown will show:
-- Rumsi
+- Ramsi
 - Thasni  
 - Thashfeeha
 - Mufeeda
 - Plus all existing executives
 
 ## Login Credentials:
-- **Rumsi**: rumsi@service.com / rumsi123
+- **Ramsi**: ramsi@service.com / ramsi123
 - **Thasni**: thasni@service.com / thasni123  
 - **Thashfeeha**: thashfeeha@service.com / thashfeeha123
 - **Mufeeda**: mufeeda@service.com / mufeeda123
