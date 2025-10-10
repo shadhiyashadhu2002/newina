@@ -1990,41 +1990,41 @@
 
     // Handle edit form submission
     editForm.addEventListener('submit', function(e) {
-      e.preventDefault();
-      
-      // Validate comment field
-      const commentField = document.getElementById('edit_comment');
-      if (!commentField || !commentField.value.trim()) {
-        showNotification('Please enter a comment explaining the reason for this edit', 'error');
-        if (commentField) {
-          commentField.focus();
-          commentField.style.border = '2px solid #dc3545';
-        }
-        return;
-      }
-      
-      if (commentField.value.trim().length < 10) {
-        showNotification('Comment must be at least 10 characters long', 'error');
-        commentField.focus();
-        commentField.style.border = '2px solid #dc3545';
-        return;
-      }
-      
-      // Reset border color if validation passes
-      commentField.style.border = '1px solid #ddd';
-      
-      const formData = new FormData(this);
-      // Ensure _method is set to PUT for Laravel method spoofing
-      if (!formData.has('_method')) {
-        formData.append('_method', 'PUT');
-      }
-      fetch(this.action, {
-        method: 'POST', // Always POST for AJAX method spoofing
-        body: formData,
-        headers: {
-          'X-Requested-With': 'XMLHttpRequest'
-        }
-      })
+  e.preventDefault();
+  
+  // Validate comment field
+  const commentField = document.getElementById('edit_comment');
+  if (!commentField || !commentField.value.trim()) {
+    showNotification('Please enter a comment explaining the reason for this edit', 'error');
+    if (commentField) {
+      commentField.focus();
+      commentField.style.border = '2px solid #dc3545';
+    }
+    return;
+  }
+  
+  if (commentField.value.trim().length < 10) {
+    showNotification('Comment must be at least 10 characters long', 'error');
+    commentField.focus();
+    commentField.style.border = '2px solid #dc3545';
+    return;
+  }
+  
+  // Reset border color if validation passes
+  commentField.style.border = '1px solid #ddd';
+  
+  const formData = new FormData(this);
+  
+  // Log for debugging on live server
+  console.log('Submitting to:', this.action);
+  console.log('Form has _method:', formData.has('_method'));
+  console.log('Form has _token:', formData.has('_token'));
+  
+  fetch(this.action, {
+    method: 'POST',
+    body: formData,
+    credentials: 'same-origin'
+  })
       .then(response => {
         if (!response.ok && response.status === 422) {
           return response.json().then(data => {
