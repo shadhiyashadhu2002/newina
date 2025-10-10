@@ -72,6 +72,8 @@ class Service extends Model
         'deleted',
         'delete_comment',
         'deleted_at',
-        'deleted_by',
+    'deleted_by',
+    // Status tracking
+    'tracking_updated_by',
     ];
 }

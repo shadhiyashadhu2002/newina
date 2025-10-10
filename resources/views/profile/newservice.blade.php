@@ -1181,7 +1181,7 @@
               <div class="modal-form-group" style="width: 50%;">
                 <label>Status</label>
                 <select name="status" id="edit_status" style="width: 100%; max-width: 200px;">
-                  <option value="">Select Status</option>
+                  <option value="" selected>Select Status</option>
                   <option value="postponed">Postponed</option>
                   <option value="deleted">Deleted</option>
                   <option value="RM changed">RM Changed</option>
@@ -1736,7 +1736,11 @@
           // Populate status field with current status
           const editStatusField = document.getElementById('edit_status');
           if (editStatusField) {
-            editStatusField.value = data.service.status || '';
+            if (data.service.status && ['postponed','deleted','RM changed'].includes(data.service.status)) {
+              editStatusField.value = data.service.status;
+            } else {
+              editStatusField.value = '';
+            }
           }
           
           // Handle Service Executive and RM Change
@@ -1914,7 +1918,32 @@
       // Reset border color if validation passes
       commentField.style.border = '1px solid #ddd';
       
-      const formData = new FormData(this);
+      // Collect all required fields for update
+      const formData = new FormData();
+      formData.append('profile_id', document.getElementById('edit_profile_id').value || '');
+      formData.append('name', document.getElementById('edit_name').value || '');
+      formData.append('member_gender', document.getElementById('edit_gender').value || '');
+      formData.append('contact_mobile_no', document.getElementById('edit_mobile').value || '');
+      formData.append('contact_alternate', document.getElementById('edit_contact_alternate').value || '');
+      formData.append('edit_comment', document.getElementById('edit_comment').value || '');
+      // Service executive (admin: dropdown, staff: readonly)
+      const execDropdown = document.getElementById('edit_service_executive');
+      const execReadonly = document.getElementById('edit_service_executive_readonly');
+      if (execDropdown && execDropdown.style.display !== 'none') {
+        formData.append('service_executive', execDropdown.value || '');
+      } else if (execReadonly) {
+        formData.append('service_executive', execReadonly.value || '');
+      }
+      // RM change (admin only)
+      const rmChange = document.getElementById('edit_rm_change');
+      if (rmChange) {
+        formData.append('rm_change', rmChange.value || '');
+      }
+      // Status
+      formData.append('status', document.getElementById('edit_status').value || '');
+      // CSRF and method spoofing
+      formData.append('_token', document.querySelector('meta[name="csrf-token"]').getAttribute('content'));
+      formData.append('_method', 'PUT');
       
       fetch(this.action, {
         method: 'POST',
@@ -2150,19 +2179,12 @@
           const historyTableBody = document.getElementById('status-history-body');
           let historyHTML = '';
           const entries = [];
-          if (data.service.status && data.service.tracking_date) {
+          // Always show the latest edit as a status history entry
+          if (data.service) {
             entries.push({
-              date: data.service.tracking_date || data.service.updated_at || data.service.created_at || new Date().toISOString(),
-              status: data.service.status,
+              date: data.service.updated_at || data.service.tracking_date || data.service.created_at || new Date().toISOString(),
+              status: data.service.status || 'Edit',
               comment: data.service.edit_comment || 'No comment available',
-              updatedBy: data.service.tracking_updated_by || 'Unknown'
-            });
-          }
-          if (data.service.edit_comment && !data.service.status) {
-            entries.push({
-              date: data.service.updated_at || new Date().toISOString(),
-              status: 'Edit',
-              comment: data.service.edit_comment,
               updatedBy: data.service.tracking_updated_by || 'Unknown'
             });
           }

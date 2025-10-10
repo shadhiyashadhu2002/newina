@@ -27,7 +27,9 @@ class ServiceController extends Controller
             
             // Handle different field mappings from different forms
             $data['name'] = $data['service_name'] ?? $data['member_name'] ?? null;
-            $data['service_executive'] = $data['service_executive'] ?? Auth::user()->first_name ?? 'admin';
+            $user = Auth::user();
+            $data['service_executive'] = $data['service_executive'] ?? ($user && $user->first_name ? $user->first_name : ($user->name ?? 'admin'));
+            $data['tracking_updated_by'] = ($user && $user->first_name && trim($user->first_name) !== '') ? $user->first_name : ($user->name ?? 'Unknown');
             
             // Set default service_name if not provided (for admin modal)
             if (!isset($data['service_name'])) {
@@ -133,6 +135,7 @@ class ServiceController extends Controller
                 'contact_alternate' => $request->contact_alternate,
                 'edit_comment' => $request->edit_comment,
                 'edit_flag' => 'Y',
+                'tracking_updated_by' => ($user->first_name && trim($user->first_name) !== '') ? $user->first_name : ($user->name ?? 'Unknown'),
             ];
             // Save status/tracking_status if present
             if ($request->has('status')) {
