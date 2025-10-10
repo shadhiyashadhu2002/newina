@@ -128,6 +128,33 @@
       overflow: hidden;
     }
 
+.edit-form-scroll-wrapper {
+  overflow-y: auto !important;
+  max-height: calc(85vh - 180px);
+  scrollbar-color: #ac0742 #f8f9fa;
+  scrollbar-width: thin;
+  padding-right: 8px;
+  flex: 1;
+}
+
+.edit-form-scroll-wrapper::-webkit-scrollbar {
+  width: 8px;
+}
+
+.edit-form-scroll-wrapper::-webkit-scrollbar-track {
+  background: #f8f9fa;
+  border-radius: 10px;
+}
+
+.edit-form-scroll-wrapper::-webkit-scrollbar-thumb {
+  background: #ac0742;
+  border-radius: 10px;
+}
+
+.edit-form-scroll-wrapper::-webkit-scrollbar-thumb:hover {
+  background: #9d1955;
+}
+
     .add-service-btn-beautiful:before {
       content: '';
       position: absolute;
@@ -413,7 +440,7 @@
       backdrop-filter: blur(10px);
       border: 1px solid rgba(255, 255, 255, 0.3);
       margin: 0 auto;
-      overflow-x: auto;
+      /* overflow-x removed to allow scroll wrapper to work */
     }
 
     .table-title {
@@ -501,7 +528,7 @@
 
     .services-table th:nth-child(6),
     .services-table td:nth-child(6) {
-      width: 110px; /* Executive Name - reduced */
+      width: 110px; /* RM Name - reduced */
     }
 
     .services-table th:nth-child(7),
@@ -609,6 +636,32 @@
     }
 
     .delete-btn svg {
+      margin-right: 3px;
+    }
+
+    /* Status tracking button styles */
+    .status-tracking-btn {
+      background: linear-gradient(135deg, #17a2b8 0%, #20c997 100%);
+      color: white;
+      border: none;
+      padding: 5px 10px;
+      border-radius: 12px;
+      cursor: pointer;
+      font-size: 11px;
+      font-weight: 500;
+      transition: all 0.3s ease;
+      display: flex;
+      align-items: center;
+      gap: 3px;
+    }
+
+    .status-tracking-btn:hover {
+      background: linear-gradient(135deg, #20c997 0%, #17a2b8 100%);
+      transform: translateY(-1px);
+      box-shadow: 0 3px 10px rgba(23, 162, 184, 0.3);
+    }
+
+    .status-tracking-btn svg {
       margin-right: 3px;
     }
 
@@ -977,7 +1030,8 @@
     <div id="add-service-modal" class="modal-overlay">
       <div class="modal-content-beautiful">
         <h2>Add New Service</h2>
-        <form id="add-service-form-modal">
+        <form id="add-service-form-modal" method="POST" action="{{ route('new.service.store') }}">
+          @csrf
           <div class="modal-form-row">
             <div class="modal-form-group">
               <label>Profile ID</label>
@@ -1037,89 +1091,105 @@
     @endif
 
     @if(Auth::check() && Auth::user()->is_admin)
-    <!-- Edit Service Modal -->
+   
+<!-- Edit Service Modal -->
     <div id="edit-modal-overlay" class="modal-overlay">
-      <div class="modal-content-beautiful">
+     <div class="modal-content-beautiful">
         <h2>Edit Service</h2>
         <form id="edit-service-form" method="POST" action="">
           @csrf
           @method('PUT')
-          <div class="modal-form-row">
-            <div class="modal-form-group">
-              <label>Profile ID</label>
-              <input type="text" name="profile_id" id="edit_profile_id" placeholder="Enter Profile ID" required>
+          
+          <div class="edit-form-scroll-wrapper">
+            <div class="modal-form-row">
+              <div class="modal-form-group">
+                <label>Profile ID</label>
+                <input type="text" name="profile_id" id="edit_profile_id" placeholder="Enter Profile ID" required>
+              </div>
+              <div class="modal-form-group">
+                <label>Member Name</label>
+                <input type="text" name="name" id="edit_name" placeholder="Enter member name" required>
+              </div>
             </div>
-            <div class="modal-form-group">
-              <label>Member Name</label>
-              <input type="text" name="name" id="edit_name" placeholder="Enter member name" required>
+            <div class="modal-form-row">
+              <div class="modal-form-group">
+                <label>Gender</label>
+                <select name="member_gender" id="edit_gender">
+                  <option value="">Select Gender</option>
+                  <option value="male">Male</option>
+                  <option value="female">Female</option>
+                  <option value="other">Other</option>
+                </select>
+              </div>
+              <div class="modal-form-group">
+                <label>Mobile Number</label>
+                <input type="tel" name="contact_mobile_no" id="edit_mobile" placeholder="Enter mobile number" required>
+              </div>
+              <div class="modal-form-group">
+                <label>Alternative Contact Number</label>
+                <input type="tel" name="contact_alternate" id="edit_contact_alternate" placeholder="Enter alternative contact number">
+              </div>
             </div>
-          </div>
-          <div class="modal-form-row">
-            <div class="modal-form-group">
-              <label>Gender</label>
-              <select name="member_gender" id="edit_gender">
-                <option value="">Select Gender</option>
-                <option value="male">Male</option>
-                <option value="female">Female</option>
-                <option value="other">Other</option>
-              </select>
-            </div>
-            <div class="modal-form-group">
-              <label>Mobile Number</label>
-              <input type="tel" name="contact_mobile_no" id="edit_mobile" placeholder="Enter mobile number" required>
-            </div>
-            <div class="modal-form-group">
-              <label>Alternative Contact Number</label>
-              <input type="tel" name="contact_alternate" id="edit_contact_alternate" placeholder="Enter alternative contact number">
-            </div>
-          </div>
-          <div class="modal-form-row">
-            <div class="modal-form-group">
-              <label>Service Executive</label>
+            <div class="modal-form-row">
+              <div class="modal-form-group">
+                <label>Service Executive</label>
+                @if(Auth::check() && Auth::user()->is_admin)
+                  <select name="service_executive" id="edit_service_executive" required style="display: block;">
+                    <option value="">Select Service Executive</option>
+                    @if(isset($staffUsers))
+                      @foreach($staffUsers as $staff)
+                        <option value="{{ $staff->first_name }}">{{ $staff->first_name }}</option>
+                      @endforeach
+                    @endif
+                  </select>
+                  <input type="text" id="edit_service_executive_display" readonly style="background-color: #f5f5f5; cursor: not-allowed; display: none;" placeholder="Current Service Executive (Changed via RM)">
+                @else
+                  <input type="text" id="edit_service_executive_readonly" readonly style="background-color: #f8f9fa; cursor: not-allowed; border: 1px solid #dee2e6; padding: 8px; border-radius: 4px; color: #6c757d;" placeholder="Service Executive (Admin Only)">
+                  <small style="color: #6c757d; font-size: 12px;">Only administrators can modify service executive assignments</small>
+                @endif
+              </div>
               @if(Auth::check() && Auth::user()->is_admin)
-                <select name="service_executive" id="edit_service_executive" required style="display: block;">
-                  <option value="">Select Service Executive</option>
+              <div class="modal-form-group">
+                <label>RM Change</label>
+                <select name="rm_change" id="edit_rm_change">
+                  <option value="">Select RM to Change</option>
                   @if(isset($staffUsers))
                     @foreach($staffUsers as $staff)
                       <option value="{{ $staff->first_name }}">{{ $staff->first_name }}</option>
                     @endforeach
                   @endif
                 </select>
-                <input type="text" id="edit_service_executive_display" readonly style="background-color: #f5f5f5; cursor: not-allowed; display: none;" placeholder="Current Service Executive (Changed via RM)">
-              @else
-                <input type="text" id="edit_service_executive_readonly" readonly style="background-color: #f8f9fa; cursor: not-allowed; border: 1px solid #dee2e6; padding: 8px; border-radius: 4px; color: #6c757d;" placeholder="Service Executive (Admin Only)">
-                <small style="color: #6c757d; font-size: 12px;">Only administrators can modify service executive assignments</small>
-              @endif
-            </div>
-            @if(Auth::check() && Auth::user()->is_admin)
-            <div class="modal-form-group">
-              <label>RM Change</label>
-              <select name="rm_change" id="edit_rm_change">
-                <option value="">Select RM to Change</option>
-                @if(isset($staffUsers))
-                  @foreach($staffUsers as $staff)
-                    <option value="{{ $staff->first_name }}">{{ $staff->first_name }}</option>
-                  @endforeach
-                @endif
-              </select>
-              <small style="color: #666; font-size: 12px;">Select this to change the current service executive</small>
-              
-              <!-- RM Change History Box -->
-              <div id="rm_history_box" style="display: none; margin-top: 10px; padding: 12px; background-color: #d4edda; border: 2px solid #28a745; border-radius: 6px;">
-                <div id="rm_history_content" style="color: #dc3545; font-size: 13px; font-weight: 500; line-height: 1.4;">
-                  <!-- History will be populated here -->
+                <small style="color: #666; font-size: 12px;">Select this to change the current service executive</small>
+                
+                <!-- RM Change History Box -->
+                <div id="rm_history_box" style="display: none; margin-top: 10px; padding: 12px; background-color: #d4edda; border: 2px solid #28a745; border-radius: 6px;">
+                  <div id="rm_history_content" style="color: #dc3545; font-size: 13px; font-weight: 500; line-height: 1.4;">
+                    <!-- History will be populated here -->
+                  </div>
                 </div>
               </div>
+              @endif
             </div>
-            @endif
-          </div>
-          <div class="modal-form-row">
-            <div class="modal-form-group" style="width: 100%;">
-              <label>Comment (Required for editing) <span style="color: red;">*</span></label>
-              <textarea name="edit_comment" id="edit_comment" placeholder="Please enter a comment explaining the reason for this edit..." required style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px; min-height: 80px; font-family: inherit; resize: vertical;"></textarea>
-              <small style="color: #666; font-size: 12px;">This field is mandatory. Please explain why you are making this edit.</small>
+            <div class="modal-form-row">
+              <div class="modal-form-group" style="width: 100%;">
+                <label>Comment (Required for editing) <span style="color: red;">*</span></label>
+                <textarea name="edit_comment" id="edit_comment" placeholder="Please enter a comment explaining the reason for this edit..." required style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px; min-height: 80px; font-family: inherit; resize: vertical;"></textarea>
+                <small style="color: #666; font-size: 12px;">This field is mandatory. Please explain why you are making this edit.</small>
+              </div>
+            </div>
+            <div class="modal-form-row">
+              <div class="modal-form-group" style="width: 50%;">
+                <label>Status</label>
+                <select name="status" id="edit_status" style="width: 100%; max-width: 200px;">
+                  <option value="">Select Status</option>
+                  <option value="postponed">Postponed</option>
+                  <option value="deleted">Deleted</option>
+                  <option value="RM changed">RM Changed</option>
+                </select>
+              </div>
             </div>
           </div>
+
           <div class="modal-actions">
             <button type="button" id="close-edit-modal-btn" class="btn btn-secondary">Cancel</button>
             <button type="submit" class="btn btn-primary">Update Service</button>
@@ -1128,7 +1198,6 @@
       </div>
     </div>
     @endif
-
     <!-- Delete Confirmation Modal -->
     <div id="delete-confirmation-modal" class="modal">
       <div class="modal-content" style="max-width: 500px;">
@@ -1166,6 +1235,38 @@
               <button type="submit" class="btn" style="background: #dc3545; color: white;">Delete Service</button>
             </div>
           </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Status Tracking Modal -->
+    <div id="status-tracking-modal" class="modal">
+      <div class="modal-content" style="max-width: 900px; position: relative;">
+        <button id="close-status-modal-btn" style="position: absolute; top: 18px; right: 18px; background: none; border: none; font-size: 22px; color: #888; cursor: pointer; z-index: 10;" title="Close">&times;</button>
+        <h2 style="color: #17a2b8; margin-bottom: 20px;">📋 Service Details & Status</h2>
+        
+        <!-- Status History Table -->
+        <div style="margin-bottom: 25px;">
+          <table id="status-history-table" style="width: 100%; border-collapse: collapse; font-size: 14px;">
+            <thead>
+              <tr style="background-color: #f8f9fa;">
+                <th style="padding: 12px; border: 1px solid #ddd; font-weight: bold; text-align: left; width: 20%;">Date</th>
+                <th style="padding: 12px; border: 1px solid #ddd; font-weight: bold; text-align: left; width: 15%;">Status</th>
+                <th style="padding: 12px; border: 1px solid #ddd; font-weight: bold; text-align: left; width: 45%;">Comment</th>
+                <th style="padding: 12px; border: 1px solid #ddd; font-weight: bold; text-align: left; width: 20%;">Updated By</th>
+              </tr>
+            </thead>
+            <tbody id="status-history-body">
+              <tr>
+                <td colspan="4" style="padding: 20px; text-align: center; color: #666; font-style: italic; border: 1px solid #ddd;">
+                  No status history found for this service
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Status Update Form Removed as per request -->
         </form>
       </div>
     </div>
@@ -1216,7 +1317,8 @@
         </div>
       </div>
       
-      <table class="services-table">
+  <div class="services-table-scroll-wrapper">
+    <table class="services-table" style="width: 100%;">
         <thead>
           <tr>
             <th>Sl No</th>
@@ -1224,7 +1326,7 @@
             <th>Name</th>
             <th>Plan Name</th>
             <th>Payment Date</th>
-            <th>Executive Name</th>
+            <th>RM Name</th>
             <th>Actions</th>
             @if(Auth::check() && Auth::user()->is_admin)
             <th>Edit</th>
@@ -1279,6 +1381,13 @@
                       Edit
                     </button>
                     @endif
+                    <button class="status-tracking-btn" data-service-id="{{ $service->id }}">
+                      <svg width="12" height="12" fill="currentColor" viewBox="0 0 16 16">
+                        <path d="M14 4.5V14a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V2a2 2 0 0 1 2-2h5.5L14 4.5zM9.5 3A1.5 1.5 0 0 0 11 4.5h2V14a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1h5.5v2z"/>
+                        <path d="M4.603 14.087a.81.81 0 0 1-.438-.42c-.195-.388-.13-.776.08-1.102.198-.307.526-.568.897-.787a7.68 7.68 0 0 1 1.482-.645 19.697 19.697 0 0 0 1.062-2.227 7.269 7.269 0 0 1-.43-1.295c-.086-.4-.119-.796-.046-1.136.075-.354.274-.672.65-.823.192-.077.4-.12.602-.077a.7.7 0 0 1 .477.365c.088.164.12.356.127.538.007.188-.012.396-.047.614-.084.51-.27 1.134-.52 1.794a10.954 10.954 0 0 0 .98 1.686 5.753 5.753 0 0 1 1.334.05c.364.066.734.195.96.465.12.144.193.32.2.518.007.192-.047.382-.138.563a1.04 1.04 0 0 1-.354.416.856.856 0 0 1-.51.138c-.331-.014-.654-.196-.933-.417a5.712 5.712 0 0 1-.911-.95 11.651 11.651 0 0 0-1.997.406 11.307 11.307 0 0 1-1.02 1.51c-.292.35-.609.656-.927.787a.793.793 0 0 1-.58.029zm1.379-1.901c-.166.076-.32.156-.459.238-.328.194-.541.383-.647.547-.094.145-.096.25-.04.361.01.022.02.036.026.044a.266.266 0 0 0 .035-.012c.137-.056.355-.235.635-.572a8.18 8.18 0 0 0 .45-.606zm1.64-1.33a12.71 12.71 0 0 1 1.01-.193 11.744 11.744 0 0 1-.51-.858 20.801 20.801 0 0 1-.5 1.05zm2.446.45c.15.163.296.3.435.41.24.19.407.253.498.256a.107.107 0 0 0 .07-.015.307.307 0 0 0 .094-.125.436.436 0 0 0 .059-.2.095.095 0 0 0-.026-.063c-.052-.062-.2-.152-.518-.209a3.876 3.876 0 0 0-.612-.053zM8.078 7.8a6.7 6.7 0 0 0 .2-.828c.031-.188.043-.343.038-.465a.613.613 0 0 0-.032-.198.517.517 0 0 0-.145.04c-.087.035-.158.106-.196.283-.04.192-.03.469.135.468z"/>
+                      </svg>
+                      Status
+                    </button>
                     <button class="delete-btn" data-service-id="{{ $service->id }}">
                       <svg width="12" height="12" fill="currentColor" viewBox="0 0 16 16">
                         <path d="M5.5 5.5A.5.5 0 0 1 6 6v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm2.5 0a.5.5 0 0 1 .5.5v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm3 .5a.5.5 0 0 0-1 0v6a.5.5 0 0 0 1 0V6z"/>
@@ -1295,7 +1404,8 @@
             <tr><td colspan="{{ Auth::check() && Auth::user()->is_admin ? '8' : '7' }}" style="text-align:center;">No services found.</td></tr>
         @endif
         </tbody>
-      </table>
+    </table>
+  </div>
       
       <!-- Custom Designed Pagination -->
       @if(isset($services) && method_exists($services, 'links'))
@@ -1383,80 +1493,61 @@
     });
 
     // Modal logic for Add New Service
-    const addNewServiceBtn = document.getElementById('add-new-service-btn');
-    const addServiceModal = document.getElementById('add-service-modal');
-    const closeModalBtn = document.getElementById('close-modal-btn');
-    const serviceForm = document.getElementById('add-service-form-modal');
-    const servicesTableBody = document.getElementById('services-tbody');
+    document.addEventListener('DOMContentLoaded', function() {
+      const addNewServiceBtn = document.getElementById('add-new-service-btn');
+      const addServiceModal = document.getElementById('add-service-modal');
+      const closeModalBtn = document.getElementById('close-modal-btn');
+      const serviceForm = document.getElementById('add-service-form-modal');
 
-    // Open modal
-    addNewServiceBtn.addEventListener('click', function() {
-      addServiceModal.classList.add('active');
-      document.body.style.overflow = 'hidden'; // Prevent background scrolling
-    });
-
-    // Close modal
-    closeModalBtn.addEventListener('click', function() {
-      addServiceModal.classList.remove('active');
-      document.body.style.overflow = 'auto';
-    });
-
-    // Close modal on outside click
-    addServiceModal.addEventListener('click', function(e) {
-      if (e.target === addServiceModal) {
-        addServiceModal.classList.remove('active');
-        document.body.style.overflow = 'auto';
+      // Open modal
+      if (addNewServiceBtn && addServiceModal) {
+        addNewServiceBtn.addEventListener('click', function(e) {
+          e.preventDefault();
+          addServiceModal.classList.add('active');
+          document.body.style.overflow = 'hidden';
+        });
       }
-    });
 
-    // Close modal on Escape key
-    document.addEventListener('keydown', function(e) {
-      if (e.key === 'Escape' && addServiceModal.classList.contains('active')) {
-        addServiceModal.classList.remove('active');
-        document.body.style.overflow = 'auto';
-      }
-    });
-
-    // Handle form submission
-    serviceForm.addEventListener('submit', function(e) {
-      e.preventDefault();
-      const formData = new FormData(this);
-      
-      fetch("{{ route('new.service.store') }}", {
-        method: 'POST',
-        headers: {
-          'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
-          'Accept': 'application/json',
-          'X-Requested-With': 'XMLHttpRequest'
-        },
-        body: formData
-      })
-      .then(response => {
-        if (!response.ok) {
-          return response.text().then(text => {
-            throw new Error(`HTTP error! status: ${response.status}`);
-          });
-        }
-        
-        return response.json();
-      })
-      .then(data => {
-        if (data.success) {
-          showNotification('Service added successfully!', 'success');
-          // Close modal and reset form
+      // Close modal
+      if (closeModalBtn && addServiceModal) {
+        closeModalBtn.addEventListener('click', function(e) {
+          e.preventDefault();
           addServiceModal.classList.remove('active');
           document.body.style.overflow = 'auto';
-          serviceForm.reset();
-          // Reload the page to refresh the service list
-          setTimeout(() => window.location.reload(), 1000);
-        } else {
-          showNotification(data.message || 'Failed to add service', 'error');
-        }
-      })
-      .catch(error => {
-        showNotification('Failed to add service', 'error');
-      });
+        });
+      }
+
+      // Submit add service form
+      if (serviceForm) {
+        serviceForm.addEventListener('submit', function(e) {
+          e.preventDefault();
+          const formData = new FormData(this);
+          fetch('/new-service', {
+            method: 'POST',
+            body: formData,
+            headers: {
+              'X-Requested-With': 'XMLHttpRequest',
+              'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+            }
+          })
+          .then(response => response.json())
+          .then(data => {
+            if (data.success) {
+              showNotification('Service added successfully!', 'success');
+              addServiceModal.classList.remove('active');
+              document.body.style.overflow = 'auto';
+              setTimeout(() => window.location.reload(), 1000);
+            } else {
+              showNotification(data.message || 'Failed to add service', 'error');
+            }
+          })
+          .catch(() => {
+            showNotification('Failed to add service', 'error');
+          });
+        });
+      }
     });
+    // (Removed duplicate .catch and }); lines that caused JS errors)
 
     // Notification function
     function showNotification(message, type = 'info') {
@@ -1580,6 +1671,25 @@
           openDeleteConfirmation(serviceId);
         }
       }
+
+      // Handle status tracking button clicks
+      let statusBtn = null;
+      
+      if (e.target.classList.contains('status-tracking-btn')) {
+        statusBtn = e.target;
+      } else if (e.target.closest('.status-tracking-btn')) {
+        statusBtn = e.target.closest('.status-tracking-btn');
+      }
+      
+      if (statusBtn) {
+        e.preventDefault();
+        e.stopPropagation();
+        const serviceId = statusBtn.getAttribute('data-service-id');
+        
+        if (serviceId) {
+          openStatusTrackingModal(serviceId);
+        }
+      }
     });
 
     // Function to open edit modal and load service data
@@ -1616,6 +1726,18 @@
           document.getElementById('edit_gender').value = data.service.member_gender || '';
           document.getElementById('edit_mobile').value = data.service.contact_mobile_no || '';
           document.getElementById('edit_contact_alternate').value = data.service.contact_alternate || '';
+          
+          // Populate edit comment field with previously saved comment
+          const editCommentField = document.getElementById('edit_comment');
+          if (editCommentField) {
+            editCommentField.value = data.service.edit_comment || '';
+          }
+          
+          // Populate status field with current status
+          const editStatusField = document.getElementById('edit_status');
+          if (editStatusField) {
+            editStatusField.value = data.service.status || '';
+          }
           
           // Handle Service Executive and RM Change
           const currentServiceExecutive = data.service.service_executive || '';
@@ -1688,6 +1810,10 @@
     closeEditModalBtn.addEventListener('click', function() {
       editModal.classList.remove('active');
       document.body.style.overflow = 'auto';
+      // Clear form when closing
+      if (editForm) {
+        editForm.reset();
+      }
     });
 
     // Close modal on outside click
@@ -1695,6 +1821,10 @@
       if (e.target === editModal) {
         editModal.classList.remove('active');
         document.body.style.overflow = 'auto';
+        // Clear form when closing
+        if (editForm) {
+          editForm.reset();
+        }
       }
     });
 
@@ -1987,6 +2117,133 @@
         }
       });
     }
+
+    // Status Tracking Modal Functions
+    // Close status modal on close (X) button click
+    const closeStatusModalBtn = document.getElementById('close-status-modal-btn');
+    if (closeStatusModalBtn) {
+      closeStatusModalBtn.addEventListener('click', function() {
+        statusTrackingModal.classList.remove('active');
+        document.body.style.overflow = 'auto';
+      });
+    }
+  const statusTrackingModal = document.getElementById('status-tracking-modal');
+
+    // Function to open status tracking modal
+    function openStatusTrackingModal(serviceId) {
+  // No loading notification as requested
+      fetch(`/service/${serviceId}/edit`, {
+        headers: {
+          'X-Requested-With': 'XMLHttpRequest',
+          'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+        }
+      })
+      .then(response => {
+        if (!response.ok) {
+          throw new Error('Failed to fetch service data');
+        }
+        return response.json();
+      })
+      .then(data => {
+        if (data.service) {
+          // Populate status history table
+          const historyTableBody = document.getElementById('status-history-body');
+          let historyHTML = '';
+          const entries = [];
+          if (data.service.status && data.service.tracking_date) {
+            entries.push({
+              date: data.service.tracking_date || data.service.updated_at || data.service.created_at || new Date().toISOString(),
+              status: data.service.status,
+              comment: data.service.edit_comment || 'No comment available',
+              updatedBy: data.service.tracking_updated_by || 'Unknown'
+            });
+          }
+          if (data.service.edit_comment && !data.service.status) {
+            entries.push({
+              date: data.service.updated_at || new Date().toISOString(),
+              status: 'Edit',
+              comment: data.service.edit_comment,
+              updatedBy: data.service.tracking_updated_by || 'Unknown'
+            });
+          }
+          entries.sort((a, b) => new Date(b.date) - new Date(a.date));
+          if (entries.length > 0) {
+            entries.forEach((entry, idx) => {
+              // Format date as yyyy-mm-dd (no time)
+              const d = new Date(entry.date);
+              const formattedDate = d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+              let statusBadge = '';
+              if (entry.status === 'postponed') {
+                statusBadge = '<span style="background: #ffc107; color: #000; padding: 4px 8px; border-radius: 12px; font-size: 11px; font-weight: bold;">POSTPONED</span>';
+              } else if (entry.status === 'deleted') {
+                statusBadge = '<span style="background: #dc3545; color: white; padding: 4px 8px; border-radius: 12px; font-size: 11px; font-weight: bold;">DELETED</span>';
+              } else if (entry.status === 'RM changed') {
+                statusBadge = '<span style="background: #17a2b8; color: white; padding: 4px 8px; border-radius: 12px; font-size: 11px; font-weight: bold;">RM CHANGED</span>';
+              } else {
+                statusBadge = '<span style="background: #6c757d; color: white; padding: 4px 8px; border-radius: 12px; font-size: 11px; font-weight: bold;">EDIT</span>';
+              }
+              // Show only last line or first 60 chars, with 'more' link if needed
+              let comment = entry.comment || '';
+              let shortComment = comment;
+              let showMore = false;
+              if (comment.includes('\n')) {
+                const lines = comment.split(/\r?\n/);
+                shortComment = lines[lines.length-1];
+                showMore = lines.length > 1;
+              } else if (comment.length > 60) {
+                shortComment = comment.slice(-60);
+                showMore = true;
+              }
+              const commentId = `status-comment-${idx}`;
+              historyHTML += `
+                <tr style="border-bottom: 1px solid #ddd;">
+                  <td style="padding: 12px; border: 1px solid #ddd; vertical-align: top;">${formattedDate}</td>
+                  <td style="padding: 12px; border: 1px solid #ddd; vertical-align: top;">${statusBadge}</td>
+                  <td style="padding: 12px; border: 1px solid #ddd; vertical-align: top; line-height: 1.4;">
+                    <span id="${commentId}-short">${shortComment.replace(/</g,'&lt;').replace(/>/g,'&gt;')}</span>
+                    ${showMore ? `<a href="#" class="show-more-comment" data-comment-id="${commentId}" style="color:#007bff; text-decoration:underline; margin-left:8px; font-size:12px;">more</a>` : ''}
+                    <span id="${commentId}-full" style="display:none;">${comment.replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\n/g,'<br>')}</span>
+                  </td>
+                  <td style="padding: 12px; border: 1px solid #ddd; vertical-align: top; font-weight: 500;">${entry.updatedBy}</td>
+                </tr>
+              `;
+            });
+          // Add event listeners for 'more' links after table is rendered
+          setTimeout(() => {
+            document.querySelectorAll('.show-more-comment').forEach(link => {
+              if (!link.dataset.bound) {
+                link.addEventListener('click', function(e) {
+                  e.preventDefault();
+                  const id = this.getAttribute('data-comment-id');
+                  document.getElementById(id+'-short').style.display = 'none';
+                  this.style.display = 'none';
+                  document.getElementById(id+'-full').style.display = 'inline';
+                });
+                link.dataset.bound = '1';
+              }
+            });
+          }, 0);
+          } else {
+            historyHTML = `
+              <tr>
+                <td colspan="4" style="padding: 20px; text-align: center; color: #666; font-style: italic; border: 1px solid #ddd;">
+                  No status history found for this service
+                </td>
+              </tr>
+            `;
+          }
+          historyTableBody.innerHTML = historyHTML;
+          statusTrackingModal.classList.add('active');
+          document.body.style.overflow = 'hidden';
+          // Removed notification as requested
+        }
+      })
+      .catch(error => {
+        console.error('Error:', error);
+        showNotification('Failed to load service data', 'error');
+      });
+    }
+
 
     // Add CSS animation keyframes
     const style = document.createElement('style');

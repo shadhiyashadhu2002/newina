@@ -132,8 +132,12 @@ class ServiceController extends Controller
                 'contact_mobile_no' => $request->contact_mobile_no,
                 'contact_alternate' => $request->contact_alternate,
                 'edit_comment' => $request->edit_comment,
-                'edit_flag' => 'Y'
+                'edit_flag' => 'Y',
             ];
+            // Save status/tracking_status if present
+            if ($request->has('status')) {
+                $updateData['status'] = $request->status;
+            }
 
             // Check if RM is being changed
             if ($request->rm_change && $request->rm_change !== $service->service_executive) {
