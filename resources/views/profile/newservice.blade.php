@@ -1,4 +1,4 @@
-            <div class="modal-form-row">
+<div class="modal-form-row">
               <div class="modal-form-group" style="width: 50%;">
                 <label>Status</label>
                 <select name="status" id="edit_status" style="width: 100%; max-width: 200px;">
@@ -1754,7 +1754,11 @@
             editCommentField.value = data.service.edit_comment || '';
           }
           
-          // Status field removed: no need to populate status in edit modal
+          // Populate status field with current status
+          const editStatusField = document.getElementById('edit_status');
+          if (editStatusField) {
+            editStatusField.value = data.service.status || '';
+          }
           
           // Handle Service Executive and RM Change
           const currentServiceExecutive = data.service.service_executive || '';
@@ -1953,7 +1957,7 @@
         formData.append('rm_change', rmChange.value || '');
       }
       // Status
-  // Status field removed
+      formData.append('status', document.getElementById('edit_status').value || '');
       // CSRF and method spoofing
       formData.append('_token', document.querySelector('meta[name="csrf-token"]').getAttribute('content'));
       formData.append('_method', 'PUT');
@@ -2197,7 +2201,7 @@
           if (data.service) {
             entries.push({
               date: data.service.updated_at || data.service.tracking_date || data.service.created_at || new Date().toISOString(),
-              // status: data.service.status || 'Edit',
+              status: data.service.status || 'Edit',
               comment: data.service.edit_comment || 'No comment available',
               updatedBy: data.service.tracking_updated_by || 'Unknown'
             });
