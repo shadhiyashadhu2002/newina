@@ -1949,8 +1949,7 @@
         method: 'POST',
         body: formData,
         headers: {
-          'X-Requested-With': 'XMLHttpRequest',
-          'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+          'X-Requested-With': 'XMLHttpRequest'
         }
       })
       .then(response => {
@@ -2015,13 +2014,15 @@
       commentField.style.border = '1px solid #ddd';
       
       const formData = new FormData(this);
-      
+      // Ensure _method is set to PUT for Laravel method spoofing
+      if (!formData.has('_method')) {
+        formData.append('_method', 'PUT');
+      }
       fetch(this.action, {
-        method: 'POST',
+        method: 'POST', // Always POST for AJAX method spoofing
         body: formData,
         headers: {
-          'X-Requested-With': 'XMLHttpRequest',
-          'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+          'X-Requested-With': 'XMLHttpRequest'
         }
       })
       .then(response => {

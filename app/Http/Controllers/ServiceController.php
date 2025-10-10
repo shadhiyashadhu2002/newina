@@ -105,6 +105,11 @@ class ServiceController extends Controller
     // Update service
     public function update(Request $request, $id)
     {
+        Log::info('ServiceController update called', [
+            'method' => $request->method(),
+            'all' => $request->all(),
+            'user' => Auth::user() ? (array) Auth::user() : null
+        ]);
         try {
             $service = Service::findOrFail($id);
             
@@ -169,18 +174,22 @@ class ServiceController extends Controller
             
             return response()->json(['success' => true, 'message' => 'Service updated successfully']);
             
-        } catch (\Illuminate\Validation\ValidationException $e) {
+    } catch (\Illuminate\Validation\ValidationException $e) {
             $errors = $e->errors();
             $message = 'Validation failed';
-            
+            Log::error('ValidationException in update', ['errors' => $errors, 'exception' => $e->getMessage()]);
             // Provide specific message for comment field
             if (isset($errors['edit_comment'])) {
                 $message = 'Please provide a valid comment (minimum 10 characters) explaining the reason for this edit';
             }
-            
             return response()->json(['success' => false, 'message' => $message, 'errors' => $errors], 422);
         } catch (\Exception $e) {
-            Log::error('Error updating service', ['error' => $e->getMessage()]);
+            Log::error('Exception in update', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+                'request' => $request->all(),
+                'user' => Auth::user() ? (array) Auth::user() : null
+            ]);
             return response()->json(['success' => false, 'message' => 'Failed to update service'], 500);
         }
     }
