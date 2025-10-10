@@ -621,8 +621,8 @@ Route::post('/new-service', [ServiceController::class, 'store'])->name('new.serv
 // Get service for editing (AJAX)
 Route::get('/service/{id}/edit', [ServiceController::class, 'edit'])->name('service.edit');
 
-// Update service (AJAX)
-Route::put('/service/{id}', [ServiceController::class, 'update'])->name('service.update');
+// Update service (AJAX) - allow both PUT and POST for method spoofing compatibility
+Route::match(['put', 'post'], '/service/{id}', [ServiceController::class, 'update'])->name('service.update');
 
 // Delete service (AJAX) - Soft delete
 Route::delete('/service/{id}', [ServiceController::class, 'destroy'])->name('service.delete');
