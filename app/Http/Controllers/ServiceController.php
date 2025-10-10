@@ -142,8 +142,8 @@ class ServiceController extends Controller
                 'edit_flag' => 'Y',
                 'tracking_updated_by' => ($user->first_name && trim($user->first_name) !== '') ? $user->first_name : ($user->name ?? 'Unknown'),
             ];
-            // Save status/tracking_status if present
-            if ($request->has('status')) {
+            // Save status/tracking_status if present and not null/empty
+            if ($request->has('status') && !is_null($request->status) && $request->status !== '') {
                 $updateData['status'] = $request->status;
             }
 
