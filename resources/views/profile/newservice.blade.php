@@ -1177,17 +1177,7 @@
                 <small style="color: #666; font-size: 12px;">This field is mandatory. Please explain why you are making this edit.</small>
               </div>
             </div>
-            <div class="modal-form-row">
-              <div class="modal-form-group" style="width: 50%;">
-                <label>Status</label>
-                <select name="status" id="edit_status" style="width: 100%; max-width: 200px;">
-                  <option value="" selected>Select Status</option>
-                  <option value="postponed">Postponed</option>
-                  <option value="deleted">Deleted</option>
-                  <option value="RM changed">RM Changed</option>
-                </select>
-              </div>
-            </div>
+            <!-- Status field removed from edit service modal -->
           </div>
 
           <div class="modal-actions">
@@ -1733,15 +1723,7 @@
             editCommentField.value = data.service.edit_comment || '';
           }
           
-          // Populate status field with current status
-          const editStatusField = document.getElementById('edit_status');
-          if (editStatusField) {
-            if (data.service.status && ['postponed','deleted','RM changed'].includes(data.service.status)) {
-              editStatusField.value = data.service.status;
-            } else {
-              editStatusField.value = '';
-            }
-          }
+          // Status field removed: no need to populate status in edit modal
           
           // Handle Service Executive and RM Change
           const currentServiceExecutive = data.service.service_executive || '';
@@ -1940,7 +1922,7 @@
         formData.append('rm_change', rmChange.value || '');
       }
       // Status
-      formData.append('status', document.getElementById('edit_status').value || '');
+  // Status field removed
       // CSRF and method spoofing
       formData.append('_token', document.querySelector('meta[name="csrf-token"]').getAttribute('content'));
       formData.append('_method', 'PUT');
@@ -2184,7 +2166,7 @@
           if (data.service) {
             entries.push({
               date: data.service.updated_at || data.service.tracking_date || data.service.created_at || new Date().toISOString(),
-              status: data.service.status || 'Edit',
+              // status: data.service.status || 'Edit',
               comment: data.service.edit_comment || 'No comment available',
               updatedBy: data.service.tracking_updated_by || 'Unknown'
             });
