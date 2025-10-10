@@ -1,24 +1,3 @@
-<div class="modal-form-row">
-              <div class="modal-form-group" style="width: 50%;">
-                <label>Status</label>
-                <select name="status" id="edit_status" style="width: 100%; max-width: 200px;">
-                  <option value="" selected>Select Status</option>
-                  <option value="postponed">Postponed</option>
-                  <option value="deleted">Deleted</option>
-                  <option value="RM changed">RM Changed</option>
-                </select>
-              </div>
-            </div>
-          const editStatusField = document.getElementById('edit_status');
-          if (editStatusField) {
-            if (data.service.status && ['postponed','deleted','RM changed'].includes(data.service.status)) {
-              editStatusField.value = data.service.status;
-            } else {
-              editStatusField.value = '';
-            }
-          }
-  formData.append('status', document.getElementById('edit_status').value || '');
-              status: data.service.status || 'Edit',
 <!DOCTYPE html>
 <html lang="en">
 <head>
