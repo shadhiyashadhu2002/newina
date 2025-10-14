@@ -1,4 +1,6 @@
+
 <?php
+use App\Http\Controllers\SaleController;
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\AdminMemberController;
@@ -688,3 +690,36 @@ Route::get('/debug-staff-dropdown', function () {
         ];
     }
 });
+
+
+Route::get('/staff-target-assign', function () {
+    return view('stafftarget');
+})->name('stafftarget.page');
+
+Route::get('/staff-productivity', function () {
+    return view('staffproductivity');
+})->name('staffproductivity.page');
+
+Route::get('/expense-page', function () {
+    return view('expense');
+})->name('expense.page');
+Route::middleware('auth')->group(function () {
+    // Sales form page
+    Route::get('/add-sale', [SaleController::class, 'create'])->name('addsale.page');
+    
+    // Store sale
+    Route::post('/add-sale', [SaleController::class, 'store'])->name('sale.store');
+    
+    // Get profile info for auto-fetch
+    Route::get('/get-profile-info/{profileId}', [SaleController::class, 'getProfileInfo']);
+});
+
+// Add New Service page with optional prefill from sale
+Route::get('/profile/newservice', function (\Illuminate\Http\Request $request) {
+    $profile_id = $request->query('profile_id');
+    $member_name = $request->query('member_name');
+    $from_sale = $request->query('from_sale');
+    // You may want to fetch staff users or other data as needed for the form
+    $staffUsers = \App\Models\User::where('user_type', 'staff')->orderBy('first_name')->get(['id', 'first_name', 'name']);
+    return view('profile.newservice', compact('profile_id', 'member_name', 'from_sale', 'staffUsers'));
+})->name('profile.newservice');

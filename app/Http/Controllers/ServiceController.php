@@ -56,11 +56,27 @@ class ServiceController extends Controller
             
 
             
+            // Remove only the completed profile from the badge session array
+            $pending = session('show_service_badge', []);
+            $profileId = $data['profile_id'] ?? null;
+            if ($profileId && is_array($pending)) {
+                $pending = array_filter($pending, function($item) use ($profileId) {
+                    return $item['profile_id'] != $profileId;
+                });
+                // Reindex array
+                $pending = array_values($pending);
+                if (count($pending) > 0) {
+                    session(['show_service_badge' => $pending]);
+                } else {
+                    session()->forget('show_service_badge');
+                }
+            } else {
+                session()->forget('show_service_badge');
+            }
             // Check if this is an AJAX request (from admin modal)
             if ($request->expectsJson() || $request->ajax() || $request->header('X-Requested-With') === 'XMLHttpRequest') {
                 return response()->json(['success' => true, 'message' => 'Service saved successfully!']);
             }
-            
             // Regular form submission - redirect to new services page
             return redirect()->route('new.service')->with('success', 'Service saved successfully!');
             

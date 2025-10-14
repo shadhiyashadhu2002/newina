@@ -1018,8 +1018,116 @@
             </svg>
             Expired Services
           </a>
-          <button id="add-new-service-btn" class="add-service-btn-beautiful">
-            <span>✨</span> Add New Service
+          <div style="display: flex; align-items: center; gap: 0; position: relative;">
+            <button id="add-new-service-btn" class="add-service-btn-beautiful" style="border-top-right-radius: 0; border-bottom-right-radius: 0; height:44px;">
+              <span>✨</span> Add New Service
+            </button>
+            <div style="width:1.5px; height:44px; background:#111; display:inline-block;"></div>
+            @php
+              $badgeList = session('show_service_badge', []);
+              if (!is_array($badgeList)) {
+                $badgeList = $badgeList ? [$badgeList] : [];
+              }
+            @endphp
+            @if(count($badgeList) > 0)
+              <button id="pending-service-badge-btn" style="background: linear-gradient(135deg, #28a745 0%, #20c997 100%); color: #fff; font-size: 14px; font-weight: bold; border: none; border-radius: 0 50px 50px 0; padding: 2px 16px; margin-left: 0; height: 44px; cursor: pointer; display: flex; align-items: center; animation: fadeIn 0.7s;">
+                {{ count($badgeList) }}
+              </button>
+            @endif
+          </div>
+          @if(count($badgeList) > 0)
+            <div id="pending-service-table-wrap" style="display:none; position:fixed; left:50%; transform:translateX(-50%); z-index:3001; background:#7285a4; border:2.5px solid #7285a4; border-radius:18px; box-shadow:0 12px 48px rgba(40,40,40,0.10); margin-top:24px; min-width:800px; max-width:98vw; padding:48px 48px 36px 48px;">
+              <div style="padding:10px 15px; font-weight:600; color:#ac0742; border-bottom:1px solid #eee;">Pending Services</div>
+              <div style="background:linear-gradient(135deg,#fff 70%,#f8d7da 100%); border:2.5px solid #ac0742; border-radius:12px; padding:24px 18px; box-shadow:0 2px 16px rgba(172,7,66,0.08);">
+              <table style="width:100%; border-collapse:collapse; font-size:22px; color:#ac0742; background:transparent;">
+                <thead>
+                  <tr style="background:rgba(172,7,66,0.08);">
+                    <th style="padding:22px 16px; font-size:22px; text-align:left; color:#ac0742;">Profile ID</th>
+                    <th style="padding:22px 16px; font-size:22px; text-align:left; color:#ac0742;">Member Name</th>
+                    <th style="padding:22px 16px; font-size:22px; text-align:center; color:#ac0742;">Add</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  @foreach($badgeList as $idx => $item)
+                  <tr class="pending-service-row" data-profile-id="{{ $item['profile_id'] }}" data-member-name="{{ $item['member_name'] }}" style="border-bottom:2px solid #f8d7da;">
+                    <td style="padding:22px 16px; font-weight:700; font-size:22px; color:#ac0742;">{{ $item['profile_id'] }}</td>
+                    <td style="padding:22px 16px; color:#ac0742; font-size:22px;">{{ $item['member_name'] }}</td>
+                    <td style="padding:22px 16px; text-align:center;">
+                      <button class="open-add-service-modal" style="background:none; border:none; cursor:pointer; color:#ffc107; font-size:38px; padding:2px 24px;">
+                        <span title="Add Service">+</span>
+                      </button>
+                    </td>
+                  </tr>
+                  @endforeach
+                </tbody>
+              </table>
+              </table>
+              </div>
+            </div>
+            <script>
+            document.addEventListener('DOMContentLoaded', function() {
+              const addBtn = document.getElementById('add-new-service-btn');
+              const badgeBtn = document.getElementById('pending-service-badge-btn');
+              const tableWrap = document.getElementById('pending-service-table-wrap');
+              // Add New Service button opens modal
+              if (addBtn) {
+                addBtn.addEventListener('click', function(e) {
+                  e.preventDefault();
+                  const modal = document.getElementById('add-service-modal');
+                  if (modal) {
+                    modal.classList.add('active');
+                    document.body.style.overflow = 'hidden';
+                  }
+                });
+              }
+              // Badge button toggles table
+              if (badgeBtn && tableWrap) {
+                badgeBtn.addEventListener('click', function(e) {
+                  e.preventDefault();
+                  if (tableWrap.style.display === 'none' || tableWrap.style.display === '') {
+                    tableWrap.style.display = 'block';
+                    // Center table below button group
+                    const rect = badgeBtn.getBoundingClientRect();
+                    tableWrap.style.top = (rect.bottom + window.scrollY + 8) + 'px';
+                  } else {
+                    tableWrap.style.display = 'none';
+                  }
+                });
+                // Hide table on outside click
+                document.addEventListener('mousedown', function(e) {
+                  if (!tableWrap.contains(e.target) && e.target !== badgeBtn) {
+                    tableWrap.style.display = 'none';
+                  }
+                });
+                // Handle click on + icon
+                tableWrap.querySelectorAll('.open-add-service-modal').forEach(function(btn) {
+                  btn.addEventListener('click', function(ev) {
+                    ev.preventDefault();
+                    const row = this.closest('.pending-service-row');
+                    if (row) {
+                      const profileId = row.getAttribute('data-profile-id');
+                      const memberName = row.getAttribute('data-member-name');
+                      // Prefill modal form
+                      const modal = document.getElementById('add-service-modal');
+                      const form = document.getElementById('add-service-form-modal');
+                      if (form && modal) {
+                        form.querySelector('input[name="profile_id"]').value = profileId;
+                        form.querySelector('input[name="profile_id"]').readOnly = true;
+                        form.querySelector('input[name="profile_id"]').style.background = '#e9ecef';
+                        form.querySelector('input[name="member_name"]').value = memberName;
+                        form.querySelector('input[name="member_name"]').readOnly = true;
+                        form.querySelector('input[name="member_name"]').style.background = '#e9ecef';
+                        modal.classList.add('active');
+                        document.body.style.overflow = 'hidden';
+                      }
+                      tableWrap.style.display = 'none';
+                    }
+                  });
+                });
+              }
+            });
+            </script>
+          @endif
           </button>
         </div>
       @endif
@@ -1035,11 +1143,15 @@
           <div class="modal-form-row">
             <div class="modal-form-group">
               <label>Profile ID</label>
-              <input type="text" name="profile_id" placeholder="Enter Profile ID" required>
+              <input type="text" name="profile_id" placeholder="Enter Profile ID" required
+                value="{{ old('profile_id', $badgeData['profile_id'] ?? $profile_id ?? request()->query('profile_id')) }}"
+                @if(!empty($badgeData['profile_id']) || !empty($profile_id) || request()->query('profile_id')) readonly style="background:#e9ecef; color:#495057;" @endif>
             </div>
             <div class="modal-form-group">
               <label>Member Name</label>
-              <input type="text" name="member_name" placeholder="Enter member name" required>
+              <input type="text" name="member_name" placeholder="Enter member name" required
+                value="{{ old('member_name', $badgeData['member_name'] ?? $member_name ?? request()->query('member_name')) }}"
+                @if(!empty($badgeData['member_name']) || !empty($member_name) || request()->query('member_name')) readonly style="background:#e9ecef; color:#495057;" @endif>
             </div>
           </div>
           <div class="modal-form-row">
@@ -1286,10 +1398,11 @@
           <!-- Entries per page dropdown -->
           <div style="display: flex; align-items: center; gap: 10px;">
             <label for="perPageSelect" style="font-size: 14px; color: #666;">Show:</label>
+            @php $perPage = $perPage ?? request('per_page', 10); @endphp
             <select id="perPageSelect" onchange="changePerPage()" style="padding: 5px 10px; border: 1px solid #ddd; border-radius: 4px; font-size: 14px;">
-              <option value="10" {{ (isset($perPage) && $perPage == 10) ? 'selected' : '' }}>10 entries</option>
-              <option value="50" {{ (isset($perPage) && $perPage == 50) ? 'selected' : '' }}>50 entries</option>
-              <option value="100" {{ (isset($perPage) && $perPage == 100) ? 'selected' : '' }}>100 entries</option>
+              <option value="10" {{ ($perPage == 10) ? 'selected' : '' }}>10 entries</option>
+              <option value="50" {{ ($perPage == 50) ? 'selected' : '' }}>50 entries</option>
+              <option value="100" {{ ($perPage == 100) ? 'selected' : '' }}>100 entries</option>
             </select>
           </div>
           
@@ -1533,10 +1646,8 @@
           .then(response => response.json())
           .then(data => {
             if (data.success) {
-              showNotification('Service added successfully!', 'success');
-              addServiceModal.classList.remove('active');
-              document.body.style.overflow = 'auto';
-              setTimeout(() => window.location.reload(), 1000);
+              // Immediately reload the page so session-cleared state is reflected and badge disappears
+              window.location.reload();
             } else {
               showNotification(data.message || 'Failed to add service', 'error');
             }

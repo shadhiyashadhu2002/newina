@@ -19,7 +19,17 @@
                 <div class="nav-dropdown">
                     <a href="{{ route('services.page') }}" class="nav-link">Services ▼</a>
                 </div>
+                <div class="nav-dropdown accounts-dropdown">
+                    <a href="#" class="nav-link">Accounts ▼</a>
+                    <div class="dropdown-content" style="overflow: visible !important;">
+                        <a href="{{ route('addsale.page') }}" class="dropdown-item">Add Sale</a>
+                        <a href="{{ route('stafftarget.page') }}" class="dropdown-item">Staff Target Assign</a>
+                        <a href="{{ route('staffproductivity.page') }}" class="dropdown-item">Staff Productivity</a>
+                        <a href="{{ route('expense.page') }}" class="dropdown-item">Expense Page</a>
+                    </div>
+                </div>
             </nav>
+
         </div>
         <div class="header-right">
             @if(isset($profileId) && $profileId)
@@ -229,6 +239,8 @@
         align-items: center;
         backdrop-filter: blur(15px);
         border-bottom: 1px solid rgba(255, 255, 255, 0.3);
+        z-index: 100000;
+        position: relative;
     }
 
     .dashboard-title {
@@ -246,6 +258,8 @@
     .main-nav {
         display: flex;
         gap: 20px;
+        position: relative;
+        z-index: 100001;
     }
 
     .nav-link {
@@ -259,6 +273,72 @@
     .nav-link:hover,
     .nav-link.active {
         background: rgba(255, 255, 255, 0.2);
+    }
+
+    .nav-dropdown {
+        position: relative;
+        display: inline-block;
+    }
+
+    .dropdown-content {
+        display: none;
+        position: absolute;
+        background: white;
+        min-width: 240px;
+        box-shadow: 0 15px 40px rgba(0, 0, 0, 0.4);
+        z-index: 999999 !important;
+        top: 100%;
+        left: 0;
+        border-radius: 10px;
+        overflow: visible !important;
+        margin-top: 8px;
+        border: 1px solid rgba(0, 0, 0, 0.1);
+        padding: 0;
+    }
+
+    .accounts-dropdown {
+        position: relative;
+        display: inline-block;
+    }
+
+    .accounts-dropdown .dropdown-content {
+        display: none !important;
+    }
+
+    .accounts-dropdown:hover .dropdown-content {
+        display: block !important;
+    }
+
+    .dropdown-item {
+        color: #333;
+        padding: 15px 20px;
+        text-decoration: none;
+        display: block;
+        transition: all 0.3s ease;
+        border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+        font-weight: 500;
+        font-size: 14px;
+        position: relative;
+        z-index: 99999;
+        margin: 0;
+    }
+
+    .dropdown-item:first-child {
+        border-top: none;
+        border-top-left-radius: 10px;
+        border-top-right-radius: 10px;
+    }
+
+    .dropdown-item:last-child {
+        border-bottom: none;
+        border-bottom-left-radius: 10px;
+        border-bottom-right-radius: 10px;
+    }
+
+    .dropdown-item:hover {
+        background: #f5f5f5;
+        color: #ac0742;
+        padding-left: 24px;
     }
 
     .header-right {
@@ -276,6 +356,8 @@
         background: rgba(255, 255, 255, 0.2);
         border-radius: 5px;
         transition: background 0.3s;
+        border: none;
+        cursor: pointer;
     }
 
     .logout-btn:hover {

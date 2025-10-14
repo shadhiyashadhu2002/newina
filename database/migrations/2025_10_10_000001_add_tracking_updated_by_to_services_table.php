@@ -11,9 +11,11 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('services', function (Blueprint $table) {
-            $table->string('tracking_updated_by')->nullable()->after('edit_flag');
-        });
+        if (!Schema::hasColumn('services', 'tracking_updated_by')) {
+            Schema::table('services', function (Blueprint $table) {
+                $table->string('tracking_updated_by')->nullable()->after('edit_flag');
+            });
+        }
     }
 
     /**
