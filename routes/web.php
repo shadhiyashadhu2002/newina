@@ -593,8 +593,28 @@ Route::get('/csrf-token', function() {
 
 use App\Models\Service;
 // Service Details routes - Available to all authenticated users
+
+use App\Models\Member;
+use App\Models\MaritalStatus;
+
 Route::get('/service-details/{id}/{name}', function ($id, $name) {
     $service = Service::where('profile_id', $id)->first();
+    $member = Member::where('user_id', $id)->first();
+    $member_age = null;
+    $member_marital_status = null;
+    if ($member) {
+        $member_age = $member->age;
+        $member_marital_status = $member->maritalStatus ? $member->maritalStatus->name : null;
+    }
+    if ($service) {
+        // Overwrite service fields if not already set
+        if (empty($service->member_age) && $member_age !== null) {
+            $service->member_age = $member_age;
+        }
+        if (empty($service->member_marital_status) && $member_marital_status !== null) {
+            $service->member_marital_status = $member_marital_status;
+        }
+    }
     if (!$service) {
         abort(404, 'Service not found for this profile');
     }
