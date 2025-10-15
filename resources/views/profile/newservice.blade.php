@@ -1483,17 +1483,15 @@
                 <td>
                   <a href="{{ route('service.details', ['id' => $service->profile_id, 'name' => $service->name]) }}" class="action-link">Service Details</a>
                 </td>
-                @if(Auth::check() && (Auth::user()->is_admin || Auth::user()->user_type === 'staff'))
+                @if(Auth::check() && Auth::user()->is_admin)
                 <td>
                   <div style="display: flex; gap: 5px; justify-content: center;">
-                    @if(Auth::user()->is_admin)
                     <button class="edit-btn" data-service-id="{{ $service->id }}">
                       <svg width="12" height="12" fill="currentColor" viewBox="0 0 16 16">
                         <path d="M12.146.146a.5.5 0 0 1 .708 0l3 3a.5.5 0 0 1 0 .708L10.5 8.207l-3-3L12.146.146zM11.207 9l-3-3L2.5 11.707V13.5h1.793L11.207 9z"/>
                       </svg>
                       Edit
                     </button>
-                    @endif
                     <button class="status-tracking-btn" data-service-id="{{ $service->id }}">
                       <svg width="12" height="12" fill="currentColor" viewBox="0 0 16 16">
                         <path d="M14 4.5V14a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V2a2 2 0 0 1 2-2h5.5L14 4.5zM9.5 3A1.5 1.5 0 0 0 11 4.5h2V14a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1h5.5v2z"/>
