@@ -446,9 +446,9 @@
               </h4>
               <div class="form-row">
                 <div class="form-group">
-                  <input type="text" name="profile_id" id="profile-id-input" placeholder="Profile ID" 
-                         value="{{ isset($service) ? $service->profile_id : 'INA001' }}" 
-                         {{ isset($service) ? 'readonly' : '' }} required>
+        <input type="text" name="profile_id" id="profile-id-input" placeholder="Profile ID" 
+          value="{{ isset($service) ? $service->profile_id : 'INA001' }}" 
+          readonly required>
                 </div>
               </div>
             </div>
@@ -457,9 +457,11 @@
                 <label>Service Name</label>
                 <select name="service_name" id="service-name-input" {{ isset($service) ? 'disabled' : 'required' }}>
                   <option value="">Select service name</option>
-                  <option value="Gold Male" {{ (isset($service) && $service->service_name == 'Gold Male') ? 'selected' : '' }}>Gold Male</option>
-                  <option value="Gold Female" {{ (isset($service) && $service->service_name == 'Gold Female') ? 'selected' : '' }}>Gold Female</option>
+                  <option value="Silver" {{ (isset($service) && $service->service_name == 'Silver') ? 'selected' : '' }}>Silver</option>
+                  <option value="Gold" {{ (isset($service) && $service->service_name == 'Gold') ? 'selected' : '' }}>Gold</option>
+                  <option value="Platinum" {{ (isset($service) && $service->service_name == 'Platinum') ? 'selected' : '' }}>Platinum</option>
                   <option value="Diamond" {{ (isset($service) && $service->service_name == 'Diamond') ? 'selected' : '' }}>Diamond</option>
+                  <option value="Diamond Plus" {{ (isset($service) && $service->service_name == 'Diamond Plus') ? 'selected' : '' }}>Diamond Plus</option>
                   <option value="Royal" {{ (isset($service) && $service->service_name == 'Royal') ? 'selected' : '' }}>Royal</option>
                   <option value="Elite" {{ (isset($service) && $service->service_name == 'Elite') ? 'selected' : '' }}>Elite</option>
                 </select>
@@ -743,774 +745,620 @@
     </div>
   </main>
 
-  <script>
-    // Check if we're in view mode or edit mode
-    const isViewMode = {{ isset($service) ? 'true' : 'false' }};
+ <script>
+// Check if we're in view mode or edit mode
+const isViewMode = {{ isset($service) ? 'true' : 'false' }};
+
+// Initialize the page
+function initializePage() {
+  setupFormValidations();
+  
+  const isAdmin = {{ Auth::check() && Auth::user()->is_admin ? 'true' : 'false' }};
+  
+  if (!isViewMode) {
+    if (document.getElementById('profile-id-input')) {
+      document.getElementById('profile-id-input').value = 'INA001';
+    }
+    setupFormNavigation();
+    showStep(1);
+    setActiveTab('tab-service');
+  } else {
+    setupTabNavigation();
+    showStep(1);
+    setActiveTab('tab-service');
+  }
     
-    // Initialize the page
-    function initializePage() {
-      // Initialize form validations
-      setupFormValidations();
-      
-      // Check if user is admin
-      const isAdmin = {{ Auth::check() && Auth::user()->is_admin ? 'true' : 'false' }};
-      
-      if (!isViewMode) {
-        // Set default profile ID for new services
-        if (document.getElementById('profile-id-input')) {
-          document.getElementById('profile-id-input').value = 'INA001';
-        }
-        
-        // Set up form navigation for new services
-        setupFormNavigation();
-        
-        // Start from Service Details tab for all users
-        showStep(1);
-        setActiveTab('tab-service');
-      } else {
-        // Set up tab navigation for viewing existing services
-        setupTabNavigation();
-        
-        // Start from Service Details tab in view mode for all users
-        showStep(1);
-        setActiveTab('tab-service');
-      }
-        
-      // Set up edit button functionality
-      const editBtn = document.getElementById('edit-service-btn');
-      if (editBtn) {
-        editBtn.onclick = function() {
-          enableEditMode();
-        };
-      }
-    }
-
-    // Setup form validations
-    function setupFormValidations() {
-      // Date validation: Expiry date should not be before start date
-      const startDateInput = document.getElementById('start-date-input');
-      const expiryDateInput = document.getElementById('expiry-date-input');
-      if (startDateInput && expiryDateInput) {
-        startDateInput.addEventListener('change', function() {
-          const startDate = this.value;
-          if (startDate) {
-            expiryDateInput.setAttribute('min', startDate);
-            if (expiryDateInput.value && expiryDateInput.value < startDate) {
-              expiryDateInput.value = '';
-              alert('Expiry date cannot be before the start date. Please select a valid expiry date.');
-            }
-          }
-        });
-        expiryDateInput.addEventListener('change', function() {
-          const startDate = startDateInput.value;
-          const expiryDate = this.value;
-          if (startDate && expiryDate && expiryDate < startDate) {
-            this.value = '';
-            alert('Expiry date cannot be before the start date. Please select a valid expiry date.');
-          }
-        });
-      }
-      // Age restrictions: Member age - 2 digits max
-      const memberAgeInput = document.getElementById('member-age-input');
-      if (memberAgeInput) {
-        memberAgeInput.setAttribute('maxlength', '2');
-        memberAgeInput.setAttribute('max', '99');
-        memberAgeInput.addEventListener('input', function() {
-          this.value = this.value.replace(/[^0-9]/g, '');
-          if (this.value.length > 2) {
-            this.value = this.value.slice(0, 2);
-          }
-        });
-      }
-      // Age restrictions: Preferred age - 2 digits max
-      const preferredAgeInput = document.getElementById('preferred-age-input');
-      if (preferredAgeInput) {
-        preferredAgeInput.setAttribute('maxlength', '2');
-        preferredAgeInput.setAttribute('max', '99');
-        preferredAgeInput.addEventListener('input', function() {
-          this.value = this.value.replace(/[^0-9]/g, '');
-          if (this.value.length > 2) {
-            this.value = this.value.slice(0, 2);
-          }
-        });
-      }
-    }
-    // Validate all required fields in a step
-    function validateStepFields(stepNum) {
-      const step = document.getElementById('step-' + stepNum);
-      if (!step) return false;
-      const requiredFields = step.querySelectorAll('input[required], select[required], textarea[required]');
-      for (let field of requiredFields) {
-        if (field.offsetParent !== null && !field.value.trim()) {
-          field.focus();
-          alert('Please fill all fields before continuing.');
-          return false;
-        }
-      }
-      return true;
-    }
-
-    // Enable edit mode
-    function enableEditMode() {
-      // Remove readonly from all form inputs and enable selects
-      const inputs = document.querySelectorAll('#addServiceForm input, #addServiceForm textarea');
-      inputs.forEach(input => {
-        input.removeAttribute('readonly');
-      });
-      
-      const selects = document.querySelectorAll('#addServiceForm select');
-      selects.forEach(select => {
-        select.removeAttribute('disabled');
-      });
-      
-      // Show save buttons
-      const formActions = document.querySelectorAll('.form-actions');
-      formActions.forEach(action => {
-        action.style.display = 'flex';
-      });
-      
-      // Update the status badge (if it exists)
-      const badge = document.querySelector('.status-badge');
-      if (badge) {
-        badge.textContent = 'Editing Service';
-        badge.className = 'status-badge edit-mode';
-      }
-      
-      // Hide edit button, show save button
-      const editBtn = document.getElementById('edit-service-btn');
-      const saveBtn = document.getElementById('save-service-btn');
-      if (editBtn) {
-        editBtn.style.display = 'none';
-      }
-      if (saveBtn) {
-        saveBtn.style.display = 'inline-block';
-        saveBtn.onclick = function() {
-          saveAllChanges();
-        };
-      }
-      
-      // Re-setup form validations for edit mode
-      setupFormValidations();
-      
-      // Re-setup service pricing for edit mode
-      setupServicePricing();
-      
-      // Set up form navigation for editing
-      setupFormNavigation();
-    }
-
-    // Save all changes function
-    function saveAllChanges() {
-      const form = document.getElementById('addServiceForm');
-      if (!form) {
-        alert('Form not found');
-        return;
-      }
-      // Validate all required fields in all steps before saving
-      for (let i = 1; i <= 4; i++) {
-        if (!validateStepFields(i)) {
-          return;
-        }
-      }
-      // Create FormData object to collect all form data
-      const formData = new FormData(form);
-      // Add CSRF token
-      const csrfToken = document.querySelector('input[name="_token"]').value;
-      formData.append('_token', csrfToken);
-      formData.append('_method', 'PUT');
-      // Show loading state
-      const saveBtn = document.getElementById('save-service-btn');
-      if (saveBtn) {
-        saveBtn.textContent = 'Saving...';
-        saveBtn.disabled = true;
-      }
-      // Submit the form data
-      fetch(form.action, {
-        method: 'POST',
-        body: formData,
-        headers: {
-          'X-CSRF-TOKEN': csrfToken
-        }
-      })
-      .then(response => {
-        if (response.ok) {
-          alert('Changes saved successfully!');
-          location.reload(); // Reload to show updated data
-        } else {
-          throw new Error('Failed to save changes');
-        }
-      })
-      .catch(error => {
-        console.error('Error:', error);
-        alert('Error saving changes: ' + error.message);
-      })
-      .finally(() => {
-        // Reset button state
-        if (saveBtn) {
-          saveBtn.textContent = 'Save Changes';
-          saveBtn.disabled = false;
-        }
-      });
-    }
-
-    // Set up tab navigation (for viewing mode)
-    function setupTabNavigation() {
-      const tabs = ['tab-service', 'tab-member', 'tab-partner', 'tab-contact'];
-      const steps = ['step-1', 'step-2', 'step-3', 'step-4'];
-      
-      tabs.forEach((tabId, index) => {
-        const tabElement = document.getElementById(tabId);
-        const stepElement = document.getElementById(steps[index]);
-        
-        if (tabElement && stepElement) {
-          tabElement.onclick = function() {
-            // Remove active from all tabs
-            tabs.forEach(id => {
-              const tab = document.getElementById(id);
-              if (tab) tab.classList.remove('active');
-            });
-            // Hide all steps
-            steps.forEach(id => {
-              const step = document.getElementById(id);
-              if (step) step.style.display = 'none';
-            });
-            
-            // Show selected tab and step
-            this.classList.add('active');
-            stepElement.style.display = 'block';
-          };
-        }
-      });
-    }
-
-    // Set up form navigation (for add/edit mode)
-    function setupFormNavigation() {
-      // Tab switching
-      const tabs = ['tab-service', 'tab-member', 'tab-partner', 'tab-contact'];
-      const steps = ['step-1', 'step-2', 'step-3', 'step-4'];
-      
-      tabs.forEach((tabId, index) => {
-        const tabElement = document.getElementById(tabId);
-        if (tabElement) {
-          tabElement.onclick = function() {
-            showStep(index + 1);
-          };
-        }
-      });
-
-      // Save & Next buttons
-      const saveNext1 = document.getElementById('save-next-1');
-      if (saveNext1) {
-        saveNext1.onclick = function() {
-          saveCurrentSection(1);
-        };
-      }
-
-      const saveNext2 = document.getElementById('save-next-2');
-      if (saveNext2) {
-        saveNext2.onclick = function() {
-          saveCurrentSection(2);
-        };
-      }
-
-      const saveNext3 = document.getElementById('save-next-3');
-      if (saveNext3) {
-        saveNext3.onclick = function() {
-          saveCurrentSection(3);
-        };
-      }
-
-      // Back buttons
-      const back2 = document.getElementById('back-2');
-      if (back2) {
-        back2.onclick = function() {
-          showStep(1);
-        };
-      }
-
-      const back3 = document.getElementById('back-3');
-      if (back3) {
-        back3.onclick = function() {
-          showStep(2);
-        };
-      }
-
-      document.getElementById('back-4').onclick = function() {
-        showStep(3);
-      };
-
-      // Final Save button
-      document.getElementById('save-service').onclick = function() {
-        saveCurrentSection(4);
-      };
-
-      // Back to Services button
-      document.getElementById('back-to-services').onclick = function() {
-        window.location.href = '/profile';
-      };
-    }
-
-    // Show specific step
-    function showStep(step) {
-      // Hide all steps
-      for (let i = 1; i <= 4; i++) {
-        document.getElementById('step-' + i).style.display = 'none';
-      }
-      
-      // Show target step
-      document.getElementById('step-' + step).style.display = 'block';
-      
-      // Update tab states
-      const tabs = ['tab-service', 'tab-member', 'tab-partner', 'tab-contact'];
-      tabs.forEach((tabId, index) => {
-        const tab = document.getElementById(tabId);
-        if (index === step - 1) {
-          tab.classList.add('active');
-        } else {
-          tab.classList.remove('active');
-        }
-      });
-    }
-
-    // Save current section and proceed
-    function saveCurrentSection(currentStep) {
-      // Validate all required fields in this step
-      if (!validateStepFields(currentStep)) {
-        return;
-      }
-      const formData = new FormData(document.getElementById('addServiceForm'));
-      formData.append('current_step', currentStep);
-
-      fetch('/save-service', {
-        method: 'POST',
-        body: formData,
-        headers: {
-          'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
-        }
-      })
-      .then(response => response.json())
-      .then(data => {
-        if (data.success) {
-          console.log('Section saved successfully');
-          if (currentStep < 4) {
-            showStep(currentStep + 1);
-          } else {
-            alert('Service saved successfully!');
-            window.location.href = '/profile';
-          }
-        } else {
-          console.error('Save failed:', data.message);
-          alert('Failed to save: ' + data.message);
-        }
-      })
-      .catch(error => {
-        console.error('Error:', error);
-        alert('An error occurred while saving.');
-      });
-    }
-
-    // Navigation functionality for header
-    document.querySelectorAll('.header-nav a').forEach(link => {
-      link.addEventListener('click', function(e) {
-        if (!this.getAttribute('href') || this.getAttribute('href') === '#') {
-          e.preventDefault();
-          document.querySelectorAll('.header-nav a').forEach(l => l.classList.remove('active'));
-          this.classList.add('active');
-          const page = this.getAttribute('data-page');
-          console.log('Navigating to:', page);
-        }
-      });
-    });
-
-    // Logout functionality - Global function
-    window.confirmLogout = function() {
-      if (confirm('Are you sure you want to logout?')) {
-        document.getElementById('logout-form').submit();
-      }
+  const editBtn = document.getElementById('edit-service-btn');
+  if (editBtn) {
+    editBtn.onclick = function() {
+      enableEditMode();
     };
+  }
+}
 
-    // Redirect to service details page with current profile data
-    function redirectToServiceDetails() {
-      // Get the profile ID from the form
-      const profileId = document.getElementById('profile-id-input').value || 'INA001';
-      const serviceName = document.querySelector('input[name="service_name"]').value || 'Service';
-      
-      // Redirect to the service details route
-      window.location.href = `/service-details/${profileId}/${serviceName}`;
-    }
-
-    // Function to setup automatic service pricing and success fee calculation
-    function setupServicePricing() {
-      console.log('Setting up service pricing...');
-      const serviceNameSelect = document.getElementById('service-name-input');
-      const servicePriceInput = document.getElementById('service-price-input');
-      const paidAmountInput = document.getElementById('amount-paid-input');
-      const successFeeInput = document.getElementById('success-fee-input');
-      
-      console.log('Elements found:', {
-        serviceNameSelect: !!serviceNameSelect,
-        servicePriceInput: !!servicePriceInput,
-        paidAmountInput: !!paidAmountInput,
-        successFeeInput: !!successFeeInput
-      });
-      
-      // Auto-populate service price based on service name
-      if (serviceNameSelect && servicePriceInput) {
-        console.log('Adding change listener to service name select');
-        serviceNameSelect.addEventListener('change', function() {
-          console.log('Service name changed to:', this.value);
-          const selectedService = this.value;
-          let price = '';
-          
-          // Define service prices
-          const servicePrices = {
-            'Gold Male': 18000,
-            'Gold Female': 14000,
-            'Diamond': 18000,
-            'Royal': 20000,
-            'Elite': 100000
-          };
-          
-          if (servicePrices[selectedService]) {
-            price = servicePrices[selectedService];
-            console.log('Setting price to:', price);
-            servicePriceInput.value = price;
-            calculateSuccessFee(); // Recalculate success fee when price changes
-          }
-        });
-        
-        // Set initial price if service is already selected
-        if (serviceNameSelect.value && !servicePriceInput.value) {
-          console.log('Triggering initial change event for:', serviceNameSelect.value);
-          serviceNameSelect.dispatchEvent(new Event('change'));
-        }
-      } else {
-        console.log('Service name select or price input not found!');
-      }
-      
-      // Calculate success fee when paid amount changes
-      if (paidAmountInput) {
-        paidAmountInput.addEventListener('input', calculateSuccessFee);
-      }
-      
-      // Calculate success fee when service price changes
-      if (servicePriceInput) {
-        servicePriceInput.addEventListener('input', calculateSuccessFee);
-      }
-      
-      // Function to calculate success fee (Service Price - Paid Amount)
-      function calculateSuccessFee() {
-        if (servicePriceInput && paidAmountInput && successFeeInput) {
-          const servicePrice = parseFloat(servicePriceInput.value) || 0;
-          const paidAmount = parseFloat(paidAmountInput.value) || 0;
-          const successFee = servicePrice - paidAmount;
-          
-          // Only show positive success fee, negative means overpaid
-          successFeeInput.value = Math.max(0, successFee).toFixed(2);
+// Setup form validations
+function setupFormValidations() {
+  const startDateInput = document.getElementById('start-date-input');
+  const expiryDateInput = document.querySelector('input[name="expiry-date-input"]');
+  
+  if (startDateInput && expiryDateInput) {
+    startDateInput.addEventListener('change', function() {
+      const startDate = this.value;
+      if (startDate) {
+        expiryDateInput.setAttribute('min', startDate);
+        if (expiryDateInput.value && expiryDateInput.value < startDate) {
+          expiryDateInput.value = '';
+          alert('Expiry date cannot be before the start date. Please select a valid expiry date.');
         }
       }
-      
-      // Initial calculation
-      calculateSuccessFee();
-    }
-
-    // Initialize when page loads
-    document.addEventListener('DOMContentLoaded', function() {
-      initializePage();
-      // Add a small delay to ensure all DOM elements are ready
-      setTimeout(function() {
-        setupServicePricing();
-      }, 100);
     });
+    
+    expiryDateInput.addEventListener('change', function() {
+      const startDate = startDateInput.value;
+      const expiryDate = this.value;
+      if (startDate && expiryDate && expiryDate < startDate) {
+        this.value = '';
+        alert('Expiry date cannot be before the start date. Please select a valid expiry date.');
+      }
+    });
+  }
+  
+  const memberAgeInput = document.getElementById('member-age-input');
+  if (memberAgeInput) {
+    memberAgeInput.addEventListener('input', function() {
+      this.value = this.value.replace(/[^0-9]/g, '');
+      if (this.value.length > 2) {
+        this.value = this.value.slice(0, 2);
+      }
+    });
+  }
+  
+  const preferredAgeInput = document.getElementById('preferred-age-input');
+  if (preferredAgeInput) {
+    preferredAgeInput.addEventListener('input', function() {
+      this.value = this.value.replace(/[^0-9]/g, '');
+      if (this.value.length > 2) {
+        this.value = this.value.slice(0, 2);
+      }
+    });
+  }
+}
 
+// Validate all required fields in a step
+function validateStepFields(stepNum) {
+  const step = document.getElementById('step-' + stepNum);
+  if (!step) return false;
+  
+  const requiredFields = step.querySelectorAll('input[required], select[required], textarea[required]');
+  for (let field of requiredFields) {
+    if (field.offsetParent !== null && !field.value.trim()) {
+      field.focus();
+      alert('Please fill all fields before continuing.');
+      return false;
+    }
+  }
+  return true;
+}
 
-  </script>
+// Enable edit mode
+function enableEditMode() {
+  const inputs = document.querySelectorAll('#addServiceForm input, #addServiceForm textarea');
+  inputs.forEach(input => {
+    // Do not remove readonly from profile ID input
+    if (input.id !== 'profile-id-input') {
+      input.removeAttribute('readonly');
+    }
+  });
+  
+  const selects = document.querySelectorAll('#addServiceForm select');
+  selects.forEach(select => {
+    select.removeAttribute('disabled');
+  });
+  
+  const formActions = document.querySelectorAll('.form-actions');
+  formActions.forEach(action => {
+    action.style.display = 'flex';
+  });
+  
+  const badge = document.querySelector('.status-badge');
+  if (badge) {
+    badge.textContent = 'Editing Service';
+    badge.className = 'status-badge edit-mode';
+  }
+  
+  const editBtn = document.getElementById('edit-service-btn');
+  const saveBtn = document.getElementById('save-service-btn');
+  if (editBtn) editBtn.style.display = 'none';
+  if (saveBtn) {
+    saveBtn.style.display = 'inline-block';
+    saveBtn.onclick = function() {
+      saveAllChanges();
+    };
+  }
+  
+  setupFormValidations();
+  setupServicePricing();
+  setupFormNavigation();
+}
 
-  <script>
-    // Set up form navigation for add/edit mode
-    function setupFormNavigation() {
-      // CSRF Token for AJAX requests
+// Save all changes function
+function saveAllChanges() {
+  const form = document.getElementById('addServiceForm');
+  if (!form) {
+    alert('Form not found');
+    return;
+  }
+  
+  for (let i = 1; i <= 4; i++) {
+    if (!validateStepFields(i)) {
+      return;
+    }
+  }
+  
+  const formData = new FormData(form);
+  const csrfToken = document.querySelector('input[name="_token"]').value;
+  formData.append('_token', csrfToken);
+  formData.append('_method', 'PUT');
+  
+  const saveBtn = document.getElementById('save-service-btn');
+  if (saveBtn) {
+    saveBtn.textContent = 'Saving...';
+    saveBtn.disabled = true;
+  }
+  
+  fetch(form.action, {
+    method: 'POST',
+    body: formData,
+    headers: {
+      'X-CSRF-TOKEN': csrfToken
+    }
+  })
+  .then(response => {
+    if (response.ok) {
+      alert('Changes saved successfully!');
+      location.reload();
+    } else {
+      throw new Error('Failed to save changes');
+    }
+  })
+  .catch(error => {
+    console.error('Error:', error);
+    alert('Error saving changes: ' + error.message);
+  })
+  .finally(() => {
+    if (saveBtn) {
+      saveBtn.textContent = 'Save Changes';
+      saveBtn.disabled = false;
+    }
+  });
+}
+
+// Set up tab navigation (for viewing mode)
+function setupTabNavigation() {
+  const tabs = ['tab-service', 'tab-member', 'tab-partner', 'tab-contact'];
+  const steps = ['step-1', 'step-2', 'step-3', 'step-4'];
+  
+  tabs.forEach((tabId, index) => {
+    const tabElement = document.getElementById(tabId);
+    const stepElement = document.getElementById(steps[index]);
+    
+    if (tabElement && stepElement) {
+      tabElement.onclick = function() {
+        tabs.forEach(id => {
+          const tab = document.getElementById(id);
+          if (tab) tab.classList.remove('active');
+        });
+        steps.forEach(id => {
+          const step = document.getElementById(id);
+          if (step) step.style.display = 'none';
+        });
+        
+        this.classList.add('active');
+        stepElement.style.display = 'block';
+      };
+    }
+  });
+}
+
+// Function to refresh CSRF token
+function refreshCSRFToken() {
+  return fetch('/refresh-csrf', {
+    method: 'GET',
+    credentials: 'same-origin'
+  })
+  .then(response => response.json())
+  .then(data => {
+    if (data.token) {
       const csrfTokenElement = document.querySelector('meta[name="csrf-token"]');
-      const csrfToken = csrfTokenElement ? csrfTokenElement.getAttribute('content') : '';
+      if (csrfTokenElement) {
+        csrfTokenElement.setAttribute('content', data.token);
+      }
+      console.log('CSRF token refreshed');
+      return data.token;
+    }
+    throw new Error('Failed to refresh CSRF token');
+  });
+}
+
+// Set up form navigation for add/edit mode
+function setupFormNavigation() {
+  const csrfTokenElement = document.querySelector('meta[name="csrf-token"]');
+  const csrfToken = csrfTokenElement ? csrfTokenElement.getAttribute('content') : '';
+  
+  if (!csrfToken) {
+    console.error('CSRF token not found. Please refresh the page.');
+    alert('Security token missing. Please refresh the page and try again.');
+    return;
+  }
+
+  // Progressive save function
+  function saveSection(section, data, callback, retryCount = 0) {
+    const saveButtons = document.querySelectorAll('.btn-primary');
+    let saveBtn = null;
+    
+    for (let btn of saveButtons) {
+      if (btn.offsetParent !== null) {
+        saveBtn = btn;
+        break;
+      }
+    }
+    
+    const originalText = saveBtn ? saveBtn.textContent : '';
+    if (saveBtn) {
+      saveBtn.textContent = 'Saving...';
+      saveBtn.disabled = true;
+    }
+
+    const currentCsrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+    
+    console.log('Saving section:', section);
+
+    fetch('/save-service', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-CSRF-TOKEN': currentCsrfToken,
+        'X-Requested-With': 'XMLHttpRequest'
+      },
+      body: JSON.stringify({
+        ...data,
+        section: section
+      })
+    })
+    .then(response => {
+      console.log('Response status:', response.status);
+      if (!response.ok) {
+        if (response.status === 419 && retryCount < 1) {
+          console.log('CSRF token expired, refreshing and retrying...');
+          return refreshCSRFToken().then(() => {
+            return saveSection(section, data, callback, retryCount + 1);
+          });
+        }
+        throw new Error('Network response was not ok: ' + response.status);
+      }
+      return response.json();
+    })
+    .then(data => {
+      console.log('Server response:', data);
+      if (data && data.success) {
+        console.log('Section saved successfully');
+        callback();
+      } else {
+        alert('Error saving data: ' + (data?.message || 'Unknown error'));
+      }
+    })
+    .catch(error => {
+      console.error('Error:', error);
+      alert('Error occurred while saving: ' + error.message);
+    })
+    .finally(() => {
+      if (saveBtn) {
+        saveBtn.textContent = originalText;
+        saveBtn.disabled = false;
+      }
+    });
+  }
+
+  // Wizard navigation with tab highlight
+  function setActiveTab(tabId) {
+    ['tab-service', 'tab-member', 'tab-partner', 'tab-contact'].forEach(id => {
+      const tab = document.getElementById(id);
+      if (tab) tab.classList.remove('active');
+    });
+    const activeTab = document.getElementById(tabId);
+    if (activeTab) activeTab.classList.add('active');
+  }
+
+  // Step navigation buttons
+  const saveNext1 = document.getElementById('save-next-1');
+  if (saveNext1) {
+    saveNext1.onclick = function(e) {
+      e.preventDefault();
+      console.log('Save & Next 1 clicked');
       
-      if (!csrfToken) {
-        console.error('CSRF token not found. Please refresh the page.');
-        alert('Security token missing. Please refresh the page and try again.');
-        return;
-      }
-
-      // Progressive save function with CSRF retry
-      function saveSection(section, data, callback, retryCount = 0) {
-        // Show loading state
-        const saveBtn = event.target;
-        const originalText = saveBtn.textContent;
-        saveBtn.textContent = 'Saving...';
-        saveBtn.disabled = true;
-
-        // Get fresh CSRF token
-        const csrfTokenElement = document.querySelector('meta[name="csrf-token"]');
-        const csrfToken = csrfTokenElement ? csrfTokenElement.getAttribute('content') : '';
-        
-        if (!csrfToken) {
-          console.error('CSRF token not found. Please refresh the page.');
-          alert('Security token missing. Please refresh the page and try again.');
-          saveBtn.textContent = originalText;
-          saveBtn.disabled = false;
-          return;
-        }
-
-        console.log('Saving section:', section, 'Data:', data);
-        console.log('CSRF Token:', csrfToken.substring(0, 10) + '...');
-
-        fetch('/save-service', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'X-CSRF-TOKEN': csrfToken,
-            'X-Requested-With': 'XMLHttpRequest'
-          },
-          body: JSON.stringify({
-            ...data,
-            section: section
-          })
-        })
-        .then(response => {
-          console.log('Response status:', response.status);
-          if (!response.ok) {
-            if (response.status === 419 && retryCount < 1) {
-              // CSRF token expired, try to refresh and retry once
-              console.log('CSRF token expired, refreshing token and retrying...');
-              return refreshCSRFToken().then(() => {
-                // Retry the save operation with fresh token
-                return saveSection(section, data, callback, retryCount + 1);
-              });
-            }
-            if (response.status === 419) {
-              throw new Error('CSRF token expired. Please refresh the page and try again.');
-            }
-            throw new Error('Network response was not ok: ' + response.status);
-          }
-          return response.json();
-        })
-        .then(data => {
-          console.log('Server response:', data);
-          if (data.success) {
-            console.log('Section saved successfully:', section);
-            callback();
-          } else {
-            alert('Error saving data: ' + (data.message || 'Unknown error'));
-          }
-        })
-        .catch(error => {
-          console.error('Error:', error);
-          if (error.message.includes('CSRF token expired')) {
-            alert('Your session has expired. Please refresh the page and try again.');
-            // Optionally auto-refresh the page
-            // window.location.reload();
-          } else {
-            alert('Network error occurred while saving: ' + error.message);
-          }
-        })
-        .finally(() => {
-          // Restore button state
-          saveBtn.textContent = originalText;
-          saveBtn.disabled = false;
-        });
-      }
-
-      // Wizard navigation with tab highlight
-      function setActiveTab(tabId) {
-        ['tab-service', 'tab-member', 'tab-partner', 'tab-contact'].forEach(id => {
-          document.getElementById(id).classList.remove('active');
-        });
-        document.getElementById(tabId).classList.add('active');
-      }
-
-      // Step navigation with progressive saving
-      document.getElementById('save-next-1').onclick = function(e) {
-        e.preventDefault();
-        console.log('Save & Next 1 clicked');
-        
-        // Validate all required fields in step 1
-        if (!validateStepFields(1)) {
-          return;
-        }
-        
-        saveSection('service', {
-          profile_id: document.getElementById('profile-id-input').value,
-          service_name: document.getElementById('service-name-input').value,
-          service_price: document.getElementById('service-price-input').value,
-          amount_paid: document.getElementById('amount-paid-input').value,
-          success_fee: document.getElementById('success-fee-input').value,
-          start_date: document.getElementById('start-date-input').value,
-          expiry_date: document.getElementById('expiry-date-input').value,
-          service_details: document.getElementById('service-details-input').value
-        }, function() {
-          document.getElementById('step-1').style.display = 'none';
-          document.getElementById('step-2').style.display = 'block';
-          setActiveTab('tab-member');
-        });
-      };
-
-      document.getElementById('back-2').onclick = function() {
-        document.getElementById('step-2').style.display = 'none';
-        document.getElementById('step-1').style.display = 'block';
-        setActiveTab('tab-service');
-      };
-
-      document.getElementById('save-next-2').onclick = function(e) {
-        e.preventDefault();
-        console.log('Save & Next 2 clicked');
-        
-        // Validate all required fields in step 2
-        if (!validateStepFields(2)) {
-          return;
-        }
-        
-        saveSection('member', {
-          profile_id: document.getElementById('profile-id-input').value,
-          member_name: document.getElementById('member-name-input').value || '',
-          member_age: document.getElementById('member-age-input').value || '',
-          member_education: document.getElementById('member-education-input').value || '',
-          member_occupation: document.getElementById('member-occupation-input').value || '',
-          member_income: document.getElementById('member-income-input').value || '',
-          member_marital_status: document.getElementById('member-marital-status-input').value || '',
-          member_family_status: document.getElementById('member-family-status-input').value || '',
-          member_father_details: document.getElementById('member-father-details-input').value || '',
-          member_mother_details: document.getElementById('member-mother-details-input').value || '',
-          member_sibling_details: document.getElementById('member-sibling-details-input').value || '',
-          member_caste: document.getElementById('member-caste-input').value || '',
-          member_subcaste: document.getElementById('member-subcaste-input').value || ''
-        }, function() {
-          document.getElementById('step-2').style.display = 'none';
-          document.getElementById('step-3').style.display = 'block';
-          setActiveTab('tab-partner');
-        });
-      };
-
-      document.getElementById('back-3').onclick = function() {
-        document.getElementById('step-3').style.display = 'none';
+      if (!validateStepFields(1)) return;
+      
+      saveSection('service', {
+        profile_id: document.getElementById('profile-id-input').value,
+        service_name: document.getElementById('service-name-input').value,
+        service_price: document.getElementById('service-price-input').value,
+        amount_paid: document.getElementById('amount-paid-input').value,
+        success_fee: document.getElementById('success-fee-input').value,
+        start_date: document.getElementById('start-date-input').value,
+        expiry_date: document.querySelector('input[name="expiry-date-input"]').value,
+        service_details: document.getElementById('service-details-input').value
+      }, function() {
+        document.getElementById('step-1').style.display = 'none';
         document.getElementById('step-2').style.display = 'block';
         setActiveTab('tab-member');
-      };
+      });
+    };
+  }
 
-      document.getElementById('save-next-3').onclick = function(e) {
-        e.preventDefault();
-        console.log('Save & Next 3 clicked');
-        
-        // Validate all required fields in step 3
-        if (!validateStepFields(3)) {
-          return;
-        }
-        
-        saveSection('partner', {
-          profile_id: document.getElementById('profile-id-input').value,
-          preferred_age: document.getElementById('preferred-age-input').value || '',
-          preferred_weight: document.getElementById('preferred-weight-input').value || '',
-          preferred_education: document.getElementById('preferred-education-input').value || '',
-          preferred_religion: document.getElementById('preferred-religion-input').value || '',
-          preferred_caste: document.getElementById('preferred-caste-input').value || '',
-          preferred_subcaste: document.getElementById('preferred-subcaste-input').value || '',
-          preferred_marital_status: document.getElementById('preferred-marital-status-input').value || '',
-          preferred_annual_income: document.getElementById('preferred-annual-income-input').value || '',
-          preferred_occupation: document.getElementById('preferred-occupation-input').value || '',
-          preferred_family_status: document.getElementById('preferred-family-status-input').value || '',
-          preferred_eating_habits: document.getElementById('preferred-eating-habits-input').value || ''
-        }, function() {
-          document.getElementById('step-3').style.display = 'none';
-          document.getElementById('step-4').style.display = 'block';
-          setActiveTab('tab-contact');
-        });
-      };
+  const back2 = document.getElementById('back-2');
+  if (back2) {
+    back2.onclick = function(e) {
+      e.preventDefault();
+      document.getElementById('step-2').style.display = 'none';
+      document.getElementById('step-1').style.display = 'block';
+      setActiveTab('tab-service');
+    };
+  }
 
-      document.getElementById('back-4').onclick = function() {
-        document.getElementById('step-4').style.display = 'none';
+  const saveNext2 = document.getElementById('save-next-2');
+  if (saveNext2) {
+    saveNext2.onclick = function(e) {
+      e.preventDefault();
+      console.log('Save & Next 2 clicked');
+      
+      if (!validateStepFields(2)) return;
+      
+      saveSection('member', {
+        profile_id: document.getElementById('profile-id-input').value,
+        member_name: document.getElementById('member-name-input')?.value || '',
+        member_age: document.getElementById('member-age-input')?.value || '',
+        member_education: document.getElementById('member-education-input')?.value || '',
+        member_occupation: document.getElementById('member-occupation-input')?.value || '',
+        member_income: document.getElementById('member-income-input')?.value || '',
+        member_marital_status: document.getElementById('member-marital-status-input')?.value || '',
+        member_family_status: document.getElementById('member-family-status-input')?.value || '',
+        member_father_details: document.getElementById('member-father-details-input')?.value || '',
+        member_mother_details: document.getElementById('member-mother-details-input')?.value || '',
+        member_sibling_details: document.getElementById('member-sibling-details-input')?.value || '',
+        member_caste: document.getElementById('member-caste-input')?.value || '',
+        member_subcaste: document.getElementById('member-subcaste-input')?.value || ''
+      }, function() {
+        document.getElementById('step-2').style.display = 'none';
         document.getElementById('step-3').style.display = 'block';
         setActiveTab('tab-partner');
-      };
+      });
+    };
+  }
 
-      document.getElementById('save-final').onclick = function(e) {
-        e.preventDefault();
-        console.log('Save & Complete clicked');
-        
-        // Validate all required fields in step 4
-        if (!validateStepFields(4)) {
-          return;
-        }
-        
-        saveSection('contact', {
-          profile_id: document.getElementById('profile-id-input').value,
-          contact_customer_name: document.getElementById('contact-customer-name-input').value || '',
-          contact_mobile_no: document.getElementById('contact-mobile-no-input').value || '',
-          contact_whatsapp_no: document.getElementById('contact-whatsapp-no-input').value || '',
-          contact_email: document.getElementById('contact-email-input').value || '',
-          contact_alternate: document.getElementById('contact-alternate-input').value || '',
-          contact_client: document.getElementById('contact-client-input').value || ''
-        }, function() {
-          // Final save - redirect to services list
-          alert('Service saved successfully!');
-          window.location.href = '/new-service';
-        });
-      };
+  const back3 = document.getElementById('back-3');
+  if (back3) {
+    back3.onclick = function(e) {
+      e.preventDefault();
+      document.getElementById('step-3').style.display = 'none';
+      document.getElementById('step-2').style.display = 'block';
+      setActiveTab('tab-member');
+    };
+  }
 
-      // Form submission
-      document.getElementById('addServiceForm').onsubmit = function(e) {
-        // Check if key fields are filled to show user what status will be set
-        const serviceName = document.querySelector('input[name="service_name"]').value;
-        const amountPaid = document.querySelector('input[name="amount_paid"]').value;
-        const startDate = document.querySelector('input[name="start_date"]').value;
-        const expiryDate = document.querySelector('input[name="expiry_date"]').value;
-        const contactMobile = document.querySelector('input[name="contact_mobile_no"]').value;
-        const contactName = document.querySelector('input[name="contact_customer_name"]').value;
-        
-        const hasServiceDetails = serviceName && amountPaid && startDate && expiryDate;
-        const hasContactDetails = contactMobile && contactName;
-        
-        if (hasServiceDetails && hasContactDetails) {
-          console.log('Service will be marked as ACTIVE');
-        } else {
-          console.log('Service will remain as NEW until all details are completed');
-        }
-        
-        // Allow the form to submit normally to the server
-        // The server will handle the redirect to new.service route
-        return true;
-      };
+  const saveNext3 = document.getElementById('save-next-3');
+  if (saveNext3) {
+    saveNext3.onclick = function(e) {
+      e.preventDefault();
+      console.log('Save & Next 3 clicked');
+      
+      if (!validateStepFields(3)) return;
+      
+      saveSection('partner', {
+        profile_id: document.getElementById('profile-id-input').value,
+        preferred_age: document.getElementById('preferred-age-input')?.value || '',
+        preferred_weight: document.getElementById('preferred-weight-input')?.value || '',
+        preferred_education: document.getElementById('preferred-education-input')?.value || '',
+        preferred_religion: document.getElementById('preferred-religion-input')?.value || '',
+        preferred_caste: document.getElementById('preferred-caste-input')?.value || '',
+        preferred_subcaste: document.getElementById('preferred-subcaste-input')?.value || '',
+        preferred_marital_status: document.getElementById('preferred-marital-status-input')?.value || '',
+        preferred_annual_income: document.getElementById('preferred-annual-income-input')?.value || '',
+        preferred_occupation: document.getElementById('preferred-occupation-input')?.value || '',
+        preferred_family_status: document.getElementById('preferred-family-status-input')?.value || '',
+        preferred_eating_habits: document.getElementById('preferred-eating-habits-input')?.value || ''
+      }, function() {
+        document.getElementById('step-3').style.display = 'none';
+        document.getElementById('step-4').style.display = 'block';
+        setActiveTab('tab-contact');
+      });
+    };
+  }
+
+  const back4 = document.getElementById('back-4');
+  if (back4) {
+    back4.onclick = function(e) {
+      e.preventDefault();
+      document.getElementById('step-4').style.display = 'none';
+      document.getElementById('step-3').style.display = 'block';
+      setActiveTab('tab-partner');
+    };
+  }
+
+  const saveFinal = document.getElementById('save-final');
+  if (saveFinal) {
+    saveFinal.onclick = function(e) {
+      e.preventDefault();
+      console.log('Save & Complete clicked');
+      
+      if (!validateStepFields(4)) return;
+      
+      saveSection('contact', {
+        profile_id: document.getElementById('profile-id-input').value,
+        contact_customer_name: document.getElementById('contact-customer-name-input')?.value || '',
+        contact_mobile_no: document.getElementById('contact-mobile-no-input')?.value || '',
+        contact_whatsapp_no: document.getElementById('contact-whatsapp-no-input')?.value || '',
+        contact_email: document.getElementById('contact-email-input')?.value || '',
+        contact_alternate: document.getElementById('contact-alternate-input')?.value || '',
+        contact_client: document.getElementById('contact-client-input')?.value || ''
+      }, function() {
+        alert('Service saved successfully!');
+        window.location.href = '/new-service';
+      });
+    };
+  }
+}
+
+// Show specific step
+function showStep(step) {
+  for (let i = 1; i <= 4; i++) {
+    const stepEl = document.getElementById('step-' + i);
+    if (stepEl) stepEl.style.display = 'none';
+  }
+  
+  const targetStep = document.getElementById('step-' + step);
+  if (targetStep) targetStep.style.display = 'block';
+  
+  const tabs = ['tab-service', 'tab-member', 'tab-partner', 'tab-contact'];
+  tabs.forEach((tabId, index) => {
+    const tab = document.getElementById(tabId);
+    if (tab) {
+      if (index === step - 1) {
+        tab.classList.add('active');
+      } else {
+        tab.classList.remove('active');
+      }
     }
+  });
+}
 
-    // Navigation functionality for header
-    document.querySelectorAll('.header-nav a').forEach(link => {
-      link.addEventListener('click', function(e) {
-        if (!this.getAttribute('href') || this.getAttribute('href') === '#') {
-          e.preventDefault();
-          document.querySelectorAll('.header-nav a').forEach(l => l.classList.remove('active'));
-          this.classList.add('active');
-          const page = this.getAttribute('data-page');
-          console.log('Navigating to:', page);
+// Function to setup automatic service pricing
+function setupServicePricing() {
+  const serviceNameSelect = document.getElementById('service-name-input');
+  const servicePriceInput = document.getElementById('service-price-input');
+  const paidAmountInput = document.getElementById('amount-paid-input');
+  const successFeeInput = document.getElementById('success-fee-input');
+  
+  if (serviceNameSelect && servicePriceInput) {
+    serviceNameSelect.addEventListener('change', function() {
+      const servicePrices = {
+        'Silver': 3300,
+        'Gold': 4400,
+        'Platinum': 5600,
+        'Diamond': 18000,
+        'Diamond Plus': 25000,
+        'Royal': 50000,
+        'Elite': 100000
+      };
+
+      if (servicePrices[this.value]) {
+        servicePriceInput.value = servicePrices[this.value];
+        calculateSuccessFee();
+      }
+
+      // Auto-set expiry date based on service type
+      const startDateInput = document.getElementById('start-date-input');
+      const expiryDateInput = document.querySelector('input[name="expiry-date-input"]');
+      if (startDateInput && expiryDateInput && startDateInput.value) {
+        let monthsToAdd = 0;
+        let yearsToAdd = 0;
+        if (this.value === 'Diamond') monthsToAdd = 3;
+        if (this.value === 'Diamond Plus' || this.value === 'Royal') monthsToAdd = 6;
+        if (this.value === 'Elite') yearsToAdd = 1;
+
+        if (monthsToAdd > 0 || yearsToAdd > 0) {
+          const start = new Date(startDateInput.value);
+          let expiry = new Date(start);
+          if (monthsToAdd > 0) {
+            expiry.setMonth(expiry.getMonth() + monthsToAdd);
+          }
+          if (yearsToAdd > 0) {
+            expiry.setFullYear(expiry.getFullYear() + yearsToAdd);
+          }
+          // Format as yyyy-mm-dd
+          const yyyy = expiry.getFullYear();
+          const mm = String(expiry.getMonth() + 1).padStart(2, '0');
+          const dd = String(expiry.getDate()).padStart(2, '0');
+          expiryDateInput.value = `${yyyy}-${mm}-${dd}`;
+        } else {
+          expiryDateInput.value = '';
+        }
+      }
+    });
+    // Also update expiry date if start date changes and service is selected
+    const startDateInput = document.getElementById('start-date-input');
+    if (startDateInput) {
+      startDateInput.addEventListener('change', function() {
+        const service = serviceNameSelect.value;
+        let monthsToAdd = 0;
+        let yearsToAdd = 0;
+        if (service === 'Diamond') monthsToAdd = 3;
+        if (service === 'Diamond Plus' || service === 'Royal') monthsToAdd = 6;
+        if (service === 'Elite') yearsToAdd = 1;
+        if (monthsToAdd > 0 || yearsToAdd > 0) {
+          const start = new Date(this.value);
+          let expiry = new Date(start);
+          if (monthsToAdd > 0) {
+            expiry.setMonth(expiry.getMonth() + monthsToAdd);
+          }
+          if (yearsToAdd > 0) {
+            expiry.setFullYear(expiry.getFullYear() + yearsToAdd);
+          }
+          const yyyy = expiry.getFullYear();
+          const mm = String(expiry.getMonth() + 1).padStart(2, '0');
+          const dd = String(expiry.getDate()).padStart(2, '0');
+          const expiryDateInput = document.querySelector('input[name="expiry-date-input"]');
+          if (expiryDateInput) expiryDateInput.value = `${yyyy}-${mm}-${dd}`;
         }
       });
-    });
-
-    // Logout functionality - Global function
-    window.confirmLogout = function() {
-      if (confirm('Are you sure you want to logout?')) {
-        document.getElementById('logout-form').submit();
-      }
-    };
-
-    // Redirect to service details page with current profile data
-    function redirectToServiceDetails() {
-      // Get the profile ID from the form
-      const profileId = document.getElementById('profile-id-input').value || 'INA001';
-      const serviceName = document.querySelector('input[name="service_name"]').value || 'Service';
-      
-      // Redirect to the service details route
-      window.location.href = `/service-details/${profileId}/${serviceName}`;
     }
+    if (serviceNameSelect.value && !servicePriceInput.value) {
+      serviceNameSelect.dispatchEvent(new Event('change'));
+    }
+  }
+  
+  if (paidAmountInput) {
+    paidAmountInput.addEventListener('input', calculateSuccessFee);
+  }
+  
+  if (servicePriceInput) {
+    servicePriceInput.addEventListener('input', calculateSuccessFee);
+  }
+  
+  function calculateSuccessFee() {
+    if (servicePriceInput && paidAmountInput && successFeeInput) {
+      const servicePrice = parseFloat(servicePriceInput.value) || 0;
+      const paidAmount = parseFloat(paidAmountInput.value) || 0;
+      const successFee = servicePrice - paidAmount;
+      successFeeInput.value = Math.max(0, successFee).toFixed(2);
+    }
+  }
+  
+  calculateSuccessFee();
+}
 
-    // Initialize when page loads
-    document.addEventListener('DOMContentLoaded', function() {
-      initializePage();
-    });
+// Navigation functionality for header
+document.querySelectorAll('.header-nav a').forEach(link => {
+  link.addEventListener('click', function(e) {
+    if (!this.getAttribute('href') || this.getAttribute('href') === '#') {
+      e.preventDefault();
+      document.querySelectorAll('.header-nav a').forEach(l => l.classList.remove('active'));
+      this.classList.add('active');
+    }
+  });
+});
 
-  </script>
+// Logout functionality
+window.confirmLogout = function() {
+  if (confirm('Are you sure you want to logout?')) {
+    document.getElementById('logout-form').submit();
+  }
+};
+
+// Initialize when page loads
+document.addEventListener('DOMContentLoaded', function() {
+  initializePage();
+  setTimeout(function() {
+    setupServicePricing();
+  }, 100);
+});
+</script>
