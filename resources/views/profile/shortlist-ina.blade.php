@@ -283,13 +283,19 @@
 
                 <!-- Weight Range -->
                 <div class="form-group">
-                    <label class="form-label">Weight (kg Min):</label>
-                    <input type="number" name="weight_min" class="form-input" placeholder="Min weight (kg)" min="30" max="200">
-                </div>
-                
-                <div class="form-group">
-                    <label class="form-label">Weight (kg Max):</label>
-                    <input type="number" name="weight_max" class="form-input" placeholder="Max weight (kg)" min="30" max="200">
+                    <label class="form-label">Weight (kg Range):</label>
+                    <select name="weight_range" class="form-select">
+                        <option value="">-- Select Weight Range --</option>
+                        <option value="30-39">30-39 Kg</option>
+                        <option value="40-49">40-49 Kg</option>
+                        <option value="50-59">50-59 Kg</option>
+                        <option value="60-69">60-69 Kg</option>
+                        <option value="70-79">70-79 Kg</option>
+                        <option value="80-89">80-89 Kg</option>
+                        <option value="90-99">90-99 Kg</option>
+                        <option value="100-109">100-109 Kg</option>
+                        <option value="110-120">110-120 Kg</option>
+                    </select>
                 </div>
 
                 <!-- Education -->

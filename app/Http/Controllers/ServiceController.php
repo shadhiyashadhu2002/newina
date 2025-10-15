@@ -612,8 +612,7 @@ class ServiceController extends Controller
                 'age_max' => 'nullable|integer|min:18|max:100',
                 'height_min' => 'nullable|integer|min:100|max:250',
                 'height_max' => 'nullable|integer|min:100|max:250',
-                'weight_min' => 'nullable|integer|min:30|max:200',
-                'weight_max' => 'nullable|integer|min:30|max:200',
+                'weight_range' => 'nullable|string',
                 'religion' => 'nullable|string',
                 'caste' => 'nullable|string',
                 'district' => 'nullable|string',
@@ -669,21 +668,21 @@ class ServiceController extends Controller
                 });
             }
 
-            // Apply weight range filter
-            if ($request->filled('weight_min') || $request->filled('weight_max')) {
-                Log::info('Weight filter applied', [
-                    'weight_min' => $request->weight_min,
-                    'weight_max' => $request->weight_max
-                ]);
-                
-                $query->whereHas('user.physicalAttribute', function($q) use ($request) {
-                    if ($request->filled('weight_min')) {
-                        $q->where('weight', '>=', $request->weight_min);
-                    }
-                    if ($request->filled('weight_max')) {
-                        $q->where('weight', '<=', $request->weight_max);
-                    }
-                });
+            // Apply weight range filter (from dropdown)
+            if ($request->filled('weight_range')) {
+                $range = explode('-', $request->weight_range);
+                if (count($range) === 2) {
+                    $minWeight = (int) $range[0];
+                    $maxWeight = (int) $range[1];
+                    Log::info('Weight filter applied', [
+                        'weight_min' => $minWeight,
+                        'weight_max' => $maxWeight
+                    ]);
+                    $query->whereHas('user.physicalAttribute', function($q) use ($minWeight, $maxWeight) {
+                        $q->where('weight', '>=', $minWeight)
+                          ->where('weight', '<=', $maxWeight);
+                    });
+                }
             }
 
             // Apply gender filter (convert text to numeric: male=1, female=2)
@@ -753,13 +752,20 @@ class ServiceController extends Controller
             // Apply caste filter (actually religion filter through spiritual_background -> religions)
             if ($request->filled('caste')) {
                 Log::info('Religion filter applied', ['religion' => $request->caste]);
-                
-                $query->whereHas('user.spiritualBackground.religion', function($q) use ($request) {
-                    $religion = $request->caste;
-                    $q->where('name', 'like', '%' . $religion . '%')
-                      ->orWhere('name', strtolower($religion))
-                      ->orWhere('name', strtoupper($religion))
-                      ->orWhere('name', ucfirst(strtolower($religion)));
+                $religion = strtolower($request->caste);
+                $muslimAliases = ['muslim', 'islam'];
+                $query->whereHas('user.spiritualBackground.religion', function($q) use ($religion, $muslimAliases) {
+                    if (in_array($religion, $muslimAliases)) {
+                        $q->where(function($subQ) {
+                            $subQ->where('name', 'like', '%muslim%')
+                                 ->orWhere('name', 'like', '%islam%');
+                        });
+                    } else {
+                        $q->where('name', 'like', '%' . $religion . '%')
+                          ->orWhere('name', strtolower($religion))
+                          ->orWhere('name', strtoupper($religion))
+                          ->orWhere('name', ucfirst(strtolower($religion)));
+                    }
                 });
             }
 
