@@ -463,6 +463,7 @@
                   <option value="Diamond" {{ (isset($service) && $service->service_name == 'Diamond') ? 'selected' : '' }}>Diamond</option>
                   <option value="Diamond Plus" {{ (isset($service) && $service->service_name == 'Diamond Plus') ? 'selected' : '' }}>Diamond Plus</option>
                   <option value="Royal" {{ (isset($service) && $service->service_name == 'Royal') ? 'selected' : '' }}>Royal</option>
+                  <option value="Assisted" {{ (isset($service) && $service->service_name == 'Assisted') ? 'selected' : '' }}>Assisted</option>
                   <option value="Elite" {{ (isset($service) && $service->service_name == 'Elite') ? 'selected' : '' }}>Elite</option>
                 </select>
               </div>
@@ -1247,6 +1248,7 @@ function setupServicePricing() {
         'Diamond': 18000,
         'Diamond Plus': 25000,
         'Royal': 50000,
+        'Assisted': 18000,
         'Elite': 100000
       };
 
@@ -1259,11 +1261,11 @@ function setupServicePricing() {
       const startDateInput = document.getElementById('start-date-input');
       const expiryDateInput = document.querySelector('input[name="expiry-date-input"]');
       if (startDateInput && expiryDateInput && startDateInput.value) {
-        let monthsToAdd = 0;
-        let yearsToAdd = 0;
-        if (this.value === 'Diamond') monthsToAdd = 3;
-        if (this.value === 'Diamond Plus' || this.value === 'Royal') monthsToAdd = 6;
-        if (this.value === 'Elite') yearsToAdd = 1;
+  let monthsToAdd = 0;
+  let yearsToAdd = 0;
+  if (this.value === 'Diamond' || this.value === 'Assisted') monthsToAdd = 3;
+  if (this.value === 'Diamond Plus' || this.value === 'Royal') monthsToAdd = 6;
+  if (this.value === 'Elite') yearsToAdd = 1;
 
         if (monthsToAdd > 0 || yearsToAdd > 0) {
           const start = new Date(startDateInput.value);
@@ -1289,11 +1291,11 @@ function setupServicePricing() {
     if (startDateInput) {
       startDateInput.addEventListener('change', function() {
         const service = serviceNameSelect.value;
-        let monthsToAdd = 0;
-        let yearsToAdd = 0;
-        if (service === 'Diamond') monthsToAdd = 3;
-        if (service === 'Diamond Plus' || service === 'Royal') monthsToAdd = 6;
-        if (service === 'Elite') yearsToAdd = 1;
+  let monthsToAdd = 0;
+  let yearsToAdd = 0;
+  if (service === 'Diamond' || service === 'Assisted') monthsToAdd = 3;
+  if (service === 'Diamond Plus' || service === 'Royal') monthsToAdd = 6;
+  if (service === 'Elite') yearsToAdd = 1;
         if (monthsToAdd > 0 || yearsToAdd > 0) {
           const start = new Date(this.value);
           let expiry = new Date(start);
