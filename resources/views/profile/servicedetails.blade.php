@@ -521,21 +521,28 @@
                        value="{{ isset($service) ? $service->member_name : '' }}" 
                        {{ isset($service) ? 'readonly' : '' }} required>
               </div>
-              <div class="form-group">
-                <label>Age</label>
-                <input type="number" name="member_age" id="member-age-input" placeholder="Age" 
-                       value="{{ isset($service) ? $service->member_age : '' }}" 
-                       maxlength="2" max="99" min="18"
-                       {{ isset($service) ? 'readonly' : '' }} required>
-              </div>
+             <div class="form-row">
+  <div class="form-group">
+    <label>Birthday</label>
+    <input type="date" name="member_birthday" id="member-birthday-input" 
+           value="{{ isset($service) ? $service->member_birthday : '' }}" 
+           {{ isset($service) ? 'readonly' : '' }} required>
+  </div>
+  <div class="form-group">
+    <label>Age (Auto-calculated)</label>
+    <input type="number" name="member_age" id="member-age-input" placeholder="Age" 
+           value="{{ isset($service) ? $service->member_age : '' }}" 
+           maxlength="2" max="99" min="18"
+           {{ isset($service) ? 'readonly' : '' }} required>
+  </div>
+</div>
             </div>
-            <div class="form-row">
-              <div class="form-group">
-                <label>Education</label>
-                <input type="text" name="member_education" id="member-education-input" placeholder="Education" 
-                       value="{{ isset($service) ? $service->member_education : '' }}" 
-                       {{ isset($service) ? 'readonly' : '' }} required>
-              </div>
+           <div class="form-group">
+  <label>Education</label>
+  <input type="text" name="member_education" id="member-education-input" placeholder="Education" 
+         value="{{ isset($service) ? $service->member_education : '' }}" 
+         readonly required>
+</div>
               <div class="form-group">
                 <label>Occupation</label>
                 <input type="text" name="member_occupation" id="member-occupation-input" placeholder="Occupation" 
@@ -746,201 +753,7 @@
     </div>
   </main>
 
- <script>
-// Check if we're in view mode or edit mode
-const isViewMode = {{ isset($service) ? 'true' : 'false' }};
-
-// Initialize the page
-function initializePage() {
-  setupFormValidations();
-  
-  const isAdmin = {{ Auth::check() && Auth::user()->is_admin ? 'true' : 'false' }};
-  
-  if (!isViewMode) {
-    if (document.getElementById('profile-id-input')) {
-      document.getElementById('profile-id-input').value = 'INA001';
-    }
-    setupFormNavigation();
-    showStep(1);
-    setActiveTab('tab-service');
-  } else {
-    setupTabNavigation();
-    showStep(1);
-    setActiveTab('tab-service');
-  }
-    
-  const editBtn = document.getElementById('edit-service-btn');
-  if (editBtn) {
-    editBtn.onclick = function() {
-      enableEditMode();
-    };
-  }
-}
-
-// Setup form validations
-function setupFormValidations() {
-  const startDateInput = document.getElementById('start-date-input');
-  const expiryDateInput = document.querySelector('input[name="expiry-date-input"]');
-  
-  if (startDateInput && expiryDateInput) {
-    startDateInput.addEventListener('change', function() {
-      const startDate = this.value;
-      if (startDate) {
-        expiryDateInput.setAttribute('min', startDate);
-        if (expiryDateInput.value && expiryDateInput.value < startDate) {
-          expiryDateInput.value = '';
-          alert('Expiry date cannot be before the start date. Please select a valid expiry date.');
-        }
-      }
-    });
-    
-    expiryDateInput.addEventListener('change', function() {
-      const startDate = startDateInput.value;
-      const expiryDate = this.value;
-      if (startDate && expiryDate && expiryDate < startDate) {
-        this.value = '';
-        alert('Expiry date cannot be before the start date. Please select a valid expiry date.');
-      }
-    });
-  }
-  
-  const memberAgeInput = document.getElementById('member-age-input');
-  if (memberAgeInput) {
-    memberAgeInput.addEventListener('input', function() {
-      this.value = this.value.replace(/[^0-9]/g, '');
-      if (this.value.length > 2) {
-        this.value = this.value.slice(0, 2);
-      }
-    });
-  }
-  
-  const preferredAgeInput = document.getElementById('preferred-age-input');
-  if (preferredAgeInput) {
-    preferredAgeInput.addEventListener('input', function() {
-      this.value = this.value.replace(/[^0-9]/g, '');
-      if (this.value.length > 2) {
-        this.value = this.value.slice(0, 2);
-      }
-    });
-  }
-}
-
-// Validate all required fields in a step
-function validateStepFields(stepNum) {
-  const step = document.getElementById('step-' + stepNum);
-  if (!step) return false;
-  
-  const requiredFields = step.querySelectorAll('input[required], select[required], textarea[required]');
-  for (let field of requiredFields) {
-    if (field.offsetParent !== null && !field.value.trim()) {
-      field.focus();
-      alert('Please fill all fields before continuing.');
-      return false;
-    }
-  }
-  return true;
-}
-
-// Enable edit mode
-function enableEditMode() {
-  const inputs = document.querySelectorAll('#addServiceForm input, #addServiceForm textarea');
-  inputs.forEach(input => {
-    // Do not remove readonly from profile ID input
-    if (input.id !== 'profile-id-input') {
-      input.removeAttribute('readonly');
-    }
-  });
-  
-  const selects = document.querySelectorAll('#addServiceForm select');
-  selects.forEach(select => {
-    select.removeAttribute('disabled');
-  });
-  
-  const formActions = document.querySelectorAll('.form-actions');
-  formActions.forEach(action => {
-    action.style.display = 'flex';
-  });
-  
-  const badge = document.querySelector('.status-badge');
-  if (badge) {
-    badge.textContent = 'Editing Service';
-    badge.className = 'status-badge edit-mode';
-  }
-  
-  const editBtn = document.getElementById('edit-service-btn');
-  const saveBtn = document.getElementById('save-service-btn');
-  if (editBtn) editBtn.style.display = 'none';
-  if (saveBtn) {
-    saveBtn.style.display = 'inline-block';
-    saveBtn.onclick = function() {
-      saveAllChanges();
-    };
-  }
-  
-  setupFormValidations();
-  setupServicePricing();
-  setupFormNavigation();
-}
-
-// Save all changes function
-function saveAllChanges() {
-  const form = document.getElementById('addServiceForm');
-  if (!form) {
-    alert('Form not found');
-    return;
-  }
-  
-  for (let i = 1; i <= 4; i++) {
-    if (!validateStepFields(i)) {
-      return;
-    }
-  }
-  
-  const formData = new FormData(form);
-  const csrfToken = document.querySelector('input[name="_token"]').value;
-  formData.append('_token', csrfToken);
-  formData.append('_method', 'PUT');
-  
-  const saveBtn = document.getElementById('save-service-btn');
-  if (saveBtn) {
-    saveBtn.textContent = 'Saving...';
-    saveBtn.disabled = true;
-  }
-  
-  fetch(form.action, {
-    method: 'POST',
-    body: formData,
-    headers: {
-      'X-CSRF-TOKEN': csrfToken
-    }
-  })
-  .then(response => {
-    if (response.ok) {
-      alert('Changes saved successfully!');
-      location.reload();
-    } else {
-      throw new Error('Failed to save changes');
-    }
-  })
-  .catch(error => {
-    console.error('Error:', error);
-    alert('Error saving changes: ' + error.message);
-  })
-  .finally(() => {
-    if (saveBtn) {
-      saveBtn.textContent = 'Save Changes';
-      saveBtn.disabled = false;
-    }
-  });
-}
-
-// Set up tab navigation (for viewing mode)
-function setupTabNavigation() {
-  const tabs = ['tab-service', 'tab-member', 'tab-partner', 'tab-contact'];
-  const steps = ['step-1', 'step-2', 'step-3', 'step-4'];
-  
-  tabs.forEach((tabId, index) => {
-    const tabElement = document.getElementById(tabId);
+...existing code...
     const stepElement = document.getElementById(steps[index]);
     
     if (tabElement && stepElement) {
@@ -1356,11 +1169,284 @@ window.confirmLogout = function() {
   }
 };
 
+
+
+<!-- Move all scripts to the end for proper DOM loading -->
+<script>
+// Check if we're in view mode or edit mode
+const isViewMode = {{ isset($service) ? 'true' : 'false' }};
+
+// Initialize the page
+function initializePage() {
+  setupFormValidations();
+  const isAdmin = {{ Auth::check() && Auth::user()->is_admin ? 'true' : 'false' }};
+  if (!isViewMode) {
+    if (document.getElementById('profile-id-input')) {
+      document.getElementById('profile-id-input').value = 'INA001';
+    }
+    setupFormNavigation();
+    showStep(1);
+    setActiveTab('tab-service');
+  } else {
+    setupTabNavigation();
+    showStep(1);
+    setActiveTab('tab-service');
+  }
+  const editBtn = document.getElementById('edit-service-btn');
+  if (editBtn) {
+    editBtn.onclick = function() {
+      enableEditMode();
+    };
+  }
+}
+
+// Setup form validations
+function setupFormValidations() {
+  const startDateInput = document.getElementById('start-date-input');
+  const expiryDateInput = document.querySelector('input[name="expiry-date-input"]');
+  if (startDateInput && expiryDateInput) {
+    startDateInput.addEventListener('change', function() {
+      const startDate = this.value;
+      if (startDate) {
+        expiryDateInput.setAttribute('min', startDate);
+        if (expiryDateInput.value && expiryDateInput.value < startDate) {
+          expiryDateInput.value = '';
+          alert('Expiry date cannot be before the start date. Please select a valid expiry date.');
+        }
+      }
+    });
+    expiryDateInput.addEventListener('change', function() {
+      const startDate = startDateInput.value;
+      const expiryDate = this.value;
+      if (startDate && expiryDate && expiryDate < startDate) {
+        this.value = '';
+        alert('Expiry date cannot be before the start date. Please select a valid expiry date.');
+      }
+    });
+  }
+  const memberAgeInput = document.getElementById('member-age-input');
+  if (memberAgeInput) {
+    memberAgeInput.addEventListener('input', function() {
+      this.value = this.value.replace(/[^0-9]/g, '');
+      if (this.value.length > 2) {
+        this.value = this.value.slice(0, 2);
+      }
+    });
+  }
+  const preferredAgeInput = document.getElementById('preferred-age-input');
+  if (preferredAgeInput) {
+    preferredAgeInput.addEventListener('input', function() {
+      this.value = this.value.replace(/[^0-9]/g, '');
+      if (this.value.length > 2) {
+        this.value = this.value.slice(0, 2);
+      }
+    });
+  }
+}
+
+// Validate all required fields in a step
+function validateStepFields(stepNum) {
+  const step = document.getElementById('step-' + stepNum);
+  if (!step) return false;
+  const requiredFields = step.querySelectorAll('input[required], select[required], textarea[required]');
+  for (let field of requiredFields) {
+    if (field.offsetParent !== null && !field.value.trim()) {
+      field.focus();
+      alert('Please fill all fields before continuing.');
+      return false;
+    }
+  }
+  return true;
+}
+
+// Enable edit mode
+function enableEditMode() {
+  const inputs = document.querySelectorAll('#addServiceForm input, #addServiceForm textarea');
+  inputs.forEach(input => {
+    if (input.id !== 'profile-id-input') {
+      input.removeAttribute('readonly');
+    }
+  });
+  const selects = document.querySelectorAll('#addServiceForm select');
+  selects.forEach(select => {
+    select.removeAttribute('disabled');
+  });
+  const formActions = document.querySelectorAll('.form-actions');
+  formActions.forEach(action => {
+    action.style.display = 'flex';
+  });
+  const badge = document.querySelector('.status-badge');
+  if (badge) {
+    badge.textContent = 'Editing Service';
+    badge.className = 'status-badge edit-mode';
+  }
+  const editBtn = document.getElementById('edit-service-btn');
+  const saveBtn = document.getElementById('save-service-btn');
+  if (editBtn) editBtn.style.display = 'none';
+  if (saveBtn) {
+    saveBtn.style.display = 'inline-block';
+    saveBtn.onclick = function() {
+      saveAllChanges();
+    };
+  }
+  setupFormValidations();
+  setupServicePricing();
+  setupFormNavigation();
+}
+
+// Save all changes function
+function saveAllChanges() {
+  const form = document.getElementById('addServiceForm');
+  if (!form) {
+    alert('Form not found');
+    return;
+  }
+  for (let i = 1; i <= 4; i++) {
+    if (!validateStepFields(i)) {
+      return;
+    }
+  }
+  const formData = new FormData(form);
+  const csrfToken = document.querySelector('input[name="_token"]').value;
+  formData.append('_token', csrfToken);
+  formData.append('_method', 'PUT');
+  const saveBtn = document.getElementById('save-service-btn');
+  if (saveBtn) {
+    saveBtn.textContent = 'Saving...';
+    saveBtn.disabled = true;
+  }
+  fetch(form.action, {
+    method: 'POST',
+    body: formData,
+    headers: {
+      'X-CSRF-TOKEN': csrfToken
+    }
+  })
+  .then(response => {
+    if (response.ok) {
+      alert('Changes saved successfully!');
+      location.reload();
+    } else {
+      throw new Error('Failed to save changes');
+    }
+  })
+  .catch(error => {
+    console.error('Error:', error);
+    alert('Error saving changes: ' + error.message);
+  })
+  .finally(() => {
+    if (saveBtn) {
+      saveBtn.textContent = 'Save Changes';
+      saveBtn.disabled = false;
+    }
+  });
+}
+
+// Set up tab navigation (for viewing mode)
+function setupTabNavigation() {
+  const tabs = ['tab-service', 'tab-member', 'tab-partner', 'tab-contact'];
+  const steps = ['step-1', 'step-2', 'step-3', 'step-4'];
+  tabs.forEach((tabId, index) => {
+    const tabElement = document.getElementById(tabId);
+    if (tabElement) {
+      tabElement.addEventListener('click', function() {
+        setActiveTab(tabId);
+        showStep(index + 1);
+      });
+    }
+  });
+}
+
+// Set active tab
+function setActiveTab(tabId) {
+  const tabs = document.querySelectorAll('.tab');
+  tabs.forEach(tab => {
+    tab.classList.remove('active');
+  });
+  const activeTab = document.getElementById(tabId);
+  if (activeTab) {
+    activeTab.classList.add('active');
+  }
+}
+
+// Show step
+function showStep(stepNum) {
+  for (let i = 1; i <= 4; i++) {
+    const step = document.getElementById('step-' + i);
+    if (step) {
+      step.style.display = (i === stepNum) ? 'block' : 'none';
+    }
+  }
+}
+
+// Setup form navigation
+function setupFormNavigation() {
+  const nextBtns = document.querySelectorAll('.btn-next');
+  const prevBtns = document.querySelectorAll('.btn-prev');
+  nextBtns.forEach(btn => {
+    btn.addEventListener('click', function() {
+      const currentStep = parseInt(this.dataset.currentStep);
+      if (validateStepFields(currentStep)) {
+        showStep(currentStep + 1);
+      }
+    });
+  });
+  prevBtns.forEach(btn => {
+    btn.addEventListener('click', function() {
+      const currentStep = parseInt(this.dataset.currentStep);
+      showStep(currentStep - 1);
+    });
+  });
+}
+
+// Setup service pricing (dummy function for now)
+function setupServicePricing() {
+  // Add your logic here if needed
+}
+
+// Auto-fetch member data function
+function fetchMemberDataFromDB(userId) {
+  const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+  fetch('/get-member-data', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'X-CSRF-TOKEN': csrfToken,
+      'Accept': 'application/json'
+    },
+    body: JSON.stringify({ user_id: userId })
+  })
+  .then(response => response.json())
+  .then(data => {
+    console.log('Fetched data:', data);
+    if (data.success) {
+      document.getElementById('member-name-input').value = data.member_name || '';
+      document.getElementById('member-birthday-input').value = data.birthday || '';
+      document.getElementById('member-age-input').value = data.age || '';
+      document.getElementById('member-education-input').value = data.education || '';
+      document.getElementById('member-marital-status-input').value = data.marital_status || '';
+      document.getElementById('member-occupation-input').value = data.occupation || '';
+      document.getElementById('member-income-input').value = data.income || '';
+    } else {
+      console.warn('Error:', data.message);
+    }
+  })
+  .catch(error => {
+    console.error('Fetch error:', error);
+  });
+}
+
 // Initialize when page loads
 document.addEventListener('DOMContentLoaded', function() {
   initializePage();
   setTimeout(function() {
     setupServicePricing();
   }, 100);
+  // Auto-fetch member data if we have a service (viewing mode)
+  const profileIdInput = document.getElementById('profile-id-input');
+  if (profileIdInput && profileIdInput.value && profileIdInput.value !== 'INA001') {
+    console.log('Fetching data for profile ID:', profileIdInput.value);
+    fetchMemberDataFromDB(profileIdInput.value);
+  }
 });
 </script>

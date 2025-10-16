@@ -595,6 +595,7 @@ use App\Models\Service;
 // Service Details routes - Available to all authenticated users
 
 use App\Models\Member;
+use App\Models\Education;
 use App\Models\MaritalStatus;
 
 Route::get('/service-details/{id}/{name}', function ($id, $name) {
@@ -602,9 +603,15 @@ Route::get('/service-details/{id}/{name}', function ($id, $name) {
     $member = Member::where('user_id', $id)->first();
     $member_age = null;
     $member_marital_status = null;
+    $member_education = null;
     if ($member) {
         $member_age = $member->age;
         $member_marital_status = $member->maritalStatus ? $member->maritalStatus->name : null;
+        // Fetch education degree for this user_id
+        $education = Education::where('user_id', $member->user_id)->first();
+        if ($education) {
+            $member_education = $education->degree;
+        }
     }
     if ($service) {
         // Overwrite service fields if not already set
@@ -613,6 +620,9 @@ Route::get('/service-details/{id}/{name}', function ($id, $name) {
         }
         if (empty($service->member_marital_status) && $member_marital_status !== null) {
             $service->member_marital_status = $member_marital_status;
+        }
+        if (empty($service->member_education) && $member_education !== null) {
+            $service->member_education = $member_education;
         }
     }
     if (!$service) {
@@ -743,3 +753,55 @@ Route::get('/profile/newservice', function (\Illuminate\Http\Request $request) {
     $staffUsers = \App\Models\User::where('user_type', 'staff')->orderBy('first_name')->get(['id', 'first_name', 'name']);
     return view('profile.newservice', compact('profile_id', 'member_name', 'from_sale', 'staffUsers'));
 })->name('profile.newservice');
+// Fetch member data for service form auto-population
+Route::post('/get-member-data', function (Request $request) {
+    try {
+        $profileIdOrUserId = $request->input('user_id');
+        // Try to find by user_id directly
+        $user = \App\Models\User::find($profileIdOrUserId);
+        // If not found, try to find the Service by profile_id and get its user
+        if (!$user) {
+            $service = \App\Models\Service::where('profile_id', $profileIdOrUserId)->first();
+            if ($service && isset($service->user_id)) {
+                $user = \App\Models\User::find($service->user_id);
+            }
+        }
+        // If still not found, try finding user by code field
+        if (!$user) {
+            $user = \App\Models\User::where('code', $profileIdOrUserId)->first();
+        }
+        if (!$user) {
+            return response()->json(['success' => false, 'message' => 'User not found. Tried profile_id: ' . $profileIdOrUserId]);
+        }
+        $member = \App\Models\Member::where('user_id', $user->id)->first();
+        if (!$member) {
+            return response()->json(['success' => false, 'message' => 'Member not found']);
+        }
+        // Calculate age from birthday
+        $age = null;
+        if ($member->birthday) {
+            $age = \Carbon\Carbon::parse($member->birthday)->age;
+        }
+        // Get education degree
+        $education = \App\Models\Education::where('user_id', $user->id)->first();
+        $educationDegree = $education ? $education->degree : '';
+        // Get marital status name
+        $maritalStatusName = '';
+        if ($member->marital_status_id) {
+            $maritalStatus = \App\Models\MaritalStatus::find($member->marital_status_id);
+            $maritalStatusName = $maritalStatus ? $maritalStatus->name : '';
+        }
+        return response()->json([
+            'success' => true,
+            'member_name' => $user->name ?? ($user->first_name . ' ' . $user->last_name),
+            'birthday' => $member->birthday ? $member->birthday->format('Y-m-d') : '',
+            'age' => $age,
+            'education' => $educationDegree,
+            'marital_status' => $maritalStatusName,
+            'occupation' => $member->occupation ?? '',
+            'income' => $member->annual_income ?? ''
+        ]);
+    } catch (\Exception $e) {
+        return response()->json(['success' => false, 'message' => 'Error: ' . $e->getMessage()]);
+    }
+});
