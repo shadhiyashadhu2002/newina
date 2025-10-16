@@ -521,28 +521,21 @@
                        value="{{ isset($service) ? $service->member_name : '' }}" 
                        {{ isset($service) ? 'readonly' : '' }} required>
               </div>
-             <div class="form-row">
-  <div class="form-group">
-    <label>Birthday</label>
-    <input type="date" name="member_birthday" id="member-birthday-input" 
-           value="{{ isset($service) ? $service->member_birthday : '' }}" 
-           {{ isset($service) ? 'readonly' : '' }} required>
-  </div>
-  <div class="form-group">
-    <label>Age (Auto-calculated)</label>
-    <input type="number" name="member_age" id="member-age-input" placeholder="Age" 
-           value="{{ isset($service) ? $service->member_age : '' }}" 
-           maxlength="2" max="99" min="18"
-           {{ isset($service) ? 'readonly' : '' }} required>
-  </div>
-</div>
+              <div class="form-group">
+                <label>Age (Auto-calculated)</label>
+                <input type="number" name="member_age" id="member-age-input" placeholder="Age" 
+                       value="{{ isset($service) ? $service->member_age : '' }}" 
+                       maxlength="2" max="99" min="18"
+                       {{ isset($service) ? 'readonly' : '' }} required>
+              </div>
             </div>
-           <div class="form-group">
-  <label>Education</label>
-  <input type="text" name="member_education" id="member-education-input" placeholder="Education" 
-         value="{{ isset($service) ? $service->member_education : '' }}" 
-         readonly required>
-</div>
+            <div class="form-row">
+              <div class="form-group">
+                <label>Education</label>
+                <input type="text" name="member_education" id="member-education-input" placeholder="Education" 
+                       value="{{ isset($service) ? $service->member_education : '' }}" 
+                       readonly required>
+              </div>
               <div class="form-group">
                 <label>Occupation</label>
                 <input type="text" name="member_occupation" id="member-occupation-input" placeholder="Occupation" 
@@ -753,26 +746,8 @@
     </div>
   </main>
 
-...existing code...
-    const stepElement = document.getElementById(steps[index]);
-    
-    if (tabElement && stepElement) {
-      tabElement.onclick = function() {
-        tabs.forEach(id => {
-          const tab = document.getElementById(id);
-          if (tab) tab.classList.remove('active');
-        });
-        steps.forEach(id => {
-          const step = document.getElementById(id);
-          if (step) step.style.display = 'none';
-        });
-        
-        this.classList.add('active');
-        stepElement.style.display = 'block';
-      };
-    }
-  });
-}
+
+<script>
 
 // Function to refresh CSRF token
 function refreshCSRFToken() {
@@ -1171,9 +1146,6 @@ window.confirmLogout = function() {
 
 
 
-<!-- Move all scripts to the end for proper DOM loading -->
-<script>
-// Check if we're in view mode or edit mode
 const isViewMode = {{ isset($service) ? 'true' : 'false' }};
 
 // Initialize the page
@@ -1343,23 +1315,42 @@ function saveAllChanges() {
 }
 
 // Set up tab navigation (for viewing mode)
+// Set up tab navigation (for viewing mode)
 function setupTabNavigation() {
   const tabs = ['tab-service', 'tab-member', 'tab-partner', 'tab-contact'];
   const steps = ['step-1', 'step-2', 'step-3', 'step-4'];
+  
   tabs.forEach((tabId, index) => {
     const tabElement = document.getElementById(tabId);
     if (tabElement) {
-      tabElement.addEventListener('click', function() {
-        setActiveTab(tabId);
-        showStep(index + 1);
+      tabElement.addEventListener('click', function(e) {
+        e.preventDefault();
+        
+        // Remove active from all tabs
+        tabs.forEach(id => {
+          const tab = document.getElementById(id);
+          if (tab) tab.classList.remove('active');
+        });
+        
+        // Hide all steps
+        steps.forEach(id => {
+          const step = document.getElementById(id);
+          if (step) step.style.display = 'none';
+        });
+        
+        // Activate current tab and show current step
+        this.classList.add('active');
+        const currentStep = document.getElementById(steps[index]);
+        if (currentStep) currentStep.style.display = 'block';
       });
     }
   });
 }
 
 // Set active tab
+// Set active tab
 function setActiveTab(tabId) {
-  const tabs = document.querySelectorAll('.tab');
+  const tabs = document.querySelectorAll('.tab-nav button');
   tabs.forEach(tab => {
     tab.classList.remove('active');
   });
@@ -1377,31 +1368,6 @@ function showStep(stepNum) {
       step.style.display = (i === stepNum) ? 'block' : 'none';
     }
   }
-}
-
-// Setup form navigation
-function setupFormNavigation() {
-  const nextBtns = document.querySelectorAll('.btn-next');
-  const prevBtns = document.querySelectorAll('.btn-prev');
-  nextBtns.forEach(btn => {
-    btn.addEventListener('click', function() {
-      const currentStep = parseInt(this.dataset.currentStep);
-      if (validateStepFields(currentStep)) {
-        showStep(currentStep + 1);
-      }
-    });
-  });
-  prevBtns.forEach(btn => {
-    btn.addEventListener('click', function() {
-      const currentStep = parseInt(this.dataset.currentStep);
-      showStep(currentStep - 1);
-    });
-  });
-}
-
-// Setup service pricing (dummy function for now)
-function setupServicePricing() {
-  // Add your logic here if needed
 }
 
 // Auto-fetch member data function
@@ -1427,6 +1393,12 @@ function fetchMemberDataFromDB(userId) {
       document.getElementById('member-marital-status-input').value = data.marital_status || '';
       document.getElementById('member-occupation-input').value = data.occupation || '';
       document.getElementById('member-income-input').value = data.income || '';
+      document.getElementById('member-family-status-input').value = data.family_status || '';
+      document.getElementById('member-father-details-input').value = data.father_details || '';
+      document.getElementById('member-mother-details-input').value = data.mother_details || '';
+      document.getElementById('member-sibling-details-input').value = data.sibling_details || '';
+      document.getElementById('member-caste-input').value = data.caste || '';
+      document.getElementById('member-subcaste-input').value = data.subcaste || '';
     } else {
       console.warn('Error:', data.message);
     }
@@ -1448,5 +1420,7 @@ document.addEventListener('DOMContentLoaded', function() {
     console.log('Fetching data for profile ID:', profileIdInput.value);
     fetchMemberDataFromDB(profileIdInput.value);
   }
+
+  // Age is fetched from the database and set via fetchMemberDataFromDB; no auto-calculation from birthday.
 });
 </script>

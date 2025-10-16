@@ -599,41 +599,137 @@ use App\Models\Education;
 use App\Models\MaritalStatus;
 
 Route::get('/service-details/{id}/{name}', function ($id, $name) {
+    // Find the service
     $service = Service::where('profile_id', $id)->first();
-    $member = Member::where('user_id', $id)->first();
+    if (!$service) {
+        abort(404, 'Service not found for this profile');
+    }
+    // Find the user associated with this service
+    $user = null;
+    if ($service->user_id) {
+        $user = \App\Models\User::find($service->user_id);
+    }
+    // If user not found via service, try finding by code
+    if (!$user) {
+        $user = \App\Models\User::where('code', $id)->first();
+    }
+    // Get member data
+    $member = null;
     $member_age = null;
     $member_marital_status = null;
     $member_education = null;
-    if ($member) {
-        $member_age = $member->age;
-        $member_marital_status = $member->maritalStatus ? $member->maritalStatus->name : null;
-        // Fetch education degree for this user_id
-        $education = Education::where('user_id', $member->user_id)->first();
+    $member_occupation = null;
+    $member_income = null;
+    $member_family_status = null;
+    $member_father_details = null;
+    $member_mother_details = null;
+    $member_sibling_details = null;
+    $member_caste = null;
+    $member_subcaste = null;
+    if ($user) {
+        $member = \App\Models\Member::where('user_id', $user->id)->first();
+        if ($member) {
+            // Calculate age from birthday
+            if ($member->birthday) {
+                $member_age = \Carbon\Carbon::parse($member->birthday)->age;
+            }
+            // Get marital status name
+            if ($member->marital_status_id) {
+                $maritalStatus = \App\Models\MaritalStatus::find($member->marital_status_id);
+                $member_marital_status = $maritalStatus ? $maritalStatus->name : null;
+            }
+            // Get other member details
+            $member_occupation = $member->occupation;
+            $member_income = $member->annual_income;
+            $member_family_status = $member->family_status;
+            $member_father_details = $member->father_details;
+            $member_mother_details = $member->mother_details;
+            $member_sibling_details = $member->sibling_details;
+            $member_caste = $member->caste;
+            $member_subcaste = $member->subcaste;
+        }
+        // Get education degree
+        $education = \App\Models\Education::where('user_id', $user->id)->first();
         if ($education) {
             $member_education = $education->degree;
         }
     }
-    if ($service) {
-        // Overwrite service fields if not already set
-        if (empty($service->member_age) && $member_age !== null) {
-            $service->member_age = $member_age;
-        }
-        if (empty($service->member_marital_status) && $member_marital_status !== null) {
-            $service->member_marital_status = $member_marital_status;
-        }
-        if (empty($service->member_education) && $member_education !== null) {
-            $service->member_education = $member_education;
-        }
+    // Auto-fill service fields if empty
+    if (empty($service->member_age) && $member_age !== null) {
+        $service->member_age = $member_age;
     }
-    if (!$service) {
-        abort(404, 'Service not found for this profile');
+    if (empty($service->member_marital_status) && $member_marital_status !== null) {
+        $service->member_marital_status = $member_marital_status;
+    }
+    if (empty($service->member_education) && $member_education !== null) {
+        $service->member_education = $member_education;
+    }
+    if (empty($service->member_occupation) && $member_occupation !== null) {
+        $service->member_occupation = $member_occupation;
+    }
+    if (empty($service->member_income) && $member_income !== null) {
+        $service->member_income = $member_income;
+    }
+    if (empty($service->member_family_status) && $member_family_status !== null) {
+        $service->member_family_status = $member_family_status;
+    }
+    if (empty($service->member_father_details) && $member_father_details !== null) {
+        $service->member_father_details = $member_father_details;
+    }
+    if (empty($service->member_mother_details) && $member_mother_details !== null) {
+        $service->member_mother_details = $member_mother_details;
+    }
+    if (empty($service->member_sibling_details) && $member_sibling_details !== null) {
+        $service->member_sibling_details = $member_sibling_details;
+    }
+    if (empty($service->member_caste) && $member_caste !== null) {
+        $service->member_caste = $member_caste;
+    }
+    if (empty($service->member_subcaste) && $member_subcaste !== null) {
+        $service->member_subcaste = $member_subcaste;
     }
     return view('profile.servicedetails', compact('service'));
 })->name('service.details');
 
 // Route for creating new service details (without existing service)
 Route::get('/profile/{id}/servicedetails', function ($id) {
-    return view('profile.servicedetails');
+    // Create a new service object with fetched data
+    $service = new Service();
+    $service->profile_id = $id;
+    // Find user by profile ID (code)
+    $user = \App\Models\User::where('code', $id)->first();
+    if ($user) {
+        $service->user_id = $user->id;
+        // Get member data
+        $member = \App\Models\Member::where('user_id', $user->id)->first();
+        if ($member) {
+            // Calculate age from birthday
+            if ($member->birthday) {
+                $service->member_age = \Carbon\Carbon::parse($member->birthday)->age;
+            }
+            // Get marital status name
+            if ($member->marital_status_id) {
+                $maritalStatus = \App\Models\MaritalStatus::find($member->marital_status_id);
+                $service->member_marital_status = $maritalStatus ? $maritalStatus->name : '';
+            }
+            // Fill other member details
+            $service->member_name = $user->name ?? ($user->first_name . ' ' . $user->last_name);
+            $service->member_occupation = $member->occupation;
+            $service->member_income = $member->annual_income;
+            $service->member_family_status = $member->family_status;
+            $service->member_father_details = $member->father_details;
+            $service->member_mother_details = $member->mother_details;
+            $service->member_sibling_details = $member->sibling_details;
+            $service->member_caste = $member->caste;
+            $service->member_subcaste = $member->subcaste;
+        }
+        // Get education degree
+        $education = \App\Models\Education::where('user_id', $user->id)->first();
+        if ($education) {
+            $service->member_education = $education->degree;
+        }
+    }
+    return view('profile.servicedetails', compact('service'));
 })->name('profile.servicedetails');
 
 // New Service page route (show list for executive or admin)
@@ -757,8 +853,10 @@ Route::get('/profile/newservice', function (\Illuminate\Http\Request $request) {
 Route::post('/get-member-data', function (Request $request) {
     try {
         $profileIdOrUserId = $request->input('user_id');
-        // Try to find by user_id directly
+        
+        // First, try to find by user_id directly
         $user = \App\Models\User::find($profileIdOrUserId);
+        
         // If not found, try to find the Service by profile_id and get its user
         if (!$user) {
             $service = \App\Models\Service::where('profile_id', $profileIdOrUserId)->first();
@@ -766,31 +864,39 @@ Route::post('/get-member-data', function (Request $request) {
                 $user = \App\Models\User::find($service->user_id);
             }
         }
+        
         // If still not found, try finding user by code field
         if (!$user) {
             $user = \App\Models\User::where('code', $profileIdOrUserId)->first();
         }
+        
         if (!$user) {
             return response()->json(['success' => false, 'message' => 'User not found. Tried profile_id: ' . $profileIdOrUserId]);
         }
+        
+        // Get member data
         $member = \App\Models\Member::where('user_id', $user->id)->first();
         if (!$member) {
             return response()->json(['success' => false, 'message' => 'Member not found']);
         }
+        
         // Calculate age from birthday
         $age = null;
         if ($member->birthday) {
             $age = \Carbon\Carbon::parse($member->birthday)->age;
         }
-        // Get education degree
+        
+        // Get education degree from education table
         $education = \App\Models\Education::where('user_id', $user->id)->first();
         $educationDegree = $education ? $education->degree : '';
-        // Get marital status name
+        
+        // Get marital status name from marital_statuses table
         $maritalStatusName = '';
         if ($member->marital_status_id) {
             $maritalStatus = \App\Models\MaritalStatus::find($member->marital_status_id);
             $maritalStatusName = $maritalStatus ? $maritalStatus->name : '';
         }
+        
         return response()->json([
             'success' => true,
             'member_name' => $user->name ?? ($user->first_name . ' ' . $user->last_name),
@@ -799,7 +905,13 @@ Route::post('/get-member-data', function (Request $request) {
             'education' => $educationDegree,
             'marital_status' => $maritalStatusName,
             'occupation' => $member->occupation ?? '',
-            'income' => $member->annual_income ?? ''
+            'income' => $member->annual_income ?? '',
+            'family_status' => $member->family_status ?? '',
+            'father_details' => $member->father_details ?? '',
+            'mother_details' => $member->mother_details ?? '',
+            'sibling_details' => $member->sibling_details ?? '',
+            'caste' => $member->caste ?? '',
+            'subcaste' => $member->subcaste ?? ''
         ]);
     } catch (\Exception $e) {
         return response()->json(['success' => false, 'message' => 'Error: ' . $e->getMessage()]);
