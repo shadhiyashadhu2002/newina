@@ -734,6 +734,67 @@ Route::get('/service-details/{id}/{name}', function ($id, $name) {
     if (empty($service->member_subcaste) && $member_subcaste !== null) {
         $service->member_subcaste = $member_subcaste;
     }
+    // Partner preferences: try to fetch from partner_expectations by user (robust column names)
+    if ($user) {
+        $pe = \App\Models\PartnerExpectation::where('user_id', $user->id)->first();
+        if ($pe) {
+            // helper to prefer id->lookup or string directly
+            $getIdOrValue = function ($modelClass, $idOrValue) {
+                if (!$idOrValue) return null;
+                // numeric -> lookup
+                if (is_numeric($idOrValue)) {
+                    $m = $modelClass::find($idOrValue);
+                    return $m ? ($m->name ?? ($m->value ?? null)) : null;
+                }
+                // string -> use directly
+                return $idOrValue;
+            };
+
+            if (empty($service->preferred_weight) && ($pe->weight ?? null)) {
+                $service->preferred_weight = $pe->weight;
+            }
+            if (empty($service->preferred_education) && ($pe->education ?? null)) {
+                $service->preferred_education = $pe->education;
+            }
+
+            // religion: try several keys
+            $religionKey = $pe->religion_id ?? $pe->religion ?? null;
+            if (empty($service->preferred_religion) && $religionKey) {
+                $service->preferred_religion = $getIdOrValue('\App\\Models\\Religion', $religionKey);
+            }
+
+            // caste
+            $casteKey = $pe->caste_id ?? $pe->caste ?? null;
+            if (empty($service->preferred_caste) && $casteKey) {
+                $service->preferred_caste = $getIdOrValue('\App\\Models\\Caste', $casteKey);
+            }
+
+            // subcaste
+            $subKey = $pe->sub_caste_id ?? $pe->subcaste ?? $pe->sub_cast_id ?? null;
+            if (empty($service->preferred_subcaste) && $subKey) {
+                $service->preferred_subcaste = $getIdOrValue('\App\\Models\\SubCaste', $subKey);
+            }
+
+            // marital status
+            $msKey = $pe->marital_status_id ?? $pe->marital_status ?? null;
+            if (empty($service->preferred_marital_status) && $msKey) {
+                $service->preferred_marital_status = $getIdOrValue('\App\\Models\\MaritalStatus', $msKey);
+            }
+
+            // profession / occupation
+            $prof = $pe->profession ?? $pe->profession_title ?? $pe->profession_id ?? null;
+            if (empty($service->preferred_occupation) && $prof) {
+                // if numeric, try to lookup in careers? but partner expectation likely stores string
+                $service->preferred_occupation = is_numeric($prof) ? (\App\Models\Career::find($prof)->designation ?? null) : $prof;
+            }
+
+            // family value
+            $fvKey = $pe->family_value_id ?? $pe->family_value ?? null;
+            if (empty($service->preferred_family_status) && $fvKey) {
+                $service->preferred_family_status = $getIdOrValue('\App\\Models\\FamilyValue', $fvKey);
+            }
+        }
+    }
     return view('profile.servicedetails', compact('service'));
 })->name('service.details');
 
@@ -804,6 +865,39 @@ Route::get('/profile/{id}/servicedetails', function ($id) {
         $education = \App\Models\Education::where('user_id', $user->id)->first();
         if ($education) {
             $service->member_education = $education->degree;
+        }
+        // Partner preferences from partner_expectations (populate preferred_* fields)
+        $pe = \App\Models\PartnerExpectation::where('user_id', $user->id)->first();
+        if ($pe) {
+            if (empty($service->preferred_weight) && $pe->weight) {
+                $service->preferred_weight = $pe->weight;
+            }
+            if (empty($service->preferred_education) && $pe->education) {
+                $service->preferred_education = $pe->education;
+            }
+            if (empty($service->preferred_religion) && $pe->religion_id) {
+                $rel = \App\Models\Religion::find($pe->religion_id);
+                $service->preferred_religion = $rel ? $rel->name : null;
+            }
+            if (empty($service->preferred_caste) && $pe->caste_id) {
+                $cast = \App\Models\Caste::find($pe->caste_id);
+                $service->preferred_caste = $cast ? $cast->name : null;
+            }
+            if (empty($service->preferred_subcaste) && $pe->sub_caste_id) {
+                $sub = \App\Models\SubCaste::find($pe->sub_caste_id);
+                $service->preferred_subcaste = $sub ? $sub->name : null;
+            }
+            if (empty($service->preferred_marital_status) && $pe->marital_status_id) {
+                $ms = \App\Models\MaritalStatus::find($pe->marital_status_id);
+                $service->preferred_marital_status = $ms ? $ms->name : null;
+            }
+            if (empty($service->preferred_occupation) && $pe->profession) {
+                $service->preferred_occupation = $pe->profession;
+            }
+            if (empty($service->preferred_family_status) && $pe->family_value_id) {
+                $fv = \App\Models\FamilyValue::find($pe->family_value_id);
+                $service->preferred_family_status = $fv ? $fv->value : null;
+            }
         }
     }
     return view('profile.servicedetails', compact('service'));
@@ -895,6 +989,66 @@ Route::get('/debug-staff-dropdown', function () {
 });
 
 
+// Debug: return partner_expectations and resolved lookups for a profile/user
+Route::get('/debug/partner-expectations/{profileId}', function ($profileId) {
+    try {
+        // Find user by id, code, or service.member_name
+        $user = \App\Models\User::find($profileId);
+        if (!$user) {
+            $user = \App\Models\User::where('code', $profileId)->first();
+        }
+        if (!$user) {
+            $service = \App\Models\Service::where('profile_id', $profileId)->first();
+            if ($service && $service->member_name) {
+                $user = \App\Models\User::where('name', 'like', '%' . $service->member_name . '%')->first();
+            }
+        }
+        if (!$user) {
+            return response()->json(['success' => false, 'message' => 'User not found for: ' . $profileId]);
+        }
+
+        $pe = \App\Models\PartnerExpectation::where('user_id', $user->id)->first();
+
+        $resolved = [
+            'partner_expectation' => $pe ? $pe->toArray() : null,
+            'resolved' => []
+        ];
+
+        if ($pe) {
+            // Resolve lookups
+            $resolved['resolved']['religion'] = null;
+            if (!empty($pe->religion_id)) {
+                $r = \App\Models\Religion::find($pe->religion_id);
+                $resolved['resolved']['religion'] = $r ? $r->name : null;
+            }
+            $resolved['resolved']['caste'] = null;
+            if (!empty($pe->caste_id)) {
+                $c = \App\Models\Caste::find($pe->caste_id);
+                $resolved['resolved']['caste'] = $c ? $c->name : null;
+            }
+            $resolved['resolved']['sub_caste'] = null;
+            if (!empty($pe->sub_caste_id)) {
+                $s = \App\Models\SubCaste::find($pe->sub_caste_id);
+                $resolved['resolved']['sub_caste'] = $s ? $s->name : null;
+            }
+            $resolved['resolved']['marital_status'] = null;
+            if (!empty($pe->marital_status_id)) {
+                $m = \App\Models\MaritalStatus::find($pe->marital_status_id);
+                $resolved['resolved']['marital_status'] = $m ? $m->name : null;
+            }
+            $resolved['resolved']['family_value'] = null;
+            if (!empty($pe->family_value_id)) {
+                $fv = \App\Models\FamilyValue::find($pe->family_value_id);
+                $resolved['resolved']['family_value'] = $fv ? $fv->value : null;
+            }
+        }
+
+        return response()->json(['success' => true, 'user_id' => $user->id, 'data' => $resolved]);
+    } catch (\Exception $e) {
+        return response()->json(['success' => false, 'error' => $e->getMessage()]);
+    }
+});
+
 Route::get('/staff-target-assign', function () {
     return view('stafftarget');
 })->name('stafftarget.page');
@@ -931,30 +1085,38 @@ Route::post('/get-member-data', function (Request $request) {
     try {
         $profileIdOrUserId = $request->input('user_id');
         
+        $user = null;
+        
         // First, try to find by user_id directly
         $user = \App\Models\User::find($profileIdOrUserId);
         
-        // If not found, try to find the Service by profile_id and get its user
-        if (!$user) {
-            $service = \App\Models\Service::where('profile_id', $profileIdOrUserId)->first();
-            if ($service && isset($service->user_id)) {
-                $user = \App\Models\User::find($service->user_id);
-            }
-        }
-        
-        // If still not found, try finding user by code field
+        // If not found, try finding user by code field (profile_id)
         if (!$user) {
             $user = \App\Models\User::where('code', $profileIdOrUserId)->first();
         }
         
+        // If still not found, try by member_name in services table
         if (!$user) {
-            return response()->json(['success' => false, 'message' => 'User not found. Tried profile_id: ' . $profileIdOrUserId]);
+            $service = \App\Models\Service::where('profile_id', $profileIdOrUserId)->first();
+            if ($service && $service->member_name) {
+                $user = \App\Models\User::where('name', 'like', '%' . $service->member_name . '%')->first();
+            }
+        }
+        
+        if (!$user) {
+            return response()->json([
+                'success' => false, 
+                'message' => 'User not found. Profile ID: ' . $profileIdOrUserId . '. Please ensure the profile exists in the system.'
+            ]);
         }
         
         // Get member data
         $member = \App\Models\Member::where('user_id', $user->id)->first();
         if (!$member) {
-            return response()->json(['success' => false, 'message' => 'Member not found']);
+            return response()->json([
+                'success' => false, 
+                'message' => 'Member details not found for this user'
+            ]);
         }
         
         // Calculate age from birthday
@@ -974,6 +1136,134 @@ Route::post('/get-member-data', function (Request $request) {
             $maritalStatusName = $maritalStatus ? $maritalStatus->name : '';
         }
         
+        // Get career information
+        $occupation = '';
+        $career = \App\Models\Career::where('user_id', $user->id)->first();
+        if ($career) {
+            $occupation = $career->designation ?? '';
+        }
+        
+        // Get income from annual_salary_ranges
+        $income = '';
+        if ($member->annual_salary_range_id) {
+            $salaryRange = \App\Models\AnnualSalaryRange::find($member->annual_salary_range_id);
+            if ($salaryRange) {
+                $income = number_format($salaryRange->min_salary, 2) . '-' . number_format($salaryRange->max_salary, 2);
+            }
+        }
+        
+        // Get family details
+        $father_details = '';
+        $mother_details = '';
+        $sibling_details = '';
+        $family = \App\Models\Family::where('user_id', $user->id)->first();
+        if ($family) {
+            $father_details = $family->father ?? '';
+            if ($family->father_occupation) {
+                $father_details .= $family->father ? (', ' . $family->father_occupation) : $family->father_occupation;
+            }
+            
+            $mother_details = $family->mother ?? '';
+            if ($family->mother_occupation) {
+                $mother_details .= $family->mother ? (', ' . $family->mother_occupation) : $family->mother_occupation;
+            }
+            
+            $sibling_parts = [];
+            if ($family->no_of_sisters && $family->no_of_sisters > 0) {
+                $sibling_parts[] = $family->no_of_sisters . ' sister' . ($family->no_of_sisters > 1 ? 's' : '');
+            }
+            if ($family->no_of_brothers && $family->no_of_brothers > 0) {
+                $sibling_parts[] = $family->no_of_brothers . ' brother' . ($family->no_of_brothers > 1 ? 's' : '');
+            }
+            if ($family->about_sibling) {
+                $sibling_parts[] = $family->about_sibling;
+            }
+            $sibling_details = count($sibling_parts) ? implode(', ', $sibling_parts) : '';
+        }
+        
+        // Get caste and subcaste from spiritual_backgrounds
+        $caste = '';
+        $subcaste = '';
+        $spiritual = \App\Models\SpiritualBackground::where('user_id', $user->id)->first();
+        if ($spiritual) {
+            $religion = \App\Models\Religion::find($spiritual->religion_id);
+            $caste = $religion ? $religion->name : '';
+            
+            $casteObj = \App\Models\Caste::find($spiritual->caste_id);
+            $subcaste = $casteObj ? $casteObj->name : '';
+        }
+        
+        // Fetch partner preferences from partner_expectations table
+        $preferred_weight = '';
+        $preferred_education = '';
+        $preferred_religion = '';
+        $preferred_caste = '';
+        $preferred_subcaste = '';
+        $preferred_marital_status = '';
+        $preferred_occupation = '';
+        $preferred_family_status = '';
+        $preferred_eating_habits = '';
+    $preferred_annual_income = '';
+        
+        $pe = \App\Models\PartnerExpectation::where('user_id', $user->id)->first();
+        if ($pe) {
+            // Weight - direct column value
+            $preferred_weight = $pe->weight ?? '';
+            
+            // Education - direct column value
+            $preferred_education = $pe->education ?? '';
+            
+            // Religion - look up from religions table
+            if ($pe->religion_id) {
+                $religion = \App\Models\Religion::find($pe->religion_id);
+                $preferred_religion = $religion ? $religion->name : '';
+            }
+            
+            // Caste - look up from castes table
+            if ($pe->caste_id) {
+                $casteObj = \App\Models\Caste::find($pe->caste_id);
+                $preferred_caste = $casteObj ? $casteObj->name : '';
+            }
+            
+            // Subcaste - look up from sub_castes table
+            if ($pe->sub_caste_id) {
+                $subcasteObj = \App\Models\SubCaste::find($pe->sub_caste_id);
+                $preferred_subcaste = $subcasteObj ? $subcasteObj->name : '';
+            }
+            
+            // Marital status - look up from marital_statuses table
+            if ($pe->marital_status_id) {
+                $maritalStatusObj = \App\Models\MaritalStatus::find($pe->marital_status_id);
+                $preferred_marital_status = $maritalStatusObj ? $maritalStatusObj->name : '';
+            }
+            
+            // Occupation - direct column value (profession)
+            $preferred_occupation = $pe->profession ?? '';
+            
+            // Family status - look up from family_values table
+            if ($pe->family_value_id) {
+                $familyValueObj = \App\Models\FamilyValue::find($pe->family_value_id);
+                $preferred_family_status = $familyValueObj ? $familyValueObj->value : '';
+            }
+            
+            // Eating habits - direct column value
+            $preferred_eating_habits = $pe->eating_habits ?? $pe->diet ?? '';
+
+            // Annual income - direct column value
+            $preferred_annual_income = $pe->annual_income ?? '';
+
+            // Age - prefer explicit min/max columns if present
+            $preferred_age_min = $pe->preferred_age_min ?? null;
+            $preferred_age_max = $pe->preferred_age_max ?? null;
+
+            // Height, complexion, body type, smoking and drinking
+            $preferred_height = $pe->height ?? '';
+            $preferred_complexion = $pe->complexion ?? '';
+            $preferred_body_type = $pe->body_type ?? '';
+            $preferred_smoking = $pe->smoking_acceptable ?? '';
+            $preferred_drinking = $pe->drinking_acceptable ?? '';
+        }
+        
         return response()->json([
             'success' => true,
             'member_name' => $user->name ?? ($user->first_name . ' ' . $user->last_name),
@@ -981,16 +1271,43 @@ Route::post('/get-member-data', function (Request $request) {
             'age' => $age,
             'education' => $educationDegree,
             'marital_status' => $maritalStatusName,
-            'occupation' => $member->occupation ?? '',
-            'income' => $member->annual_income ?? '',
+            'occupation' => $occupation,
+            'income' => $income,
             'family_status' => $member->family_status ?? '',
-            'father_details' => $member->father_details ?? '',
-            'mother_details' => $member->mother_details ?? '',
-            'sibling_details' => $member->sibling_details ?? '',
-            'caste' => $member->caste ?? '',
-            'subcaste' => $member->subcaste ?? ''
+            'father_details' => $father_details,
+            'mother_details' => $mother_details,
+            'sibling_details' => $sibling_details,
+            'caste' => $caste,
+            'subcaste' => $subcaste,
+            'preferred_age_min' => $preferred_age_min,
+            'preferred_age_max' => $preferred_age_max,
+            // For backward compatibility provide preferred_age as string
+            'preferred_age' => ($preferred_age_min && $preferred_age_max) ? ($preferred_age_min . '-' . $preferred_age_max) : ($preferred_age_min ?? ''),
+            'preferred_weight' => $preferred_weight,
+            'preferred_education' => $preferred_education,
+            'preferred_religion' => $preferred_religion,
+            'preferred_caste' => $preferred_caste,
+            'preferred_subcaste' => $preferred_subcaste,
+            'preferred_marital_status' => $preferred_marital_status,
+            'preferred_occupation' => $preferred_occupation,
+            'preferred_family_status' => $preferred_family_status,
+            'preferred_eating_habits' => $preferred_eating_habits,
+            'preferred_annual_income' => $preferred_annual_income,
+            'preferred_height' => $preferred_height,
+            'preferred_complexion' => $preferred_complexion,
+            'preferred_body_type' => $preferred_body_type,
+            'preferred_smoking' => $preferred_smoking,
+            'preferred_drinking' => $preferred_drinking
         ]);
+        
     } catch (\Exception $e) {
-        return response()->json(['success' => false, 'message' => 'Error: ' . $e->getMessage()]);
+        \Illuminate\Support\Facades\Log::error('Error in get-member-data', [
+            'error' => $e->getMessage(),
+            'user_input' => $request->input('user_id')
+        ]);
+        return response()->json([
+            'success' => false, 
+            'message' => 'Error: ' . $e->getMessage()
+        ]);
     }
 });

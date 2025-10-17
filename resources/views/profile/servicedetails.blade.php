@@ -609,11 +609,18 @@
             <h3>Partner Preferences</h3>
             <div class="form-row">
               <div class="form-group">
-                <label>Preferred Age</label>
-                <input type="number" name="preferred_age" id="preferred-age-input" placeholder="Preferred Age" 
-                       value="{{ isset($service) ? $service->preferred_age : '' }}" 
+                <label>Preferred Age (Min)</label>
+                <input type="number" name="preferred_age_min" id="preferred-age-min-input" placeholder="Preferred Age Min" 
+                       value="{{ isset($service) ? ($service->preferred_age_min ?? '') : '' }}" 
                        maxlength="2" max="99" min="18"
                        {{ isset($service) ? 'readonly' : '' }} required>
+              </div>
+              <div class="form-group">
+                <label>Preferred Age (Max)</label>
+                <input type="number" name="preferred_age_max" id="preferred-age-max-input" placeholder="Preferred Age Max" 
+                       value="{{ isset($service) ? ($service->preferred_age_max ?? '') : '' }}" 
+                       maxlength="2" max="99" min="18"
+                       {{ isset($service) ? 'readonly' : '' }} >
               </div>
               <div class="form-group">
                 <label>Preferred Weight</label>
@@ -676,6 +683,42 @@
                 <input type="text" name="preferred_family_status" id="preferred-family-status-input" placeholder="Preferred Family Status" 
                        value="{{ isset($service) ? $service->preferred_family_status : '' }}" 
                        {{ isset($service) ? 'readonly' : '' }} required>
+              </div>
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label>Preferred Height</label>
+                <input type="text" name="preferred_height" id="preferred-height-input" placeholder="Preferred Height"
+                       value="{{ isset($service) ? ($service->preferred_height ?? '') : '' }}"
+                       {{ isset($service) ? 'readonly' : '' }} >
+              </div>
+              <div class="form-group">
+                <label>Preferred Complexion</label>
+                <input type="text" name="preferred_complexion" id="preferred-complexion-input" placeholder="Preferred Complexion"
+                       value="{{ isset($service) ? ($service->preferred_complexion ?? '') : '' }}"
+                       {{ isset($service) ? 'readonly' : '' }} >
+              </div>
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label>Preferred Body Type</label>
+                <input type="text" name="preferred_body_type" id="preferred-body-type-input" placeholder="Preferred Body Type"
+                       value="{{ isset($service) ? ($service->preferred_body_type ?? '') : '' }}"
+                       {{ isset($service) ? 'readonly' : '' }} >
+              </div>
+              <div class="form-group">
+                <label>Smoking (acceptable)</label>
+                <input type="text" name="preferred_smoking" id="preferred-smoking-input" placeholder="Smoking acceptable"
+                       value="{{ isset($service) ? ($service->preferred_smoking ?? '') : '' }}"
+                       {{ isset($service) ? 'readonly' : '' }} >
+              </div>
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label>Drinking (acceptable)</label>
+                <input type="text" name="preferred_drinking" id="preferred-drinking-input" placeholder="Drinking acceptable"
+                       value="{{ isset($service) ? ($service->preferred_drinking ?? '') : '' }}"
+                       {{ isset($service) ? 'readonly' : '' }} >
               </div>
             </div>
             <div class="form-row">
@@ -944,7 +987,8 @@ function setupFormNavigation() {
       
       saveSection('partner', {
         profile_id: document.getElementById('profile-id-input').value,
-        preferred_age: document.getElementById('preferred-age-input')?.value || '',
+        preferred_age_min: document.getElementById('preferred-age-min-input')?.value || '',
+        preferred_age_max: document.getElementById('preferred-age-max-input')?.value || '',
         preferred_weight: document.getElementById('preferred-weight-input')?.value || '',
         preferred_education: document.getElementById('preferred-education-input')?.value || '',
         preferred_religion: document.getElementById('preferred-religion-input')?.value || '',
@@ -954,7 +998,12 @@ function setupFormNavigation() {
         preferred_annual_income: document.getElementById('preferred-annual-income-input')?.value || '',
         preferred_occupation: document.getElementById('preferred-occupation-input')?.value || '',
         preferred_family_status: document.getElementById('preferred-family-status-input')?.value || '',
-        preferred_eating_habits: document.getElementById('preferred-eating-habits-input')?.value || ''
+        preferred_eating_habits: document.getElementById('preferred-eating-habits-input')?.value || '',
+        preferred_height: document.getElementById('preferred-height-input')?.value || '',
+        preferred_complexion: document.getElementById('preferred-complexion-input')?.value || '',
+        preferred_body_type: document.getElementById('preferred-body-type-input')?.value || '',
+        preferred_smoking: document.getElementById('preferred-smoking-input')?.value || '',
+        preferred_drinking: document.getElementById('preferred-drinking-input')?.value || ''
       }, function() {
         document.getElementById('step-3').style.display = 'none';
         document.getElementById('step-4').style.display = 'block';
@@ -1146,12 +1195,12 @@ window.confirmLogout = function() {
 
 
 
-const isViewMode = {{ isset($service) ? 'true' : 'false' }};
+  const isViewMode = @json(isset($service) ? true : false);
 
 // Initialize the page
 function initializePage() {
   setupFormValidations();
-  const isAdmin = {{ Auth::check() && Auth::user()->is_admin ? 'true' : 'false' }};
+  const isAdmin = @json(Auth::check() && Auth::user() && Auth::user()->is_admin ? true : false);
   if (!isViewMode) {
     if (document.getElementById('profile-id-input')) {
       document.getElementById('profile-id-input').value = 'INA001';
@@ -1205,13 +1254,18 @@ function setupFormValidations() {
       }
     });
   }
-  const preferredAgeInput = document.getElementById('preferred-age-input');
-  if (preferredAgeInput) {
-    preferredAgeInput.addEventListener('input', function() {
+  const preferredAgeMinInput = document.getElementById('preferred-age-min-input');
+  if (preferredAgeMinInput) {
+    preferredAgeMinInput.addEventListener('input', function() {
       this.value = this.value.replace(/[^0-9]/g, '');
-      if (this.value.length > 2) {
-        this.value = this.value.slice(0, 2);
-      }
+      if (this.value.length > 2) this.value = this.value.slice(0, 2);
+    });
+  }
+  const preferredAgeMaxInput = document.getElementById('preferred-age-max-input');
+  if (preferredAgeMaxInput) {
+    preferredAgeMaxInput.addEventListener('input', function() {
+      this.value = this.value.replace(/[^0-9]/g, '');
+      if (this.value.length > 2) this.value = this.value.slice(0, 2);
     });
   }
 }
@@ -1399,6 +1453,28 @@ function fetchMemberDataFromDB(userId) {
       document.getElementById('member-sibling-details-input').value = data.sibling_details || '';
       document.getElementById('member-caste-input').value = data.caste || '';
       document.getElementById('member-subcaste-input').value = data.subcaste || '';
+  // Partner Preferences
+  if (document.getElementById('preferred-age-min-input')) {
+    document.getElementById('preferred-age-min-input').value = data.preferred_age_min || '';
+  }
+  if (document.getElementById('preferred-age-max-input')) {
+    document.getElementById('preferred-age-max-input').value = data.preferred_age_max || '';
+  }
+  document.getElementById('preferred-weight-input').value = data.preferred_weight || '';
+  document.getElementById('preferred-education-input').value = data.preferred_education || '';
+  document.getElementById('preferred-religion-input').value = data.preferred_religion || '';
+  document.getElementById('preferred-caste-input').value = data.preferred_caste || '';
+  document.getElementById('preferred-subcaste-input').value = data.preferred_subcaste || '';
+  document.getElementById('preferred-marital-status-input').value = data.preferred_marital_status || '';
+  document.getElementById('preferred-annual-income-input').value = data.preferred_annual_income || '';
+  document.getElementById('preferred-occupation-input').value = data.preferred_occupation || '';
+  document.getElementById('preferred-family-status-input').value = data.preferred_family_status || '';
+  document.getElementById('preferred-eating-habits-input').value = data.preferred_eating_habits || '';
+  document.getElementById('preferred-height-input').value = data.preferred_height || '';
+  document.getElementById('preferred-complexion-input').value = data.preferred_complexion || '';
+  document.getElementById('preferred-body-type-input').value = data.preferred_body_type || '';
+  document.getElementById('preferred-smoking-input').value = data.preferred_smoking || '';
+  document.getElementById('preferred-drinking-input').value = data.preferred_drinking || '';
     } else {
       console.warn('Error:', data.message);
     }

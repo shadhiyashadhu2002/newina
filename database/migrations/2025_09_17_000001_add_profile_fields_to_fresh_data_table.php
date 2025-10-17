@@ -8,31 +8,104 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::table('fresh_data', function (Blueprint $table) {
-            $table->string('gender')->nullable();
-            $table->date('registration_date')->nullable();
-            $table->string('profile_id')->nullable();
-            $table->string('mobile_number_2')->nullable();
-            $table->string('whatsapp_number')->nullable();
-            $table->boolean('profile_created')->default(false);
-            $table->boolean('photo_uploaded')->default(false);
-            $table->boolean('welcome_call')->default(false);
-        });
+        if (!Schema::hasTable('fresh_data')) {
+            return;
+        }
+
+        if (!Schema::hasColumn('fresh_data', 'gender')) {
+            Schema::table('fresh_data', function (Blueprint $table) {
+                $table->string('gender')->nullable();
+            });
+        }
+
+        if (!Schema::hasColumn('fresh_data', 'registration_date')) {
+            Schema::table('fresh_data', function (Blueprint $table) {
+                $table->date('registration_date')->nullable();
+            });
+        }
+
+        if (!Schema::hasColumn('fresh_data', 'profile_id')) {
+            Schema::table('fresh_data', function (Blueprint $table) {
+                $table->string('profile_id')->nullable();
+            });
+        }
+
+        if (!Schema::hasColumn('fresh_data', 'mobile_number_2')) {
+            Schema::table('fresh_data', function (Blueprint $table) {
+                $table->string('mobile_number_2')->nullable();
+            });
+        }
+
+        if (!Schema::hasColumn('fresh_data', 'whatsapp_number')) {
+            Schema::table('fresh_data', function (Blueprint $table) {
+                $table->string('whatsapp_number')->nullable();
+            });
+        }
+
+        if (!Schema::hasColumn('fresh_data', 'profile_created')) {
+            Schema::table('fresh_data', function (Blueprint $table) {
+                $table->boolean('profile_created')->default(false);
+            });
+        }
+
+        if (!Schema::hasColumn('fresh_data', 'photo_uploaded')) {
+            Schema::table('fresh_data', function (Blueprint $table) {
+                $table->boolean('photo_uploaded')->default(false);
+            });
+        }
+
+        if (!Schema::hasColumn('fresh_data', 'welcome_call')) {
+            Schema::table('fresh_data', function (Blueprint $table) {
+                $table->boolean('welcome_call')->default(false);
+            });
+        }
     }
 
     public function down(): void
     {
-        Schema::table('fresh_data', function (Blueprint $table) {
-            $table->dropColumn([
-                'gender',
-                'registration_date',
-                'profile_id',
-                'mobile_number_2',
-                'whatsapp_number',
-                'profile_created',
-                'photo_uploaded',
-                'welcome_call',
-            ]);
-        });
+        if (!Schema::hasTable('fresh_data')) {
+            return;
+        }
+
+        if (Schema::hasColumn('fresh_data', 'gender')) {
+            Schema::table('fresh_data', function (Blueprint $table) {
+                $table->dropColumn('gender');
+            });
+        }
+        if (Schema::hasColumn('fresh_data', 'registration_date')) {
+            Schema::table('fresh_data', function (Blueprint $table) {
+                $table->dropColumn('registration_date');
+            });
+        }
+        if (Schema::hasColumn('fresh_data', 'profile_id')) {
+            Schema::table('fresh_data', function (Blueprint $table) {
+                $table->dropColumn('profile_id');
+            });
+        }
+        if (Schema::hasColumn('fresh_data', 'mobile_number_2')) {
+            Schema::table('fresh_data', function (Blueprint $table) {
+                $table->dropColumn('mobile_number_2');
+            });
+        }
+        if (Schema::hasColumn('fresh_data', 'whatsapp_number')) {
+            Schema::table('fresh_data', function (Blueprint $table) {
+                $table->dropColumn('whatsapp_number');
+            });
+        }
+        if (Schema::hasColumn('fresh_data', 'profile_created')) {
+            Schema::table('fresh_data', function (Blueprint $table) {
+                $table->dropColumn('profile_created');
+            });
+        }
+        if (Schema::hasColumn('fresh_data', 'photo_uploaded')) {
+            Schema::table('fresh_data', function (Blueprint $table) {
+                $table->dropColumn('photo_uploaded');
+            });
+        }
+        if (Schema::hasColumn('fresh_data', 'welcome_call')) {
+            Schema::table('fresh_data', function (Blueprint $table) {
+                $table->dropColumn('welcome_call');
+            });
+        }
     }
 };

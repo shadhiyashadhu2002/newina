@@ -524,6 +524,116 @@ class ServiceController extends Controller
                 $service->save();
             }
 
+            // If partner section, persist partner expectations to partner_expectations table
+            if ($section === 'partner') {
+                try {
+                    $profileId = $service->profile_id;
+                    // Try to find user by id or code
+                    $user = null;
+                    if (is_numeric($profileId)) {
+                        $user = \App\Models\User::find($profileId);
+                    }
+                    if (!$user) {
+                        $user = \App\Models\User::where('code', $profileId)->first();
+                    }
+
+                    if ($user) {
+                        $peData = [];
+                        // Map incoming frontend keys to DB columns
+                        if ($request->has('preferred_age')) {
+                            $val = $request->input('preferred_age');
+                            // If a range like 25-30 provided, split
+                            if (strpos($val, '-') !== false) {
+                                [$min, $max] = array_map('trim', explode('-', $val, 2));
+                                $peData['preferred_age_min'] = is_numeric($min) ? (int)$min : null;
+                                $peData['preferred_age_max'] = is_numeric($max) ? (int)$max : null;
+                            } else {
+                                $peData['preferred_age_min'] = is_numeric($val) ? (int)$val : null;
+                            }
+                        }
+                        if ($request->has('preferred_age_min')) {
+                            $peData['preferred_age_min'] = is_numeric($request->input('preferred_age_min')) ? (int)$request->input('preferred_age_min') : null;
+                        }
+                        if ($request->has('preferred_age_max')) {
+                            $peData['preferred_age_max'] = is_numeric($request->input('preferred_age_max')) ? (int)$request->input('preferred_age_max') : null;
+                        }
+                        if ($request->has('preferred_height')) {
+                            $peData['preferred_height'] = $request->input('preferred_height');
+                        }
+                        if ($request->has('preferred_weight')) {
+                            $peData['preferred_weight'] = $request->input('preferred_weight');
+                        }
+                        if ($request->has('preferred_complexion')) {
+                            $peData['complexion'] = $request->input('preferred_complexion');
+                        }
+                        if ($request->has('preferred_body_type')) {
+                            $peData['preferred_body_type'] = $request->input('preferred_body_type');
+                        }
+                        if ($request->has('preferred_education')) {
+                            $peData['preferred_education'] = $request->input('preferred_education');
+                        }
+                        if ($request->has('preferred_occupation')) {
+                            $peData['preferred_profession'] = $request->input('preferred_occupation');
+                        }
+                        if ($request->has('preferred_annual_income')) {
+                            $peData['preferred_annual_income'] = $request->input('preferred_annual_income');
+                        }
+                        // smoking/drinking inputs could be strings like 'Yes'/'No' — normalize to boolean/null
+                        if ($request->has('preferred_smoking')) {
+                            $v = strtolower($request->input('preferred_smoking'));
+                            if (in_array($v, ['yes','y','true','1'])) $peData['smoking_acceptable'] = 1;
+                            elseif (in_array($v, ['no','n','false','0'])) $peData['smoking_acceptable'] = 0;
+                            else $peData['smoking_acceptable'] = null;
+                        }
+                        if ($request->has('preferred_drinking')) {
+                            $v = strtolower($request->input('preferred_drinking'));
+                            if (in_array($v, ['yes','y','true','1'])) $peData['drinking_acceptable'] = 1;
+                            elseif (in_array($v, ['no','n','false','0'])) $peData['drinking_acceptable'] = 0;
+                            else $peData['drinking_acceptable'] = null;
+                        }
+                        if ($request->has('preferred_eating_habits')) {
+                            $peData['diet'] = $request->input('preferred_eating_habits');
+                        }
+
+                        // Resolve textual lookups to IDs where possible
+                        if ($request->has('preferred_religion')) {
+                            $val = $request->input('preferred_religion');
+                            $rel = \App\Models\Religion::where('name', 'like', $val)->orWhere('name', 'like', '%' . $val . '%')->first();
+                            if ($rel) $peData['preferred_religion_id'] = $rel->id;
+                        }
+                        if ($request->has('preferred_caste')) {
+                            $val = $request->input('preferred_caste');
+                            $c = \App\Models\Caste::where('name', 'like', $val)->orWhere('name', 'like', '%' . $val . '%')->first();
+                            if ($c) $peData['preferred_caste_id'] = $c->id;
+                        }
+                        if ($request->has('preferred_subcaste')) {
+                            $val = $request->input('preferred_subcaste');
+                            $sc = \App\Models\SubCaste::where('name', 'like', $val)->orWhere('name', 'like', '%' . $val . '%')->first();
+                            if ($sc) $peData['preferred_sub_caste_id'] = $sc->id;
+                        }
+                        if ($request->has('preferred_marital_status')) {
+                            $val = $request->input('preferred_marital_status');
+                            $ms = \App\Models\MaritalStatus::where('name', 'like', $val)->orWhere('name', 'like', '%' . $val . '%')->first();
+                            if ($ms) $peData['preferred_marital_status_id'] = $ms->id;
+                        }
+                        if ($request->has('preferred_family_status')) {
+                            $val = $request->input('preferred_family_status');
+                            $fv = \App\Models\FamilyValue::where('value', 'like', $val)->orWhere('value', 'like', '%' . $val . '%')->first();
+                            if ($fv) $peData['preferred_family_value_id'] = $fv->id;
+                        }
+                        $peData['user_id'] = $user->id;
+
+                        // Update or create partner expectation
+                        \App\Models\PartnerExpectation::updateOrCreate(
+                            ['user_id' => $user->id],
+                            $peData
+                        );
+                    }
+                } catch (\Exception $e) {
+                    Log::error('Error saving partner expectations', ['error' => $e->getMessage(), 'trace' => $e->getTraceAsString(), 'request' => $request->all()]);
+                }
+            }
+
             Log::info('Section saved successfully', [
                 'section' => $section,
                 'service_id' => $service->id,
