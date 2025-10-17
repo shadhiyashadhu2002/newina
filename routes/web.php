@@ -62,23 +62,21 @@ Route::post('/login', function (Request $request) {
         }
         
         $credentials = $request->only('email', 'password');
-        
+
         // Attempt authentication
         if (Auth::attempt($credentials)) {
             $user = Auth::user();
-            
+
             // Regenerate session for security
             $request->session()->regenerate();
-            
+
             Log::info('Login successful', ['user_id' => $user->id, 'user_type' => $user->user_type]);
-            
-            // Test if we can access dashboard directly
+
+            // Redirect based on user type
             try {
                 if ($user->is_admin || $user->user_type === 'staff') {
                     $dashboardUrl = url('/dashboard');
                     Log::info('Redirecting to dashboard', ['url' => $dashboardUrl]);
-                    
-                    // Force a simple redirect
                     return redirect($dashboardUrl)->with('login_success', 'Welcome ' . $user->name . '!');
                 } else {
                     $dashboardUrl = url('/user/dashboard');
@@ -87,228 +85,18 @@ Route::post('/login', function (Request $request) {
                 }
             } catch (Exception $redirectException) {
                 Log::error('Redirect failed', ['error' => $redirectException->getMessage()]);
-                // If redirect fails, show success message instead
                 return back()->with('success', 'Login successful! Please navigate to dashboard manually.');
             }
         }
-        
-        Log::error('Auth::attempt failed despite password check passing', $debugInfo);
-        return back()->withErrors(['email' => 'Authentication system error. Debug info logged.'])->withInput();
-        
+
+        Log::error('Auth::attempt failed', isset($debugInfo) ? $debugInfo : []);
+        return back()->withErrors(['email' => 'Authentication failed. Debug info logged.'])->withInput();
+
     } catch (Exception $e) {
         Log::error('Login exception: ' . $e->getMessage());
         return back()->withErrors(['email' => 'System error: ' . $e->getMessage()])->withInput();
     }
 })->name('login.submit');
-
-// Registration routes (if needed)
-Route::get('/register', [LoginController::class, 'showRegistrationForm'])->name('register');
-Route::post('/register', [LoginController::class, 'register'])->name('register.submit');
-
-// Test login route (for debugging)
-Route::get('/test-login', function () {
-    return view('test-login');
-});
-Route::post('/test-login', function (Illuminate\Http\Request $request) {
-    $credentials = $request->only('email', 'password');
-    
-    try {
-        // First check if user exists
-        $user = App\Models\User::where('email', $credentials['email'])->first();
-        if (!$user) {
-            return back()->with(['login_result' => 'User not found in database', 'login_success' => false]);
-        }
-        
-        // Debug user info
-        $debugInfo = "User found: {$user->name}, Email: {$user->email}, User Type: {$user->user_type}, Is Admin: " . ($user->is_admin ? 'Yes' : 'No');
-        
-        // Check password manually
-        if (Illuminate\Support\Facades\Hash::check($credentials['password'], $user->password)) {
-            $passwordCheck = 'Password hash check: PASS';
-        } else {
-            $passwordCheck = 'Password hash check: FAIL - Hash: ' . substr($user->password, 0, 30) . '...';
-            
-            // Try to reset password if it fails
-            $user->password = Illuminate\Support\Facades\Hash::make($credentials['password']);
-            $user->save();
-            $passwordCheck .= ' | Password has been reset, try again.';
-        }
-        
-        // Try authentication
-        if (Auth::attempt($credentials)) {
-            $authUser = Auth::user();
-            
-            // Redirect to appropriate dashboard based on user type
-            if ($authUser->is_admin || $authUser->user_type === 'staff') {
-                return redirect('/dashboard')->with('success', 'Login successful! Welcome ' . $authUser->name);
-            } else {
-                return redirect('/user/dashboard')->with('success', 'User login successful!');
-            }
-        } else {
-            return back()->with(['login_result' => 'LOGIN FAILED! Auth::attempt() returned false. ' . $debugInfo . ' | ' . $passwordCheck, 'login_success' => false]);
-        }
-    } catch (Exception $e) {
-        return back()->with(['login_result' => 'ERROR: ' . $e->getMessage(), 'login_success' => false]);
-    }
-});
-
-// Dashboard test route (for debugging)
-Route::get('/dashboard-test', function () {
-    try {
-        $users = App\Models\User::paginate(10);
-        $stats = [
-            'total_users' => App\Models\User::count(),
-            'new_profiles' => App\Models\User::whereDate('created_at', today())->count()
-        ];
-        return view('dashboard', compact('users', 'stats'));
-    } catch (Exception $e) {
-        return response()->json([
-            'error' => $e->getMessage(),
-            'file' => $e->getFile(),
-            'line' => $e->getLine()
-        ]);
-    }
-});
-
-// Simple dashboard test
-Route::get('/simple-dashboard', function () {
-    return '<h1>Simple Dashboard Test</h1><p>If you can see this, the route works!</p>';
-});
-
-// Test dashboard with authentication
-Route::get('/test-auth-dashboard', function () {
-    // Simulate login for testing
-    $user = App\Models\User::where('email', 'sana@service.com')->first();
-    if ($user) {
-        Auth::login($user);
-        return '<h1>Login Successful!</h1><p>User: ' . $user->name . '</p><p><a href="/dashboard">Go to Dashboard</a></p>';
-    }
-    return 'User not found';
-});
-
-// Minimal dashboard test
-Route::get('/dashboard-minimal', function () {
-    if (!Auth::check()) {
-        return redirect('/login');
-    }
-    $user = Auth::user();
-    return '<h1>Dashboard</h1><p>Welcome ' . $user->name . '</p><p>User Type: ' . $user->user_type . '</p>';
-})->middleware('auth');
-
-// Server dashboard debug route
-Route::get('/server-debug', function () {
-    try {
-        // Check if user is authenticated
-        $authStatus = Auth::check() ? 'YES' : 'NO';
-        $currentUser = Auth::user();
-        
-        // Count staff users
-        $staffCount = App\Models\User::where('user_type', 'staff')->count();
-        
-        return [
-            'authenticated' => $authStatus,
-            'current_user' => $currentUser ? [
-                'id' => $currentUser->id,
-                'name' => $currentUser->name,
-                'email' => $currentUser->email,
-                'user_type' => $currentUser->user_type
-            ] : null,
-            'staff_users_count' => $staffCount,
-            'dashboard_view_exists' => view()->exists('dashboard'),
-            'session_driver' => config('session.driver'),
-            'app_env' => config('app.env'),
-            'debug_mode' => config('app.debug'),
-        ];
-    } catch (Exception $e) {
-        return [
-            'error' => $e->getMessage(),
-            'file' => $e->getFile(),
-            'line' => $e->getLine()
-        ];
-    }
-});
-
-// Force login test for debugging authentication
-Route::get('/force-login-sana', function () {
-    try {
-        $user = App\Models\User::where('email', 'sana@service.com')->first();
-        
-        if (!$user) {
-            return ['error' => 'User sana@service.com not found'];
-        }
-        
-        // Force login using Auth::login
-        Auth::login($user);
-        
-        // Check if login worked
-        $isLoggedIn = Auth::check();
-        $loggedUser = Auth::user();
-        
-        return [
-            'login_attempted' => true,
-            'user_found' => true,
-            'auth_login_called' => true,
-            'is_logged_in_now' => $isLoggedIn,
-            'logged_user' => $loggedUser ? [
-                'id' => $loggedUser->id,
-                'name' => $loggedUser->name,
-                'email' => $loggedUser->email,
-                'user_type' => $loggedUser->user_type
-            ] : null,
-            'session_id' => session()->getId(),
-            'redirect_url' => $user->user_type === 'staff' || $user->is_admin ? '/dashboard' : '/user/dashboard'
-        ];
-    } catch (Exception $e) {
-        return [
-            'error' => $e->getMessage(),
-            'file' => $e->getFile(),
-            'line' => $e->getLine()
-        ];
-    }
-});
-
-// Test manual login with Auth::attempt
-Route::get('/test-auth-attempt', function () {
-    try {
-        $credentials = [
-            'email' => 'sana@service.com',
-            'password' => 'sana123'
-        ];
-        
-        // Get user first to verify it exists
-        $user = App\Models\User::where('email', 'sana@service.com')->first();
-        
-        if (!$user) {
-            return ['error' => 'User not found'];
-        }
-        
-        // Check password manually
-        $passwordCheck = Hash::check('sana123', $user->password);
-        
-        // Try Auth::attempt
-        $authResult = Auth::attempt($credentials);
-        
-        return [
-            'user_exists' => true,
-            'password_correct' => $passwordCheck,
-            'auth_attempt_result' => $authResult,
-            'is_authenticated_after' => Auth::check(),
-            'session_driver' => config('session.driver'),
-            'user_data' => [
-                'id' => $user->id,
-                'email' => $user->email,
-                'name' => $user->name,
-                'user_type' => $user->user_type
-            ]
-        ];
-    } catch (Exception $e) {
-        return [
-            'error' => $e->getMessage(),
-            'file' => $e->getFile(),
-            'line' => $e->getLine()
-        ];
-    }
-});
 
 // Debug login form submission
 Route::post('/debug-login', function (Request $request) {
@@ -613,6 +401,21 @@ Route::get('/service-details/{id}/{name}', function ($id, $name) {
     if (!$user) {
         $user = \App\Models\User::where('code', $id)->first();
     }
+    // CONTACT DETAILS - Auto-fill from users table if empty in service
+    if ($user) {
+        if (empty($service->contact_customer_name)) {
+            $service->contact_customer_name = $user->first_name ?? '';
+        }
+        if (empty($service->contact_email)) {
+            $service->contact_email = $user->email ?? '';
+        }
+        if (empty($service->contact_whatsapp_no)) {
+            $service->contact_whatsapp_no = $user->phone ?? '';
+        }
+        if (empty($service->contact_mobile_no)) {
+            $service->contact_mobile_no = $user->phone ?? '';
+        }
+    }
     // Get member data
     $member = null;
     $member_age = null;
@@ -807,8 +610,18 @@ Route::get('/profile/{id}/servicedetails', function ($id) {
     $user = \App\Models\User::where('code', $id)->first();
     if ($user) {
         $service->user_id = $user->id;
-        // Get member data
-        $member = \App\Models\Member::where('user_id', $user->id)->first();
+    // CONTACT DETAILS - Fetch from users table (customer fields) and assign to service
+    $customer_name = $user->first_name ?? '';
+    $customer_email = $user->email ?? '';
+    $customer_whatsapp = $user->phone ?? '';
+    // Assign to service so the view has server-side values
+    $service->contact_customer_name = $customer_name;
+    $service->contact_email = $customer_email;
+    $service->contact_whatsapp_no = $customer_whatsapp;
+    $service->contact_mobile_no = $customer_whatsapp;
+
+    // Get member data
+    $member = \App\Models\Member::where('user_id', $user->id)->first();
         if ($member) {
             // Calculate age from birthday
             if ($member->birthday) {
@@ -1109,7 +922,12 @@ Route::post('/get-member-data', function (Request $request) {
                 'message' => 'User not found. Profile ID: ' . $profileIdOrUserId . '. Please ensure the profile exists in the system.'
             ]);
         }
-        
+
+        // CONTACT DETAILS - Fetch from users table (customer fields)
+        $customer_name = $user->first_name ?? '';
+        $customer_email = $user->email ?? '';
+        $customer_whatsapp = $user->phone ?? '';
+
         // Get member data
         $member = \App\Models\Member::where('user_id', $user->id)->first();
         if (!$member) {
@@ -1203,7 +1021,15 @@ Route::post('/get-member-data', function (Request $request) {
         $preferred_occupation = '';
         $preferred_family_status = '';
         $preferred_eating_habits = '';
-    $preferred_annual_income = '';
+        $preferred_annual_income = '';
+        // Initialize optional preferred fields to avoid undefined variable notices
+        $preferred_age_min = '';
+        $preferred_age_max = '';
+        $preferred_height = '';
+        $preferred_complexion = '';
+        $preferred_body_type = '';
+        $preferred_smoking = '';
+        $preferred_drinking = '';
         
         $pe = \App\Models\PartnerExpectation::where('user_id', $user->id)->first();
         if ($pe) {
@@ -1266,6 +1092,16 @@ Route::post('/get-member-data', function (Request $request) {
         
         return response()->json([
             'success' => true,
+            // CONTACT DETAILS - From users table (both modern and backward-compatible keys)
+            'customer_name' => $customer_name,
+            'customer_email' => $customer_email,
+            'customer_whatsapp' => $customer_whatsapp,
+            // Backward-compatible keys used by the form/view
+            'contact_customer_name' => $customer_name,
+            'contact_email' => $customer_email,
+            'contact_whatsapp_no' => $customer_whatsapp,
+            'contact_mobile_no' => $customer_whatsapp,
+            
             'member_name' => $user->name ?? ($user->first_name . ' ' . $user->last_name),
             'birthday' => $member->birthday ? $member->birthday->format('Y-m-d') : '',
             'age' => $age,
