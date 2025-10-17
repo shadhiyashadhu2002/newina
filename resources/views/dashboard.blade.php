@@ -20,8 +20,9 @@
                     <a href="{{ route('services.page') }}" class="nav-link">Services ▼</a>
                 </div>
                 <div class="nav-dropdown accounts-dropdown">
-                    <a href="#" class="nav-link">Accounts ▼</a>
-                    <div class="dropdown-content" style="overflow: visible !important;">
+                    <!-- Make the anchor focusable and prevent default so :focus-within keeps dropdown open when interacting -->
+                    <a href="#" class="nav-link" tabindex="0" onclick="event.preventDefault();">Accounts ▼</a>
+                    <div class="dropdown-content" style="overflow: visible !important;" aria-hidden="false">
                         <a href="{{ route('addsale.page') }}" class="dropdown-item">Add Sale</a>
                         <a href="{{ route('stafftarget.page') }}" class="dropdown-item">Staff Target Assign</a>
                         <a href="{{ route('staffproductivity.page') }}" class="dropdown-item">Staff Productivity</a>
@@ -305,7 +306,9 @@
         display: none !important;
     }
 
-    .accounts-dropdown:hover .dropdown-content {
+    /* Keep dropdown visible on hover OR when its anchor or content receives focus (keyboard/tab or click) */
+    .accounts-dropdown:hover .dropdown-content,
+    .accounts-dropdown:focus-within .dropdown-content {
         display: block !important;
     }
 
