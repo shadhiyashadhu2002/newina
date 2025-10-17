@@ -624,6 +624,32 @@ Route::get('/service-details/{id}/{name}', function ($id, $name) {
     $member_father_details = null;
     $member_mother_details = null;
     $member_sibling_details = null;
+    // Fetch family details if user exists (these always override member table)
+    if ($user) {
+        $family = \App\Models\Family::where('user_id', $user->id)->first();
+        if ($family) {
+            $member_father_details = $family->father;
+            if ($family->father_occupation) {
+                $member_father_details .= $family->father ? (', ' . $family->father_occupation) : $family->father_occupation;
+            }
+            $member_mother_details = $family->mother;
+            if ($family->mother_occupation) {
+                $member_mother_details .= $family->mother ? (', ' . $family->mother_occupation) : $family->mother_occupation;
+            }
+            // Sibling details
+            $sibling_parts = [];
+            if ($family->no_of_sisters && $family->no_of_sisters > 0) {
+                $sibling_parts[] = $family->no_of_sisters . ' sister' . ($family->no_of_sisters > 1 ? 's' : '');
+            }
+            if ($family->no_of_brothers && $family->no_of_brothers > 0) {
+                $sibling_parts[] = $family->no_of_brothers . ' brother' . ($family->no_of_brothers > 1 ? 's' : '');
+            }
+            if ($family->about_sibling) {
+                $sibling_parts[] = $family->about_sibling;
+            }
+            $member_sibling_details = count($sibling_parts) ? implode(', ', $sibling_parts) : null;
+        }
+    }
     $member_caste = null;
     $member_subcaste = null;
     if ($user) {
@@ -639,14 +665,34 @@ Route::get('/service-details/{id}/{name}', function ($id, $name) {
                 $member_marital_status = $maritalStatus ? $maritalStatus->name : null;
             }
             // Get other member details
-            $member_occupation = $member->occupation;
-            $member_income = $member->annual_income;
+            // Fetch occupation from careers.designation
+            $member_occupation = null;
+            $member_income = null;
+            if ($user) {
+                $career = \App\Models\Career::where('user_id', $user->id)->first();
+                if ($career) {
+                    $member_occupation = $career->designation;
+                }
+            }
+            // Fetch income from annual_salary_ranges (min_salary-max_salary)
+            if ($member && $member->annual_salary_range_id) {
+                $salaryRange = \App\Models\AnnualSalaryRange::find($member->annual_salary_range_id);
+                if ($salaryRange) {
+                    $member_income = number_format($salaryRange->min_salary, 2) . '-' . number_format($salaryRange->max_salary, 2);
+                }
+            }
             $member_family_status = $member->family_status;
-            $member_father_details = $member->father_details;
-            $member_mother_details = $member->mother_details;
-            $member_sibling_details = $member->sibling_details;
-            $member_caste = $member->caste;
-            $member_subcaste = $member->subcaste;
+            // Do NOT override family details with member table values
+            // Fetch caste and subcaste from spiritual_backgrounds
+            $spiritual = \App\Models\SpiritualBackground::where('user_id', $user->id)->first();
+            if ($spiritual) {
+                // Caste = religion name
+                $religion = \App\Models\Religion::find($spiritual->religion_id);
+                $member_caste = $religion ? $religion->name : null;
+                // Subcaste = caste name
+                $caste = \App\Models\Caste::find($spiritual->caste_id);
+                $member_subcaste = $caste ? $caste->name : null;
+            }
         }
         // Get education degree
         $education = \App\Models\Education::where('user_id', $user->id)->first();
@@ -714,12 +760,43 @@ Route::get('/profile/{id}/servicedetails', function ($id) {
             }
             // Fill other member details
             $service->member_name = $user->name ?? ($user->first_name . ' ' . $user->last_name);
-            $service->member_occupation = $member->occupation;
-            $service->member_income = $member->annual_income;
+            // Fetch occupation from careers.designation
+            $career = \App\Models\Career::where('user_id', $user->id)->first();
+            if ($career) {
+                $service->member_occupation = $career->designation;
+            }
+            // Fetch income from annual_salary_ranges (min_salary-max_salary)
+            if ($member->annual_salary_range_id) {
+                $salaryRange = \App\Models\AnnualSalaryRange::find($member->annual_salary_range_id);
+                if ($salaryRange) {
+                    $service->member_income = number_format($salaryRange->min_salary, 2) . '-' . number_format($salaryRange->max_salary, 2);
+                }
+            }
             $service->member_family_status = $member->family_status;
-            $service->member_father_details = $member->father_details;
-            $service->member_mother_details = $member->mother_details;
-            $service->member_sibling_details = $member->sibling_details;
+            // Fetch family details if user exists
+            $family = \App\Models\Family::where('user_id', $user->id)->first();
+            if ($family) {
+                $service->member_father_details = $family->father;
+                if ($family->father_occupation) {
+                    $service->member_father_details .= $family->father ? (', ' . $family->father_occupation) : $family->father_occupation;
+                }
+                $service->member_mother_details = $family->mother;
+                if ($family->mother_occupation) {
+                    $service->member_mother_details .= $family->mother ? (', ' . $family->mother_occupation) : $family->mother_occupation;
+                }
+                // Sibling details
+                $sibling_parts = [];
+                if ($family->no_of_sisters && $family->no_of_sisters > 0) {
+                    $sibling_parts[] = $family->no_of_sisters . ' sister' . ($family->no_of_sisters > 1 ? 's' : '');
+                }
+                if ($family->no_of_brothers && $family->no_of_brothers > 0) {
+                    $sibling_parts[] = $family->no_of_brothers . ' brother' . ($family->no_of_brothers > 1 ? 's' : '');
+                }
+                if ($family->about_sibling) {
+                    $sibling_parts[] = $family->about_sibling;
+                }
+                $service->member_sibling_details = count($sibling_parts) ? implode(', ', $sibling_parts) : null;
+            }
             $service->member_caste = $member->caste;
             $service->member_subcaste = $member->subcaste;
         }
