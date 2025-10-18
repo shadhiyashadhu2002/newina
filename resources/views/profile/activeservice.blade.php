@@ -19,7 +19,7 @@
       min-height: 100vh;
     }
 
-    /* Main Dashboard Header - Same as original code */
+    /* Main Dashboard Header */
     .main-header {
       background: linear-gradient(135deg, #ac0742, #9d1955);
       padding: 15px 30px;
@@ -37,6 +37,7 @@
       font-size: 24px;
       font-weight: 700;
       text-decoration: none;
+      margin-right: auto;
     }
 
     .header-nav {
@@ -44,6 +45,8 @@
       list-style: none;
       gap: 25px;
       align-items: center;
+      margin: 0;
+      padding: 0;
     }
 
     .header-nav li {
@@ -89,6 +92,7 @@
       cursor: pointer;
       transition: all 0.3s ease;
       font-weight: 500;
+      margin-left: 20px;
     }
 
     .logout-btn:hover {
@@ -198,16 +202,6 @@
       transform: translateY(-1px);
     }
 
-    .btn-shortlist-varuna {
-      background: #ffc107;
-      color: #212529;
-    }
-
-    .btn-shortlist-varuna:hover {
-      background: #e0a800;
-      transform: translateY(-1px);
-    }
-
     .btn-view-prospects {
       background: #dc3545;
       color: white;
@@ -246,6 +240,13 @@
       font-size: 13px;
     }
 
+    /* Empty state */
+    .empty-state {
+      text-align: center;
+      padding: 40px;
+      color: #999;
+    }
+
     /* Responsive */
     @media (max-width: 1200px) {
       .profiles-table {
@@ -263,12 +264,8 @@
         padding: 15px;
       }
       
-      .table-container {
-        margin: 0 10px;
-      }
-      
-      .profiles-table {
-        font-size: 11px;
+      .header-nav {
+        gap: 15px;
       }
       
       .profiles-table th,
@@ -281,33 +278,28 @@
         font-size: 10px;
         margin: 1px;
       }
-      
-      .header-nav {
-        flex-wrap: wrap;
-        gap: 15px;
-      }
     }
   </style>
 </head>
 <body>
 
-  <!-- Main Dashboard Header - Same as original -->
+  <!-- Main Dashboard Header -->
   <header class="main-header">
     <a href="#" class="header-brand">INA</a>
     
     <nav>
       <ul class="header-nav">
-        <li><a href="#" data-page="dashboard" class="active">Home</a></li>
-        <li><a href="#" data-page="profiles">Profiles</a></li>
-        <li><a href="#" data-page="sales">Sales <span class="dropdown-arrow">▼</span></a></li>
-        <li><a href="#" data-page="helpline">HelpLine</a></li>
-        <li><a href="#" data-page="fresh-data">Fresh Data <span class="dropdown-arrow">▼</span></a></li>
-        <li><a href="#" data-page="abc">abc</a></li>
-        <li><a href="#" data-page="services">Services <span class="dropdown-arrow">▼</span></a></li>
+        <li><a href="{{ route('dashboard') }}" class="active">Home</a></li>
+        <li><a href="{{ route('profile.hellow') }}">Profiles</a></li>
+        <li><a href="#">Sales <span class="dropdown-arrow">▼</span></a></li>
+        <li><a href="#">HelpLine</a></li>
+        <li><a href="{{ route('fresh.data') }}">Fresh Data <span class="dropdown-arrow">▼</span></a></li>
+        <li><a href="#">abc</a></li>
+        <li><a href="{{ route('services.page') }}">Services <span class="dropdown-arrow">▼</span></a></li>
       </ul>
     </nav>
     
-    <button class="logout-btn">Logout</button>
+    <button class="logout-btn" onclick="logout()">Logout</button>
   </header>
 
   <!-- Main Content Area -->
@@ -332,176 +324,72 @@
             <th>Actions</th>
           </tr>
         </thead>
-        <tbody>
-          <tr>
-            <td><span class="profile-id">38584</span></td>
-            <td><span class="date">27-Jan-2025</span></td>
-            <td><span class="date">03-Nov-2025</span></td>
-            <td><span class="executive-name">greeshmarajegh1989</span></td>
-            <td>
-              <a href="{{ route('shortlist.ina', 38584) }}" class="action-btn btn-shortlist-ina">📋 Shortlist from INA</a>
-              <a href="{{ route('shortlist.others', 38584) }}" class="action-btn btn-shortlist-others">📋 Shortlist from Others</a>
-              <a href="{{ route('view.prospects', 38584) }}" class="action-btn btn-view-prospects">👀 View Prospects</a>
-              <a href="{{ route('client.details', 38584) }}" class="action-btn btn-view-details">👤 View Client Details</a>
-            </td>
-          </tr>
-          <tr>
-            <td><span class="profile-id">44260</span></td>
-            <td><span class="date">17-Jun-2025</span></td>
-            <td><span class="date">15-Oct-2025</span></td>
-            <td><span class="executive-name">greeshmarajegh1989</span></td>
-            <td>
-              <a href="{{ route('shortlist.ina', 44260) }}" class="action-btn btn-shortlist-ina">📋 Shortlist from INA</a>
-              <a href="{{ route('shortlist.others', 44260) }}" class="action-btn btn-shortlist-others">📋 Shortlist from Others</a>
-              <a href="{{ route('view.prospects', 44260) }}" class="action-btn btn-view-prospects">👀 View Prospects</a>
-              <a href="{{ route('client.details', 44260) }}" class="action-btn btn-view-details">👤 View Client Details</a>
-            </td>
-          </tr>
-          <tr>
-            <td><span class="profile-id">29541</span></td>
-            <td><span class="date">15-May-2025</span></td>
-            <td><span class="date">11-Nov-2025</span></td>
-            <td><span class="executive-name">greeshmarajegh1989</span></td>
-            <td>
-              <a href="{{ route('shortlist.ina', 29541) }}" class="action-btn btn-shortlist-ina">📋 Shortlist from INA</a>
-              <a href="{{ route('shortlist.others', 29541) }}" class="action-btn btn-shortlist-others">📋 Shortlist from Others</a>
-              <a href="{{ route('view.prospects', 29541) }}" class="action-btn btn-view-prospects">👀 View Prospects</a>
-              <a href="{{ route('client.details', 29541) }}" class="action-btn btn-view-details">👤 View Client Details</a>
-            </td>
-          </tr>
-          <tr>
-            <td><span class="profile-id">41787</span></td>
-            <td><span class="date">05-Jul-2025</span></td>
-            <td><span class="date">03-Oct-2025</span></td>
-            <td><span class="executive-name">shijina680</span></td>
-            <td>
-              <a href="{{ route('shortlist.ina', 41787) }}" class="action-btn btn-shortlist-ina">📋 Shortlist from INA</a>
-              <a href="{{ route('shortlist.others', 41787) }}" class="action-btn btn-shortlist-others">📋 Shortlist from Others</a>
-              <a href="{{ route('view.prospects', 41787) }}" class="action-btn btn-view-prospects">👀 View Prospects</a>
-              <a href="{{ route('client.details', 41787) }}" class="action-btn btn-view-details">👤 View Client Details</a>
-            </td>
-          </tr>
-          <tr>
-            <td><span class="profile-id">87025</span></td>
-            <td><span class="date">16-Jul-2025</span></td>
-            <td><span class="date">12-Jan-2026</span></td>
-            <td><span class="executive-name">greeshmarajegh1989</span></td>
-            <td>
-              <a href="{{ route('shortlist.ina', 87025) }}" class="action-btn btn-shortlist-ina">📋 Shortlist from INA</a>
-              <a href="{{ route('shortlist.others', 87025) }}" class="action-btn btn-shortlist-others">📋 Shortlist from Others</a>
-              <a href="{{ route('view.prospects', 87025) }}" class="action-btn btn-view-prospects">👀 View Prospects</a>
-              <a href="{{ route('client.details', 87025) }}" class="action-btn btn-view-details">👤 View Client Details</a>
-            </td>
-          </tr>
-          <tr>
-            <td><span class="profile-id">30955</span></td>
-            <td><span class="date">15-May-2025</span></td>
-            <td><span class="date">11-Nov-2025</span></td>
-            <td><span class="executive-name">greeshmarajegh1989</span></td>
-            <td>
-              <a href="{{ route('shortlist.ina', 30955) }}" class="action-btn btn-shortlist-ina">📋 Shortlist from INA</a>
-              <a href="{{ route('shortlist.others', 30955) }}" class="action-btn btn-shortlist-others">📋 Shortlist from Others</a>
-              <a href="{{ route('view.prospects', 30955) }}" class="action-btn btn-view-prospects">👀 View Prospects</a>
-              <a href="{{ route('client.details', 30955) }}" class="action-btn btn-view-details">👤 View Client Details</a>
-            </td>
-          </tr>
-          <tr>
-            <td><span class="profile-id">41519</span></td>
-            <td><span class="date">30-Jul-2025</span></td>
-            <td><span class="date">26-Oct-2025</span></td>
-            <td><span class="executive-name">shijina680</span></td>
-            <td>
-              <a href="{{ route('shortlist.ina', 41519) }}" class="action-btn btn-shortlist-ina">📋 Shortlist from INA</a>
-              <a href="{{ route('shortlist.others', 41519) }}" class="action-btn btn-shortlist-others">📋 Shortlist from Others</a>
-              <a href="{{ route('view.prospects', 41519) }}" class="action-btn btn-view-prospects">👀 View Prospects</a>
-              <a href="{{ route('client.details', 41519) }}" class="action-btn btn-view-details">👤 View Client Details</a>
-            </td>
-          </tr>
-          <tr>
-            <td><span class="profile-id">51139</span></td>
-            <td><span class="date">12-Sep-2025</span></td>
-            <td><span class="date">11-Mar-2026</span></td>
-            <td><span class="executive-name">greeshmarajegh1989</span></td>
-            <td>
-              <a href="{{ route('shortlist.ina', 51139) }}" class="action-btn btn-shortlist-ina">📋 Shortlist from INA</a>
-              <a href="{{ route('shortlist.others', 51139) }}" class="action-btn btn-shortlist-others">📋 Shortlist from Others</a>
-              <a href="{{ route('view.prospects', 51139) }}" class="action-btn btn-view-prospects">👀 View Prospects</a>
-              <a href="{{ route('client.details', 51139) }}" class="action-btn btn-view-details">👤 View Client Details</a>
-            </td>
-          </tr>
-          <tr>
-            <td><span class="profile-id">17004</span></td>
-            <td><span class="date">23-Aug-2025</span></td>
-            <td><span class="date">21-Nov-2025</span></td>
-            <td><span class="executive-name">greeshmarajegh1989</span></td>
-            <td>
-              <a href="{{ route('shortlist.ina', 17004) }}" class="action-btn btn-shortlist-ina">📋 Shortlist from INA</a>
-              <a href="{{ route('shortlist.others', 17004) }}" class="action-btn btn-shortlist-others">📋 Shortlist from Others</a>
-              <a href="{{ route('view.prospects', 17004) }}" class="action-btn btn-view-prospects">👀 View Prospects</a>
-              <a href="{{ route('client.details', 17004) }}" class="action-btn btn-view-details">👤 View Client Details</a>
-            </td>
-          </tr>
+        <tbody id="servicesTableBody">
+          @if(isset($services) && $services->count() > 0)
+            @foreach($services as $s)
+              <tr>
+                <td><span class="profile-id">{{ $s->profile_id }}</span></td>
+                <td><span class="date">{{ $s->start_date ? \Carbon\Carbon::parse($s->start_date)->format('d-M-Y') : '-' }}</span></td>
+                <td><span class="date">{{ $s->expiry_date ? \Carbon\Carbon::parse($s->expiry_date)->format('d-M-Y') : '-' }}</span></td>
+                <td><span class="executive-name">{{ $s->service_executive }}</span></td>
+                <td>
+                  <a href="{{ route('shortlist.ina', $s->profile_id) }}" class="action-btn btn-shortlist-ina">📋 Shortlist from INA</a>
+                  <a href="{{ route('shortlist.others', $s->profile_id) }}" class="action-btn btn-shortlist-others">📋 Shortlist from Others</a>
+                  <a href="{{ route('view.prospects', $s->profile_id) }}" class="action-btn btn-view-prospects">👀 View Prospects</a>
+                  <a href="{{ route('client.details', $s->profile_id) }}" class="action-btn btn-view-details">👤 View Client Details</a>
+                </td>
+              </tr>
+            @endforeach
+          @else
+            <tr>
+              <td colspan="5" class="empty-state">No active services found.</td>
+            </tr>
+          @endif
         </tbody>
       </table>
     </div>
+
+    @if(isset($services))
+      <div style="margin-top: 20px;">
+        {{ $services->links() }}
+      </div>
+    @endif
   </main>
 
   <script>
-    // Navigation functionality - same as original
-    document.querySelectorAll('.header-nav a').forEach(link => {
-      link.addEventListener('click', function(e) {
-        if (!this.getAttribute('href') || this.getAttribute('href') === '#') {
-          e.preventDefault();
-          document.querySelectorAll('.header-nav a').forEach(l => l.classList.remove('active'));
-          this.classList.add('active');
-          const page = this.getAttribute('data-page');
-          console.log('Navigating to:', page);
-        }
-      });
-    });
-
-    // Logout functionality
-    document.querySelector('.logout-btn').addEventListener('click', function() {
+    function logout() {
       if(confirm('Are you sure you want to logout?')) {
-        // Create a form and submit it to the logout route
         const form = document.createElement('form');
         form.method = 'POST';
         form.action = '{{ route('logout') }}';
         
-        // Add CSRF token from meta tag
         const csrfToken = document.createElement('input');
         csrfToken.type = 'hidden';
         csrfToken.name = '_token';
         csrfToken.value = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
         form.appendChild(csrfToken);
         
-        // Add the form to the document and submit it
         document.body.appendChild(form);
         form.submit();
       }
-    });
+    }
 
-    // Action button functionality - removed preventDefault to allow normal navigation
-    document.querySelectorAll('.action-btn').forEach(btn => {
-      btn.addEventListener('click', function(e) {
-        // Allow normal navigation by not preventing default
-        const action = this.textContent.trim();
-        const profileRow = this.closest('tr');
-        const profileId = profileRow.querySelector('.profile-id').textContent;
-        
-        console.log(`Navigating to: ${action} for Profile ID: ${profileId}`);
-        // Let the browser handle the navigation normally
+    // Navigation functionality
+    document.querySelectorAll('.header-nav a').forEach(link => {
+      link.addEventListener('click', function(e) {
+        if (!this.getAttribute('href') || this.getAttribute('href') === '#') {
+          e.preventDefault();
+        }
       });
     });
 
-    // Table row click functionality
-    document.querySelectorAll('.profiles-table tbody tr').forEach(row => {
-      row.addEventListener('click', function(e) {
-        // Only trigger if not clicking on action buttons
-        if (!e.target.classList.contains('action-btn')) {
-          const profileId = this.querySelector('.profile-id').textContent;
-          console.log(`Row clicked for Profile ID: ${profileId}`);
-        }
+    // Action button functionality
+    document.querySelectorAll('.action-btn').forEach(btn => {
+      btn.addEventListener('click', function(e) {
+        const action = this.textContent.trim();
+        const profileRow = this.closest('tr');
+        const profileId = profileRow.querySelector('.profile-id').textContent;
+        console.log(`Action: ${action} for Profile ID: ${profileId}`);
       });
     });
   </script>

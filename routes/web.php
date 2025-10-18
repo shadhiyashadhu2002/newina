@@ -320,9 +320,9 @@ Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard
     // Client details route
     Route::get('/client-details/{clientId}', [ServiceController::class, 'clientDetails'])->name('client.details');
 
-    // Active Service page route
+    // Active Service page route (dynamic)
     Route::get('/active-service', function () {
-        return view('profile.activeservice');
+        return app(App\Http\Controllers\ServiceController::class)->activeServiceList();
     })->name('active.service');
 
     // Profile search and assignment routes

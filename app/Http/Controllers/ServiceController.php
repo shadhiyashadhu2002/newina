@@ -388,6 +388,47 @@ class ServiceController extends Controller
         return view('profile.newservice', compact('services', 'staffUsers', 'perPage', 'search'));
     }
 
+    // List active services (for admin show all, for staff show assigned)
+    public function activeServiceList()
+    {
+        $user = Auth::user();
+
+        // Get per page count from request, default to 10
+        $perPage = request('per_page', 10);
+        if (!in_array($perPage, [10, 50, 100])) {
+            $perPage = 10;
+        }
+
+        $search = request('search');
+
+        // Build query for active services
+        $query = Service::where('status', 'active')->where('deleted', 0);
+
+        // If not admin, limit to this executive
+        if ($user && !$user->is_admin) {
+            $executiveName = $user->first_name ?? explode('@', $user->email)[0] ?? 'Unknown';
+            $query->where('service_executive', $executiveName);
+        }
+
+        if ($search) {
+            $query->where(function($q) use ($search) {
+                $q->where('profile_id', 'LIKE', "%{$search}%")
+                  ->orWhere('name', 'LIKE', "%{$search}%")
+                  ->orWhere('service_executive', 'LIKE', "%{$search}%")
+                  ->orWhere('contact_mobile_no', 'LIKE', "%{$search}%");
+            });
+        }
+
+        $services = $query->orderByDesc('start_date')
+                          ->orderByDesc('created_at')
+                          ->paginate($perPage);
+
+        // append query params
+        $services->appends(['per_page' => $perPage, 'search' => $search]);
+
+        return view('profile.activeservice', compact('services', 'perPage', 'search'));
+    }
+
     // Service Dashboard with dynamic counts
     public function servicesDashboard()
     {
