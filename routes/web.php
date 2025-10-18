@@ -325,6 +325,49 @@ Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard
         return app(App\Http\Controllers\ServiceController::class)->activeServiceList();
     })->name('active.service');
 
+    // DEBUG: return service counts for current user (temporary)
+    Route::get('/debug/service-counts', function() {
+        $user = Auth::user();
+        if (!$user) return response()->json(['error' => 'not-authenticated'], 401);
+        $executiveName = strtolower(trim($user->first_name ?? explode('@',$user->email)[0] ?? 'Unknown'));
+
+        // Get all services for this executive
+        $allServices = \App\Models\Service::where('deleted',0)
+            ->whereRaw('LOWER(TRIM(service_executive)) = ?', [$executiveName])
+            ->get(['id', 'profile_id', 'status', 'service_executive', 'created_at']);
+
+        // Get distinct statuses
+        $statuses = \App\Models\Service::where('deleted',0)
+            ->whereRaw('LOWER(TRIM(service_executive)) = ?', [$executiveName])
+            ->distinct()
+            ->pluck('status');
+
+        $total = $allServices->count();
+        $new = $allServices->where('status', 'new')->count();
+        $active = $allServices->where('status', 'active')->count();
+        $pending = $allServices->where('status', 'pending')->count();
+
+        return response()->json([
+            'user' => [
+                'name' => $user->name,
+                'first_name' => $user->first_name,
+                'email' => $user->email,
+                'is_admin' => $user->is_admin
+            ],
+            'executive_name_used' => $executiveName,
+            'total' => $total,
+            'new' => $new,
+            'active' => $active,
+            'pending' => $pending,
+            'all_statuses_found' => $statuses->toArray(),
+            'all_services' => $allServices->toArray(),
+            'service_executives_in_db' => \App\Models\Service::where('deleted', 0)
+                ->distinct()
+                ->pluck('service_executive')
+                ->toArray()
+        ]);
+    });
+
     // Profile search and assignment routes
     Route::post('/search-profiles', [ServiceController::class, 'searchProfiles'])->name('search.profiles');
     Route::post('/assign-profile', [ServiceController::class, 'assignProfile'])->name('assign.profile');

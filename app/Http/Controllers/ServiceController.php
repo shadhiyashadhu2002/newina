@@ -29,6 +29,8 @@ class ServiceController extends Controller
             $data['name'] = $data['service_name'] ?? $data['member_name'] ?? null;
             $user = Auth::user();
             $data['service_executive'] = $data['service_executive'] ?? ($user && $user->first_name ? $user->first_name : ($user->name ?? 'admin'));
+            // Normalize service_executive to lowercase trimmed string for consistent filtering
+            $data['service_executive'] = strtolower(trim($data['service_executive']));
             $data['tracking_updated_by'] = ($user && $user->first_name && trim($user->first_name) !== '') ? $user->first_name : ($user->name ?? 'Unknown');
             
             // Set default service_name if not provided (for admin modal)
@@ -315,8 +317,9 @@ class ServiceController extends Controller
         $search = request('search');
         
         // Build query with search functionality for executive services (exclude deleted)
-        $query = Service::where('service_executive', $user->first_name)
-                        ->where('deleted', 0);
+    $execName = strtolower(trim($user->first_name ?? explode('@', $user->email)[0] ?? ''));
+    $query = Service::whereRaw('LOWER(TRIM(service_executive)) = ?', [$execName])
+            ->where('deleted', 0);
         
         if ($search) {
             $query->where(function($q) use ($search) {
@@ -406,8 +409,8 @@ class ServiceController extends Controller
 
         // If not admin, limit to this executive
         if ($user && !$user->is_admin) {
-            $executiveName = $user->first_name ?? explode('@', $user->email)[0] ?? 'Unknown';
-            $query->where('service_executive', $executiveName);
+            $executiveName = strtolower(trim($user->first_name ?? explode('@', $user->email)[0] ?? 'Unknown'));
+            $query->whereRaw('LOWER(TRIM(service_executive)) = ?', [$executiveName]);
         }
 
         if ($search) {
@@ -442,7 +445,7 @@ class ServiceController extends Controller
             if ($user->is_admin) {
                 // Admin sees all services across all staff (exclude deleted)
                 $totalServices = Service::where('deleted', 0)->count();
-                $newServices = Service::where('deleted', 0)->where('status', 'new')->count();
+                $newServices = Service::where('deleted', 0)->whereIn('status', ['pending', 'new'])->count();
                 $activeServices = Service::where('deleted', 0)->where('status', 'active')->count();
                 $completedServices = Service::where('deleted', 0)->where('status', 'completed')->count();
                 $expiredServices = Service::where('deleted', 1)->count();
@@ -455,28 +458,28 @@ class ServiceController extends Controller
             } else {
                 // Staff sees only their assigned services
                 // Use first_name, or fallback to username/email prefix if first_name is null
-                $executiveName = $user->first_name ?? explode('@', $user->email)[0] ?? 'Unknown';
+                $executiveName = strtolower(trim($user->first_name ?? explode('@', $user->email)[0] ?? 'Unknown'));
                 
-                $totalServices = Service::where('service_executive', $executiveName)
+                $totalServices = Service::whereRaw('LOWER(TRIM(service_executive)) = ?', [$executiveName])
                                         ->where('deleted', 0)->count();
-                $newServices = Service::where('service_executive', $executiveName)
+                $newServices = Service::whereRaw('LOWER(TRIM(service_executive)) = ?', [$executiveName])
                                      ->where('deleted', 0)
-                                     ->where('status', 'new')
+                                     ->whereIn('status', ['pending', 'new'])
                                      ->count();
-                $activeServices = Service::where('service_executive', $executiveName)
+                $activeServices = Service::whereRaw('LOWER(TRIM(service_executive)) = ?', [$executiveName])
                                         ->where('deleted', 0)
                                         ->where('status', 'active')
                                         ->count();
-                $completedServices = Service::where('service_executive', $executiveName)
+                $completedServices = Service::whereRaw('LOWER(TRIM(service_executive)) = ?', [$executiveName])
                                            ->where('deleted', 0)
                                            ->where('status', 'completed')
                                            ->count();
-                $expiredServices = Service::where('service_executive', $executiveName)
+                $expiredServices = Service::whereRaw('LOWER(TRIM(service_executive)) = ?', [$executiveName])
                                          ->where('deleted', 1)
                                          ->count();
 
                 // Get recent services for current service executive (last 10, exclude deleted)
-                $recentServices = Service::where('service_executive', $executiveName)
+                $recentServices = Service::whereRaw('LOWER(TRIM(service_executive)) = ?', [$executiveName])
                                         ->where('deleted', 0)
                                         ->orderBy('created_at', 'desc')
                                         ->limit(10)
@@ -509,6 +512,71 @@ class ServiceController extends Controller
             
             return view('profile.services', compact('totalServices', 'newServices', 'activeServices', 'completedServices', 'expiredServices', 'recentServices', 'staffUsers'));
         }
+    }
+
+    // Alternative services page (dashboard-like) requested by user
+    public function servicesPage(Request $request)
+    {
+        $user = Auth::user();
+        $isAdmin = $user->is_admin ?? false;
+
+        // Use normalized comparisons for service_executive when filtering for staff
+        if ($isAdmin) {
+            // ADMIN VIEW - Show ALL services (exclude deleted)
+            $totalServices = Service::where('deleted', 0)->count();
+            // Accept both 'pending' and legacy 'new' as new services
+            $newServices = Service::where('deleted', 0)->whereIn('status', ['pending', 'new'])->count();
+            // Active services are those marked 'active' and not expired
+            $activeServices = Service::where('deleted', 0)
+                                     ->where('status', 'active')
+                                     ->where('expiry_date', '>=', now())
+                                     ->count();
+            $completedServices = Service::where('deleted', 0)->where('status', 'completed')->count();
+            $expiredServices = Service::where('deleted', 0)->where('expiry_date', '<', now())->count();
+
+            $recentServices = Service::where('deleted', 0)->latest()->take(10)->get();
+
+        } else {
+            // STAFF VIEW - Show only their assigned services
+            $staffName = strtolower(trim($user->first_name ?? explode('@', $user->email)[0] ?? ''));
+
+            $totalServices = Service::whereRaw('LOWER(TRIM(service_executive)) = ?', [$staffName])
+                                    ->where('deleted', 0)
+                                    ->count();
+            $newServices = Service::whereRaw('LOWER(TRIM(service_executive)) = ?', [$staffName])
+                                 ->where('deleted', 0)
+                                 ->whereIn('status', ['pending', 'new'])
+                                 ->count();
+            $activeServices = Service::whereRaw('LOWER(TRIM(service_executive)) = ?', [$staffName])
+                                    ->where('deleted', 0)
+                                    ->where('status', 'active')
+                                    ->where('expiry_date', '>=', now())
+                                    ->count();
+            $completedServices = Service::whereRaw('LOWER(TRIM(service_executive)) = ?', [$staffName])
+                                       ->where('deleted', 0)
+                                       ->where('status', 'completed')
+                                       ->count();
+            $expiredServices = Service::whereRaw('LOWER(TRIM(service_executive)) = ?', [$staffName])
+                                     ->where('deleted', 0)
+                                     ->where('expiry_date', '<', now())
+                                     ->count();
+
+            $recentServices = Service::whereRaw('LOWER(TRIM(service_executive)) = ?', [$staffName])
+                                    ->where('deleted', 0)
+                                    ->latest()
+                                    ->take(10)
+                                    ->get();
+        }
+
+        return view('services-dashboard', [
+            'totalServices' => $totalServices,
+            'newServices' => $newServices,
+            'activeServices' => $activeServices,
+            'completedServices' => $completedServices,
+            'expiredServices' => $expiredServices,
+            'recentServices' => $recentServices,
+            'isAdmin' => $isAdmin
+        ]);
     }
 
     // Update service status
@@ -546,6 +614,7 @@ class ServiceController extends Controller
 
             // Handle different field mappings
             $data['service_executive'] = $data['service_executive'] ?? Auth::user()->first_name ?? 'admin';
+            $data['service_executive'] = strtolower(trim($data['service_executive']));
             
             // Find or create service record first
             $service = Service::updateOrCreate(
