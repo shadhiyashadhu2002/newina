@@ -292,6 +292,7 @@
                 <table class="prospects-table">
                     <thead>
                         <tr>
+                            <th>Date</th>
                             <th>Prospect ID</th>
                             <th>Name</th>
                             <th>Age</th>
@@ -300,11 +301,14 @@
                             <th>Location</th>
                             <th>Contact Date</th>
                             <th>Status</th>
+                            <th>Customer Reply</th>
                             <th>Actions</th>
+                            <th>Remark</th>
                         </tr>
                     </thead>
                     <tbody>
                         <tr>
+                            <td>07-Mar-2025</td>
                             <td class="prospect-id">PR001</td>
                             <td class="prospect-name">Priya Sharma</td>
                             <td>28</td>
@@ -313,9 +317,12 @@
                             <td>Bangalore</td>
                             <td>07-Mar-2025</td>
                             <td><span class="status-badge status-interested">Interested</span></td>
+                            <td class="customer-reply">Left voicemail</td>
                             <td><a href="#" class="action-btn">✏️ Edit</a></td>
+                            <td class="remark-cell"><button class="remark-btn" data-prospect="PR001" title="Add remark">📝</button></td>
                         </tr>
                         <tr>
+                            <td>05-Jul-2025</td>
                             <td class="prospect-id">PR002</td>
                             <td class="prospect-name">Anjali Kumar</td>
                             <td>26</td>
@@ -324,9 +331,12 @@
                             <td>Chennai</td>
                             <td>05-Jul-2025</td>
                             <td><span class="status-badge status-pending">Pending</span></td>
+                            <td class="customer-reply">No answer</td>
                             <td><a href="#" class="action-btn">✏️ Edit</a></td>
+                            <td class="remark-cell"><button class="remark-btn" data-prospect="PR002" title="Add remark">📝</button></td>
                         </tr>
                         <tr>
+                            <td>05-Jul-2025</td>
                             <td class="prospect-id">PR003</td>
                             <td class="prospect-name">Meera Nair</td>
                             <td>29</td>
@@ -335,7 +345,9 @@
                             <td>Kochi</td>
                             <td>05-Jul-2025</td>
                             <td><span class="status-badge status-contacted">Contacted</span></td>
+                            <td class="customer-reply">Interested - follow up</td>
                             <td><a href="#" class="action-btn">✏️ Edit</a></td>
+                            <td class="remark-cell"><button class="remark-btn" data-prospect="PR003" title="Add remark">📝</button></td>
                         </tr>
                     </tbody>
                 </table>
@@ -348,6 +360,20 @@
         </div>
     </div>
 
+        <!-- Remark Modal -->
+        <div id="remarkModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); align-items:center; justify-content:center; z-index:2000;">
+            <div style="background:#fff; padding:20px; border-radius:10px; width:90%; max-width:600px; position:relative;">
+                <button id="closeRemark" style="position:absolute; right:12px; top:12px; background:transparent; border:none; font-size:18px; cursor:pointer;">✕</button>
+                <h3 style="margin-top:0;">Add Remark</h3>
+                <p id="remarkProspectId" style="font-weight:600; color:#4a69bd;"></p>
+                <textarea id="remarkText" rows="6" style="width:100%; padding:10px; border:1px solid #ddd; border-radius:8px; font-size:14px;" placeholder="Type the reason here..."></textarea>
+                <div style="display:flex; justify-content:flex-end; gap:10px; margin-top:12px;">
+                    <button id="saveRemark" class="btn" style="background:#4a69bd; color:#fff;">Save</button>
+                    <button id="cancelRemark" class="btn" style="background:#e0e0e0;">Cancel</button>
+                </div>
+            </div>
+        </div>
+
     <script>
         function refreshProspects() {
             location.reload();
@@ -359,6 +385,46 @@
             rows.forEach((row, index) => {
                 row.style.animationDelay = `${0.3 + (index * 0.1)}s`;
                 row.style.animation = 'fadeInUp 0.8s ease-out both';
+            });
+            // Remark modal logic
+            const remarkModal = document.getElementById('remarkModal');
+            const remarkText = document.getElementById('remarkText');
+            const remarkProspectId = document.getElementById('remarkProspectId');
+            const closeRemark = document.getElementById('closeRemark');
+            const saveRemark = document.getElementById('saveRemark');
+            const cancelRemark = document.getElementById('cancelRemark');
+
+            document.querySelectorAll('.remark-btn').forEach(btn => {
+                btn.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    const pid = this.getAttribute('data-prospect');
+                    remarkProspectId.textContent = pid;
+                    remarkText.value = this.closest('tr').querySelector('.remark-value') ? this.closest('tr').querySelector('.remark-value').textContent : '';
+                    remarkModal.style.display = 'flex';
+                });
+            });
+
+            function closeRemarkModal() {
+                remarkModal.style.display = 'none';
+            }
+            if (closeRemark) closeRemark.addEventListener('click', closeRemarkModal);
+            if (cancelRemark) cancelRemark.addEventListener('click', closeRemarkModal);
+
+            saveRemark.addEventListener('click', function() {
+                const pid = remarkProspectId.textContent;
+                const text = remarkText.value.trim();
+                // Store remark in the row (client-side). In production, you'd POST to server.
+                const row = Array.from(document.querySelectorAll('.prospects-table tbody tr')).find(r => r.querySelector('.prospect-id') && r.querySelector('.prospect-id').textContent === pid);
+                if (row) {
+                    let cell = row.querySelector('.remark-value');
+                    if (!cell) {
+                        cell = document.createElement('div');
+                        cell.className = 'remark-value';
+                        row.querySelector('.remark-cell').appendChild(cell);
+                    }
+                    cell.textContent = text;
+                }
+                closeRemarkModal();
             });
         });
     </script>
