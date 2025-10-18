@@ -1277,25 +1277,25 @@ class ServiceController extends Controller
 
     // Assign profile from other sources (for shortlist-others)
     // Helper method to get photo URL from uploads table
-    private function getPhotoUrl($photoId)
-    {
-        if (!$photoId) return null;
-        
-        try {
-            $upload = \App\Models\Upload::find($photoId);
-            if ($upload && $upload->file_name) {
-                // Check if file exists
-                $filePath = public_path($upload->file_name);
-                if (file_exists($filePath)) {
-                    return asset($upload->file_name);
-                }
+   private function getPhotoUrl($photoId)
+{
+    if (!$photoId) return null;
+    
+    try {
+        $upload = \App\Models\Upload::find($photoId);
+        if ($upload && $upload->file_name) {
+            // Check if file exists
+            $filePath = public_path($upload->file_name);
+            if (file_exists($filePath)) {
+                return url('laravel/public/' . $upload->file_name);
             }
-        } catch (\Exception $e) {
-            Log::error('Error getting photo URL for ID ' . $photoId, ['error' => $e->getMessage()]);
         }
-        
-        return null;
+    } catch (\Exception $e) {
+        Log::error('Error getting photo URL for ID ' . $photoId, ['error' => $e->getMessage()]);
     }
+    
+    return null;
+}
 
     public function assignProfile(Request $request)
     {
@@ -1411,47 +1411,49 @@ class ServiceController extends Controller
 
     // Upload a photo and return upload metadata (id + url)
     public function uploadPhoto(Request $request)
-    {
-        try {
-            if (!$request->hasFile('photo')) {
-                return response()->json(['success' => false, 'message' => 'No file uploaded'], 400);
-            }
-            $file = $request->file('photo');
-            if (!$file->isValid()) {
-                return response()->json(['success' => false, 'message' => 'Invalid uploaded file'], 400);
-            }
-
-            $destPath = public_path('uploads');
-            if (!file_exists($destPath)) mkdir($destPath, 0755, true);
-            $filename = time() . '_' . substr(bin2hex(random_bytes(4)), 0, 8) . '.' . $file->getClientOriginalExtension();
-
-            // Move the uploaded file first
-            $file->move($destPath, $filename);
-
-            // Get size from the moved file on disk to avoid issues with missing tmp file
-            $movedPath = $destPath . DIRECTORY_SEPARATOR . $filename;
-            $size = null;
-            if (file_exists($movedPath)) {
-                $size = filesize($movedPath);
-            }
-
-            $upload = \App\Models\Upload::create([
-                'file_original_name' => $file->getClientOriginalName(),
-                'file_name' => 'uploads/' . $filename,
-                'user_id' => Auth::id() ?? null,
-                'file_size' => $size,
-                'extension' => $file->getClientOriginalExtension(),
-                'type' => $file->getClientMimeType(),
-            ]);
-
-            return response()->json(['success' => true, 'upload_id' => $upload->id, 'url' => asset($upload->file_name)]);
-
-        } catch (\Exception $e) {
-            Log::error('Error uploading photo', ['error' => $e->getMessage(), 'trace' => $e->getTraceAsString()]);
-            return response()->json(['success' => false, 'message' => 'Upload failed'], 500);
+{
+    try {
+        if (!$request->hasFile('photo')) {
+            return response()->json(['success' => false, 'message' => 'No file uploaded'], 400);
         }
-    }
+        $file = $request->file('photo');
+        if (!$file->isValid()) {
+            return response()->json(['success' => false, 'message' => 'Invalid uploaded file'], 400);
+        }
 
+        $destPath = public_path('uploads');
+        if (!file_exists($destPath)) mkdir($destPath, 0755, true);
+        $filename = time() . '_' . substr(bin2hex(random_bytes(4)), 0, 8) . '.' . $file->getClientOriginalExtension();
+
+        // Move the uploaded file first
+        $file->move($destPath, $filename);
+
+        // Get size from the moved file on disk to avoid issues with missing tmp file
+        $movedPath = $destPath . DIRECTORY_SEPARATOR . $filename;
+        $size = null;
+        if (file_exists($movedPath)) {
+            $size = filesize($movedPath);
+        }
+
+        $upload = \App\Models\Upload::create([
+            'file_original_name' => $file->getClientOriginalName(),
+            'file_name' => 'uploads/' . $filename,
+            'user_id' => Auth::id() ?? null,
+            'file_size' => $size,
+            'extension' => $file->getClientOriginalExtension(),
+            'type' => $file->getClientMimeType(),
+        ]);
+
+        // Generate correct URL accounting for Laravel app in subdirectory
+        $correctUrl = url('laravel/public/uploads/' . $filename);
+
+        return response()->json(['success' => true, 'upload_id' => $upload->id, 'url' => $correctUrl]);
+
+    } catch (\Exception $e) {
+        Log::error('Error uploading photo', ['error' => $e->getMessage(), 'trace' => $e->getTraceAsString()]);
+        return response()->json(['success' => false, 'message' => 'Upload failed'], 500);
+    }
+}
     // Add a prospect to shortlist
     public function addToShortlist(Request $request)
     {
