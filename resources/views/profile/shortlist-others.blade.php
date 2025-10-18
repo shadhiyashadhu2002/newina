@@ -673,66 +673,80 @@
             resultsContainer.style.display = 'block';
             resultsContainer.scrollIntoView({ behavior: 'smooth', block: 'start' });
         }
-
-        function handlePhotoUpload(input, profileId) {
-            if (input.files && input.files[0]) {
-                const file = input.files[0];
-                // show immediate preview using FileReader
-                const reader = new FileReader();
-                reader.onload = function(e) {
-                    const photoArea = input.closest('.photo-section').querySelector('.photo-upload-area');
-                    if (photoArea) {
-                        photoArea.classList.add('has-photo');
-                        photoArea.innerHTML = `<img src="${e.target.result}" alt="Profile photo" class="profile-photo">`;
-                    }
-                };
-                reader.readAsDataURL(file);
-
-                // Immediately upload the file to the server so it's persisted
-                const uploadForm = new FormData();
-                uploadForm.append('photo', file, file.name);
-
-                fetch('/upload-photo', {
-                    method: 'POST',
-                    credentials: 'same-origin',
-                    headers: {
-                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
-                    },
-                    body: uploadForm
-                }).then(r => r.json()).then(resp => {
-                    if (resp && resp.success) {
-                        // store upload id on the input for later linking when saving profile
-                        input._uploadId = resp.upload_id;
-                        input._uploadedUrl = resp.url;
-                        // Also set a dataset attribute so it survives DOM manipulations
-                        try { input.dataset.uploadId = resp.upload_id; } catch(e) { /* ignore */ }
-                        // replace preview with the saved URL (in case server normalized/optimized)
-                        const photoArea = input.closest('.photo-section').querySelector('.photo-upload-area');
-                        if (photoArea && resp.url) {
-                            photoArea.classList.add('has-photo');
-                            photoArea.innerHTML = `<img src="${resp.url}" alt="Profile photo" class="profile-photo">`;
-                        }
-                    } else {
-                        console.warn('Upload failed', resp && resp.message);
-                    }
-                }).catch(err => {
-                    console.error('Upload error', err);
-                });
+function handlePhotoUpload(input, profileId) {
+    if (input.files && input.files[0]) {
+        const file = input.files[0];
+        console.log('📸 Photo selected:', { name: file.name, size: file.size, type: file.type });
+        
+        // show immediate preview using FileReader
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            console.log('📷 FileReader loaded, displaying local preview');
+            const photoArea = input.closest('.photo-section').querySelector('.photo-upload-area');
+            if (photoArea) {
+                photoArea.classList.add('has-photo');
+                photoArea.innerHTML = `<img src="${e.target.result}" alt="Profile photo" class="profile-photo" style="width: 100%; height: 100%; object-fit: cover; border-radius: 12px;">`;
+                console.log('✅ Local preview displayed');
             }
-        }
+        };
+        reader.readAsDataURL(file);
 
-        // View details (without showing profile id)
-        function viewProfileDetails(profileId, profileData) {
-            const details = `
-Name: ${profileData.name}
-Member ID: ${profileData.other_site_member_id}
-Profile Source: ${profileData.profile_source}
-Service Date: ${profileData.service_date}
-Contact Numbers: ${profileData.contact_numbers}
-Remarks: ${profileData.remarks}
-            `;
-            alert(details);
-        }
+        // Immediately upload the file to the server so it's persisted
+        const uploadForm = new FormData();
+        uploadForm.append('photo', file, file.name);
+
+        console.log('🚀 Starting upload to /upload-photo');
+
+        fetch('/upload-photo', {
+            method: 'POST',
+            credentials: 'same-origin',
+            headers: {
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+            },
+            body: uploadForm
+        })
+        .then(r => {
+            console.log('📡 Server response status:', r.status);
+            return r.json();
+        })
+        .then(resp => {
+            console.log('📦 Server response:', resp);
+            
+            if (resp && resp.success) {
+                console.log('✅ Upload successful! URL:', resp.url);
+                
+                // store upload id on the input for later linking when saving profile
+                input._uploadId = resp.upload_id;
+                input._uploadedUrl = resp.url;
+                console.log('💾 Stored upload ID:', resp.upload_id);
+                
+                // Also set a dataset attribute so it survives DOM manipulations
+                try { 
+                    input.dataset.uploadId = resp.upload_id;
+                } catch(e) { 
+                    console.warn('Could not set dataset:', e);
+                }
+                
+                // replace preview with the saved URL (in case server normalized/optimized)
+                const photoArea = input.closest('.photo-section').querySelector('.photo-upload-area');
+                if (photoArea && resp.url) {
+                    photoArea.classList.add('has-photo');
+                    console.log('🖼️ Updating preview with server URL:', resp.url);
+                    photoArea.innerHTML = `<img src="${resp.url}" alt="Profile photo" class="profile-photo" style="width: 100%; height: 100%; object-fit: cover; border-radius: 12px;" onerror="console.error('Image failed to load:', '${resp.url}')" onload="console.log('Image loaded successfully')">`;
+                }
+            } else {
+                console.error('❌ Upload failed:', resp);
+                if (resp && resp.message) {
+                    alert('Upload error: ' + resp.message);
+                }
+            }
+        })
+        .catch(err => {
+            console.error('❌ Fetch error:', err);
+            alert('Error uploading photo: ' + err.message);
+        });
+    }
+}
 
         // Save profile to backend (calls saveSection endpoint)
         function saveProfile(profileId) {
