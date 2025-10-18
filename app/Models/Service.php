@@ -75,5 +75,7 @@ class Service extends Model
     'deleted_by',
     // Status tracking
     'tracking_updated_by',
+    // Photo upload linkage (uploads.id)
+    'photo',
     ];
 }

@@ -602,9 +602,9 @@ class ServiceController extends Controller
                 'section' => $request->input('section')
             ]);
 
-            // Basic validation
+            // Basic validation (profile_id optional for Assign-from-Other flow)
             $request->validate([
-                'profile_id' => 'required|string',
+                'profile_id' => 'nullable|string',
                 'section' => 'required|string'
             ]);
 
@@ -612,15 +612,51 @@ class ServiceController extends Controller
             $section = $data['section'];
             unset($data['section']); // Remove section from data to save
 
+            // Remove any raw file inputs from the data array so updateOrCreate doesn't try to store
+            // temporary file paths into integer columns (e.g., 'photo'). Files are handled separately.
+            if (isset($data['photo'])) unset($data['photo']);
+            if (isset($data['photoData'])) unset($data['photoData']);
+
             // Handle different field mappings
             $data['service_executive'] = $data['service_executive'] ?? Auth::user()->first_name ?? 'admin';
             $data['service_executive'] = strtolower(trim($data['service_executive']));
+
+            // Ensure 'name' column is populated (DB requires it)
+            // Prefer explicit 'name', then 'service_name', then 'member_name'
+            if (empty($data['name'])) {
+                if (!empty($data['service_name'])) {
+                    $data['name'] = $data['service_name'];
+                } elseif (!empty($data['member_name'])) {
+                    $data['name'] = $data['member_name'];
+                } else {
+                    $data['name'] = 'Unknown';
+                }
+            }
             
-            // Find or create service record first
-            $service = Service::updateOrCreate(
-                ['profile_id' => $data['profile_id']],
-                $data
-            );
+            // If profile_id not provided, generate a unique one server-side
+            if (empty($data['profile_id'])) {
+                // Simple generator: timestamp + random suffix to reduce collision chance
+                $data['profile_id'] = 'AUTO-' . time() . '-' . substr(bin2hex(random_bytes(4)), 0, 6);
+                Log::info('Generated profile_id for saveSection', ['profile_id' => $data['profile_id']]);
+            }
+
+            // Find or create service record first (upsert by profile_id)
+            try {
+                $service = Service::updateOrCreate(
+                    ['profile_id' => $data['profile_id']],
+                    $data
+                );
+            } catch (\Illuminate\Database\QueryException $qe) {
+                // If the insert failed due to missing required 'name' column, retry with a default name
+                Log::error('QueryException in saveSection updateOrCreate', ['error' => $qe->getMessage(), 'data' => $data]);
+                if (strpos($qe->getMessage(), "Field 'name' doesn't have a default value") !== false || strpos($qe->getMessage(), 'doesn\'t have a default value') !== false) {
+                    $data['name'] = $data['name'] ?? ($data['member_name'] ?? 'Unknown');
+                    $service = Service::updateOrCreate(['profile_id' => $data['profile_id']], $data);
+                } else {
+                    // rethrow if it's an unrelated DB error
+                    throw $qe;
+                }
+            }
 
             // Now check the complete service record to determine status
             $hasServiceDetails = !empty($service->service_name) && !empty($service->amount_paid) && !empty($service->start_date) && !empty($service->expiry_date);
@@ -632,6 +668,76 @@ class ServiceController extends Controller
             } else {
                 $service->status = 'new';
                 $service->save();
+            }
+
+            // If this save came from the Assign-from-Other flow or includes other-site fields,
+            // mark the record with who assigned it so assignedProfiles() can find it.
+            try {
+                $shouldMarkAssigned = ($section === 'others') || (!empty($data['other_site_member_id'])) || (!empty($data['profile_source'])) || (!empty($data['assigned_at']));
+                if ($shouldMarkAssigned) {
+                    $assignedBy = Auth::user()->first_name ?? Auth::user()->name ?? '';
+                    $service->assigned_by = $assignedBy;
+                    // only set assigned_at if not already set
+                    if (empty($service->assigned_at)) {
+                        $service->assigned_at = now();
+                    }
+                    $service->save();
+                }
+            } catch (\Exception $e) {
+                Log::warning('Could not mark service as assigned', ['error' => $e->getMessage(), 'service_id' => $service->id]);
+            }
+
+            // Handle an uploaded photo (if provided) and link it via uploads table
+            try {
+                // If the client uploaded earlier and provided photo_id, prefer that and skip processing
+                if ($request->has('photo_id') && !empty($request->input('photo_id'))) {
+                    $photoId = (int) $request->input('photo_id');
+                    Log::info('Linking uploaded photo id to service', ['service_id' => $service->id, 'photo_id' => $photoId]);
+                    if ($photoId > 0) {
+                        $service->photo = $photoId;
+                        $service->save();
+                    }
+                } else {
+                    // Only process a direct file upload if no photo_id was supplied
+                    if ($request->hasFile('photo')) {
+                        $file = $request->file('photo');
+                        // Ensure the uploaded tmp file still exists and is readable before operating on it
+                        $realPath = $file && method_exists($file, 'getRealPath') ? $file->getRealPath() : null;
+                        if ($file && $file->isValid() && $realPath && file_exists($realPath) && is_readable($realPath)) {
+                            // Create a unique filename and move to public/uploads
+                            $destPath = public_path('uploads');
+                            if (!file_exists($destPath)) mkdir($destPath, 0755, true);
+                            $filename = time() . '_' . bin2hex(random_bytes(4)) . '.' . $file->getClientOriginalExtension();
+                            $moved = $file->move($destPath, $filename);
+
+                            // Determine size from the moved file on disk to avoid tmp stat issues
+                            $movedPath = $destPath . DIRECTORY_SEPARATOR . $filename;
+                            $size = null;
+                            if (file_exists($movedPath)) {
+                                $size = filesize($movedPath);
+                            }
+
+                            // Create an Upload record
+                            $upload = \App\Models\Upload::create([
+                                'file_original_name' => $file->getClientOriginalName(),
+                                'file_name' => 'uploads/' . $filename,
+                                'user_id' => Auth::id() ?? null,
+                                'file_size' => $size,
+                                'extension' => $file->getClientOriginalExtension(),
+                                'type' => $file->getClientMimeType(),
+                            ]);
+
+                            if ($upload && $upload->id) {
+                                $service->photo = $upload->id;
+                                $service->save();
+                            }
+                        } else {
+                            Log::warning('Uploaded photo tmp file missing or unreadable; skipping file save', ['realPath' => $realPath, 'service_id' => $service->id]);
+                        }
+                    }
+                }
+            } catch (\Exception $e) {
+                Log::warning('Error saving uploaded photo for service', ['error' => $e->getMessage(), 'service_id' => $service->id]);
             }
 
             // If partner section, persist partner expectations to partner_expectations table
@@ -751,10 +857,13 @@ class ServiceController extends Controller
             ]);
 
             return response()->json([
-                'success' => true, 
+                'success' => true,
                 'message' => ucfirst($section) . ' section saved successfully',
                 'service_id' => $service->id,
-                'status' => $service->status
+                'profile_id' => $service->profile_id ?? ($data['profile_id'] ?? null),
+                'status' => $service->status,
+                'photo_id' => $service->photo ?? null,
+                'photo_url' => $service->photo ? $this->getPhotoUrl($service->photo) : null,
             ]);
 
         } catch (\Exception $e) {
@@ -1241,6 +1350,105 @@ class ServiceController extends Controller
 
             // Regular form submission - redirect back with error
             return redirect()->back()->withErrors(['error' => 'Assignment failed: ' . $e->getMessage()])->withInput();
+        }
+    }
+
+    // Return assigned profiles for current user as JSON
+    public function assignedProfiles(Request $request)
+    {
+        $user = Auth::user();
+        if (!$user) {
+            return response()->json(['success' => false, 'message' => 'Unauthorized'], 401);
+        }
+
+        // Only return rows that were created via the "Assign Profile from Other Sources" flow.
+        // Those rows will have the other_site_member_id or profile_source populated and will have assigned_by set.
+    $assignedByName = strtolower(trim($user->first_name ?? $user->name ?? ''));
+
+        $list = Service::where('deleted', 0)
+                ->whereRaw('LOWER(TRIM(assigned_by)) = ?', [$assignedByName])
+                ->where(function($q) {
+                    $q->whereNotNull('other_site_member_id')
+                      ->orWhereNotNull('profile_source')
+                      ->orWhereNotNull('assigned_at');
+                })
+                // order by assigned_at when present, otherwise fallback to created_at
+                ->orderByRaw("COALESCE(assigned_at, created_at) DESC")
+                ->get(['profile_id','other_site_member_id','member_name','profile_source','service_name','start_date','contact_numbers','remarks','assigned_at','id','photo']);
+
+        // Map to include photo_url for the frontend
+        $mapped = $list->map(function($svc) {
+            return [
+                'profile_id' => $svc->profile_id,
+                'other_site_member_id' => $svc->other_site_member_id,
+                'member_name' => $svc->member_name,
+                'profile_source' => $svc->profile_source,
+                'service_name' => $svc->service_name,
+                'start_date' => $svc->start_date,
+                'contact_numbers' => $svc->contact_numbers,
+                'remarks' => $svc->remarks,
+                'assigned_at' => $svc->assigned_at,
+                'id' => $svc->id,
+                'photo_url' => $svc->photo ? $this->getPhotoUrl($svc->photo) : null,
+                'has_photo' => $svc->photo ? true : false,
+            ];
+        });
+
+        return response()->json(['success' => true, 'data' => $mapped]);
+    }
+
+    // Generate a unique profile id for frontend usage
+    public function generateProfileId(Request $request)
+    {
+        try {
+            $pid = 'AUTO-' . time() . '-' . substr(bin2hex(random_bytes(4)), 0, 6);
+            return response()->json(['success' => true, 'profile_id' => $pid]);
+        } catch (\Exception $e) {
+            Log::error('Error generating profile id', ['error' => $e->getMessage()]);
+            return response()->json(['success' => false, 'message' => 'Failed to generate profile id'], 500);
+        }
+    }
+
+    // Upload a photo and return upload metadata (id + url)
+    public function uploadPhoto(Request $request)
+    {
+        try {
+            if (!$request->hasFile('photo')) {
+                return response()->json(['success' => false, 'message' => 'No file uploaded'], 400);
+            }
+            $file = $request->file('photo');
+            if (!$file->isValid()) {
+                return response()->json(['success' => false, 'message' => 'Invalid uploaded file'], 400);
+            }
+
+            $destPath = public_path('uploads');
+            if (!file_exists($destPath)) mkdir($destPath, 0755, true);
+            $filename = time() . '_' . substr(bin2hex(random_bytes(4)), 0, 8) . '.' . $file->getClientOriginalExtension();
+
+            // Move the uploaded file first
+            $file->move($destPath, $filename);
+
+            // Get size from the moved file on disk to avoid issues with missing tmp file
+            $movedPath = $destPath . DIRECTORY_SEPARATOR . $filename;
+            $size = null;
+            if (file_exists($movedPath)) {
+                $size = filesize($movedPath);
+            }
+
+            $upload = \App\Models\Upload::create([
+                'file_original_name' => $file->getClientOriginalName(),
+                'file_name' => 'uploads/' . $filename,
+                'user_id' => Auth::id() ?? null,
+                'file_size' => $size,
+                'extension' => $file->getClientOriginalExtension(),
+                'type' => $file->getClientMimeType(),
+            ]);
+
+            return response()->json(['success' => true, 'upload_id' => $upload->id, 'url' => asset($upload->file_name)]);
+
+        } catch (\Exception $e) {
+            Log::error('Error uploading photo', ['error' => $e->getMessage(), 'trace' => $e->getTraceAsString()]);
+            return response()->json(['success' => false, 'message' => 'Upload failed'], 500);
         }
     }
 }

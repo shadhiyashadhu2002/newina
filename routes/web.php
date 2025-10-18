@@ -371,6 +371,11 @@ Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard
     // Profile search and assignment routes
     Route::post('/search-profiles', [ServiceController::class, 'searchProfiles'])->name('search.profiles');
     Route::post('/assign-profile', [ServiceController::class, 'assignProfile'])->name('assign.profile');
+    Route::get('/assigned-profiles', [ServiceController::class, 'assignedProfiles'])->name('assigned.profiles');
+    // Generate a new profile id for Assign-from-Other flow
+    Route::get('/generate-profile-id', [ServiceController::class, 'generateProfileId'])->name('generate.profile.id');
+    // Upload photo endpoint (uploads file and returns upload id + url)
+    Route::post('/upload-photo', [ServiceController::class, 'uploadPhoto'])->name('upload.photo');
 });
 
 // Home route - redirect based on user type

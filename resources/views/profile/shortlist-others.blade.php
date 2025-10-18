@@ -533,41 +533,85 @@
             const pidInput = document.querySelector('input[name="profile_id"]');
             const pidVal = pidInput ? pidInput.value : '';
 
-            const formData = {
-                profile_id: pidVal,
-                other_site_member_id: document.querySelector('input[name="other_site_member_id"]').value,
-                profile_source: document.querySelector('select[name="profile_source"]').value,
-                service_date: document.querySelector('input[name="service_date"]').value,
-                name: document.querySelector('input[name="name"]').value || 'Not specified',
-                contact_numbers: document.querySelector('input[name="contact_numbers"]').value || 'Not specified',
-                remarks: document.querySelector('textarea[name="remarks"]').value || 'No remarks'
-            };
+            // Build FormData and POST to server so the profile is persisted immediately
+            const form = new FormData();
+            form.append('profile_id', pidVal);
+            form.append('section', 'others');
+            form.append('other_site_member_id', document.querySelector('input[name="other_site_member_id"]').value);
+            form.append('profile_source', document.querySelector('select[name="profile_source"]').value);
+            form.append('start_date', document.querySelector('input[name="service_date"]').value);
+            const nm = document.querySelector('input[name="name"]').value;
+            if (nm) form.append('member_name', nm);
+            const cn = document.querySelector('input[name="contact_numbers"]').value;
+            if (cn) form.append('contact_numbers', cn);
+            const rm = document.querySelector('textarea[name="remarks"]').value;
+            if (rm) form.append('remarks', rm);
 
-            addProfileToResults(formData);
+            fetch('/save-service', {
+                method: 'POST',
+                credentials: 'same-origin',
+                headers: {
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                },
+                body: form
+            }).then(r => r.json())
+            .then(resp => {
+                if (!resp) throw new Error('No response from server');
+                if (resp.success) {
+                    // server should return profile_id (may be generated)
+                    const serverPid = resp.profile_id || resp.data && resp.data.profile_id || pidVal;
+                    const profileData = {
+                        profile_id: serverPid,
+                        other_site_member_id: form.get('other_site_member_id'),
+                        profile_source: form.get('profile_source'),
+                        name: form.get('member_name') || 'Not specified',
+                        service_date: form.get('start_date') || '',
+                        contact_numbers: form.get('contact_numbers') || 'Not specified',
+                        remarks: form.get('remarks') || 'No remarks'
+                    };
 
-            // reset the form and fetch a fresh profile id so user doesn't need to type
-            this.reset();
-            document.querySelector('input[name="service_date"]').value = today;
-            // request a new profile id and mark taken
-            fetch('/generate-profile-id', { credentials: 'same-origin' })
-                .then(resp => resp.json())
-                .then(data => {
-                    if (data && data.profile_id) {
-                        if (pidInput) {
-                            pidInput.value = data.profile_id;
-                            pidInput.classList.add('taken');
-                            pidInput.setAttribute('data-auto-generated','1');
-                        }
-                    }
-                }).catch(err => console.warn('Could not refresh profile id:', err));
+                    addProfileToResults(profileData);
+
+                    // reset the form and get a new profile id for the next entry
+                    this.reset();
+                    document.querySelector('input[name="service_date"]').value = today;
+                    fetch('/generate-profile-id', { credentials: 'same-origin' })
+                        .then(r => r.json())
+                        .then(data => {
+                            if (data && data.profile_id) {
+                                if (pidInput) {
+                                    pidInput.value = data.profile_id;
+                                    pidInput.classList.add('taken');
+                                    pidInput.setAttribute('data-auto-generated','1');
+                                }
+                            }
+                        }).catch(err => console.warn('Could not refresh profile id:', err));
+                } else {
+                    alert('Failed to save profile: ' + (resp.message || 'Unknown error'));
+                }
+            }).catch(err => {
+                console.error('Save failed', err);
+                alert('Error saving profile');
+            });
         });
 
         function addProfileToResults(profileData) {
             const resultsContainer = document.getElementById('resultsContainer');
             const resultsGrid = document.getElementById('resultsGrid');
 
+            // If a card for this profile_id already exists, don't add a duplicate
+            if (profileData.profile_id) {
+                const existing = document.querySelector(`.profile-card[data-profile-id='${profileData.profile_id}']`);
+                if (existing) {
+                    // bring existing into view and return
+                    existing.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    return;
+                }
+            }
+
             const profileCard = document.createElement('div');
             profileCard.className = 'profile-card';
+            if (profileData.profile_id) profileCard.setAttribute('data-profile-id', profileData.profile_id);
             profileCard.innerHTML = `
                 <div class="profile-header">
                     <div class="header-left">
@@ -599,10 +643,7 @@
 
                     <div class="photo-section">
                         <div class="photo-upload-area" onclick="document.querySelector('.file-input-${profileData.profile_id}').click()">
-                            <div class="photo-placeholder">
-                                <span style="font-size: 50px; line-height: 1;">📷</span>
-                                <span>Add Photo</span>
-                            </div>
+                            ${profileData.photo_url ? `<img src="${profileData.photo_url}" alt="Profile photo" class="profile-photo">` : `<div class="photo-placeholder"><span style="font-size: 50px; line-height: 1;">📷</span><span>Add Photo</span></div>` }
                         </div>
                         <input type="file" class="file-input file-input-${profileData.profile_id}" accept="image/*" onchange="handlePhotoUpload(this, '${profileData.profile_id}')">
                     </div>
@@ -621,17 +662,195 @@
 
         function handlePhotoUpload(input, profileId) {
             if (input.files && input.files[0]) {
+                const file = input.files[0];
+                // show immediate preview using FileReader
                 const reader = new FileReader();
                 reader.onload = function(e) {
-                    const photoArea = document.querySelector(`.photo-upload-area`);
-                    if (photoArea && photoArea.closest('.photo-section').querySelector(`.file-input-${profileId}`).value.includes(input.value.split('\\').pop())) {
+                    const photoArea = input.closest('.photo-section').querySelector('.photo-upload-area');
+                    if (photoArea) {
                         photoArea.classList.add('has-photo');
                         photoArea.innerHTML = `<img src="${e.target.result}" alt="Profile photo" class="profile-photo">`;
                     }
                 };
-                reader.readAsDataURL(input.files[0]);
+                reader.readAsDataURL(file);
+
+                // Immediately upload the file to the server so it's persisted
+                const uploadForm = new FormData();
+                uploadForm.append('photo', file, file.name);
+
+                fetch('/upload-photo', {
+                    method: 'POST',
+                    credentials: 'same-origin',
+                    headers: {
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                    },
+                    body: uploadForm
+                }).then(r => r.json()).then(resp => {
+                    if (resp && resp.success) {
+                        // store upload id on the input for later linking when saving profile
+                        input._uploadId = resp.upload_id;
+                        input._uploadedUrl = resp.url;
+                        // Also set a dataset attribute so it survives DOM manipulations
+                        try { input.dataset.uploadId = resp.upload_id; } catch(e) { /* ignore */ }
+                        // replace preview with the saved URL (in case server normalized/optimized)
+                        const photoArea = input.closest('.photo-section').querySelector('.photo-upload-area');
+                        if (photoArea && resp.url) {
+                            photoArea.classList.add('has-photo');
+                            photoArea.innerHTML = `<img src="${resp.url}" alt="Profile photo" class="profile-photo">`;
+                        }
+                    } else {
+                        console.warn('Upload failed', resp && resp.message);
+                    }
+                }).catch(err => {
+                    console.error('Upload error', err);
+                });
             }
         }
+
+        // View details (without showing profile id)
+        function viewProfileDetails(profileId, profileData) {
+            const details = `
+Name: ${profileData.name}
+Member ID: ${profileData.other_site_member_id}
+Profile Source: ${profileData.profile_source}
+Service Date: ${profileData.service_date}
+Contact Numbers: ${profileData.contact_numbers}
+Remarks: ${profileData.remarks}
+            `;
+            alert(details);
+        }
+
+        // Save profile to backend (calls saveSection endpoint)
+        function saveProfile(profileId) {
+            const fileInput = document.querySelector(`.file-input-${profileId}`);
+            const photoData = fileInput ? (fileInput.dataset.photoData || null) : null;
+
+            if (!confirm('Are you sure you want to save this profile to the system?')) return;
+
+            // Find the profile card and extract displayed fields
+            const card = fileInput ? fileInput.closest('.profile-card') : null;
+            const memberName = card ? (card.querySelector('.profile-field strong') ? card.querySelector('.profile-field').innerText.replace('Name:', '').trim() : '') : '';
+            const otherSiteMemberId = card ? (card.querySelector('.profile-field:nth-of-type(2)') ? card.querySelector('.profile-field:nth-of-type(2)').innerText.replace('Member ID:', '').trim() : '') : '';
+            const profileSource = card ? (card.querySelectorAll('.profile-field')[2] ? card.querySelectorAll('.profile-field')[2].innerText.replace('Profile Source:', '').trim() : '') : '';
+            const serviceDate = card ? (card.querySelectorAll('.profile-field')[3] ? card.querySelectorAll('.profile-field')[3].innerText.replace('Service Date:', '').trim() : '') : '';
+            const contactNumbers = card ? (card.querySelectorAll('.profile-field')[4] ? card.querySelectorAll('.profile-field')[4].innerText.replace('Contact Numbers:', '').trim() : '') : '';
+            const remarks = card ? (card.querySelectorAll('.profile-field')[5] ? card.querySelectorAll('.profile-field')[5].innerText.replace('Remarks:', '').trim() : '') : '';
+
+            const form = new FormData();
+            form.append('profile_id', profileId);
+            form.append('section', 'others');
+            if (memberName) form.append('member_name', memberName);
+            if (otherSiteMemberId) form.append('other_site_member_id', otherSiteMemberId);
+            if (profileSource) form.append('profile_source', profileSource);
+            if (serviceDate) form.append('start_date', serviceDate);
+            if (contactNumbers) form.append('contact_numbers', contactNumbers);
+            if (remarks) form.append('remarks', remarks);
+            // If the file input has a selected File object, append it to FormData
+            if (fileInput && fileInput._selectedFile) {
+                form.append('photo', fileInput._selectedFile, fileInput._selectedFile.name);
+            }
+            // If we already uploaded immediately, include the upload id to link instead of re-uploading
+            const uploadId = fileInput && (fileInput._uploadId || fileInput.dataset && fileInput.dataset.uploadId) ? (fileInput._uploadId || fileInput.dataset.uploadId) : null;
+            if (uploadId) {
+                form.append('photo_id', uploadId);
+            }
+
+            fetch('/save-service', {
+                method: 'POST',
+                credentials: 'same-origin',
+                headers: {
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                },
+                body: form
+            }).then(res => res.json())
+            .then(resp => {
+                if (resp && resp.success) {
+                    alert('Profile saved successfully');
+
+                    // if server generated/normalized profile_id, update the card to use the returned id
+                    const newPid = resp.profile_id || (resp.data && resp.data.profile_id) || profileId;
+                    if (newPid && newPid !== profileId) {
+                        updateCardProfileId(profileId, newPid);
+                    }
+                } else {
+                    alert('Failed to save profile: ' + (resp.message || 'Unknown error'));
+                }
+            }).catch(err => {
+                console.error(err);
+                alert('Error saving profile');
+            });
+        }
+
+        // Update DOM card references when server returns a different profile id
+        function updateCardProfileId(oldId, newId) {
+            try {
+                // Update file-input class
+                const oldFile = document.querySelector('.file-input-' + oldId);
+                if (oldFile) {
+                    oldFile.classList.remove('file-input-' + oldId);
+                    oldFile.classList.add('file-input-' + newId);
+                }
+
+                // Update photo upload onclick area (closest .photo-upload-area)
+                const photoAreas = document.querySelectorAll('.photo-upload-area');
+                photoAreas.forEach(area => {
+                    const onclick = area.getAttribute('onclick') || '';
+                    if (onclick.includes(oldId)) {
+                        area.setAttribute('onclick', `document.querySelector('.file-input-${newId}').click()`);
+                    }
+                });
+
+                // Update save/view buttons which reference the oldId
+                const buttons = document.querySelectorAll('.profile-card');
+                buttons.forEach(card => {
+                    // find view and save buttons inside this card and update their onclicks
+                    const viewBtn = card.querySelector('.btn-view-details');
+                    if (viewBtn) {
+                        const onclick = viewBtn.getAttribute('onclick') || '';
+                        if (onclick.includes(oldId)) {
+                            // replace occurrences of the old id in the onclick string
+                            viewBtn.setAttribute('onclick', onclick.replace(new RegExp(oldId, 'g'), newId));
+                        }
+                    }
+                    const saveBtn = card.querySelector('.btn-save-profile');
+                    if (saveBtn) {
+                        const onclick = saveBtn.getAttribute('onclick') || '';
+                        if (onclick.includes(oldId)) {
+                            saveBtn.setAttribute('onclick', onclick.replace(new RegExp(oldId, 'g'), newId));
+                        }
+                    }
+                });
+            } catch (err) {
+                console.warn('Could not update card profile id', err);
+            }
+        }
+
+        // Load saved assigned profiles for current user and render them
+        function loadAssignedProfiles() {
+            fetch('/assigned-profiles', { credentials: 'same-origin' })
+                .then(res => res.json())
+                .then(resp => {
+                    if (!resp) return;
+                    const list = resp.data && Array.isArray(resp.data) ? resp.data : (Array.isArray(resp) ? resp : []);
+                    list.forEach(svc => {
+                        addProfileToResults({
+                            profile_id: svc.profile_id,
+                            other_site_member_id: svc.other_site_member_id,
+                            profile_source: svc.profile_source,
+                            name: svc.member_name || svc.service_name || 'Not specified',
+                            service_date: svc.start_date || '',
+                            contact_numbers: svc.contact_numbers || 'Not specified',
+                            remarks: svc.remarks || 'No remarks',
+                            photo_url: svc.photo_url || null,
+                            has_photo: svc.has_photo || false
+                        });
+                    });
+                }).catch(err => console.error('Failed to load assigned profiles', err));
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            loadAssignedProfiles();
+        });
 
         function clearForm() {
             document.getElementById('assignProfileForm').reset();
