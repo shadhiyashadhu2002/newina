@@ -9,7 +9,11 @@ return new class extends Migration {
     {
         Schema::table('services', function (Blueprint $table) {
             if (!Schema::hasColumn('services', 'photo')) {
-                $table->unsignedBigInteger('photo')->nullable()->after('remarks');
+                if (Schema::hasColumn('services', 'remarks')) {
+                    $table->unsignedBigInteger('photo')->nullable()->after('remarks');
+                } else {
+                    $table->unsignedBigInteger('photo')->nullable();
+                }
             }
         });
     }
