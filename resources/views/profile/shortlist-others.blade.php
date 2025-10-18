@@ -428,8 +428,11 @@
             <form id="assignProfileForm">
                 <div class="form-group">
                     <label class="form-label">ProfileId <span class="required">*</span></label>
-                    <input type="text" name="profile_id" class="form-input" placeholder="36584" required>
+                    <!-- Always readonly to prevent typing; value is auto-filled via server or JS -->
+                    <input type="text" name="profile_id" class="form-input" placeholder="36584" value="{{ $service->profile_id ?? '' }}" readonly required onkeydown="return false;" onpaste="return false;" style="background:#e9ecef;">
                 </div>
+
+                <!-- Customer ID removed as requested -->
 
                 <div class="form-group">
                     <label class="form-label">Other Site Member ID <span class="required">*</span></label>
@@ -491,22 +494,79 @@
         const today = new Date().toISOString().split('T')[0];
         document.querySelector('input[name="service_date"]').value = today;
 
+        // If profile_id input is empty, request a generated profile id from server and lock the input
+        (function ensureProfileId() {
+            const pidInput = document.querySelector('input[name="profile_id"]');
+            if (!pidInput) return;
+            if (!pidInput.value || pidInput.value.trim() === '') {
+                fetch('/generate-profile-id', { credentials: 'same-origin' })
+                    .then(resp => resp.json())
+                    .then(data => {
+                        if (data && data.profile_id) {
+                            pidInput.value = data.profile_id;
+                            pidInput.readOnly = true;
+                            pidInput.style.background = '#e9ecef';
+                        }
+                    })
+                    .catch(err => console.warn('Could not generate profile id:', err));
+            } else {
+                // If already present (prefilled), ensure it's readonly
+                pidInput.readOnly = true;
+                pidInput.style.background = '#e9ecef';
+            }
+        })();
+
         document.getElementById('assignProfileForm').addEventListener('submit', function(e) {
             e.preventDefault();
 
-            const formData = {
+            const payload = {
                 profile_id: document.querySelector('input[name="profile_id"]').value,
                 other_site_member_id: document.querySelector('input[name="other_site_member_id"]').value,
                 profile_source: document.querySelector('select[name="profile_source"]').value,
                 service_date: document.querySelector('input[name="service_date"]').value,
-                name: document.querySelector('input[name="name"]').value || 'Not specified',
-                contact_numbers: document.querySelector('input[name="contact_numbers"]').value || 'Not specified',
-                remarks: document.querySelector('textarea[name="remarks"]').value || 'No remarks'
+                name: document.querySelector('input[name="name"]').value || null,
+                contact_numbers: document.querySelector('input[name="contact_numbers"]').value || null,
+                remarks: document.querySelector('textarea[name="remarks"]').value || null
             };
 
-            addProfileToResults(formData);
-            this.reset();
-            document.querySelector('input[name="service_date"]').value = today;
+            fetch('/assign-profile', {
+                method: 'POST',
+                credentials: 'same-origin',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                },
+                body: JSON.stringify(payload)
+            }).then(res => res.json())
+            .then(data => {
+                if (data && data.success) {
+                    addProfileToResults({
+                        profile_id: data.data.profile_id,
+                        other_site_member_id: data.data.other_site_member_id,
+                        profile_source: payload.profile_source,
+                        name: payload.name || 'Not specified',
+                        service_date: payload.service_date,
+                        contact_numbers: payload.contact_numbers || 'Not specified',
+                        remarks: payload.remarks || 'No remarks'
+                    });
+
+                    // keep profile id after reset
+                    const pidInput = document.querySelector('input[name="profile_id"]');
+                    const pidVal = pidInput ? pidInput.value : '';
+                    this.reset();
+                    if (pidInput) {
+                        pidInput.value = pidVal;
+                        pidInput.readOnly = true;
+                        pidInput.style.background = '#e9ecef';
+                    }
+                    document.querySelector('input[name="service_date"]').value = today;
+                } else {
+                    alert('Failed to assign profile: ' + (data.message || 'Unknown error'));
+                }
+            }).catch(err => {
+                console.error(err);
+                alert('Error assigning profile. See console for details.');
+            });
         });
 
         function addProfileToResults(profileData) {
@@ -531,6 +591,7 @@
                         <div class="profile-field">
                             <strong>Member ID:</strong> ${profileData.other_site_member_id}
                         </div>
+                        <!-- Customer ID removed from display -->
                         <div class="profile-field">
                             <strong>Profile Source:</strong> ${profileData.profile_source}
                         </div>
@@ -557,8 +618,8 @@
                 </div>
 
                 <div class="profile-actions">
-                    <button class="btn-small btn-view-details" onclick="viewProfileDetails('${profileData.profile_id}', ${JSON.stringify(profileData).replace(/'/g, "&apos;")})">View Details</button>
-                    <button class="btn-small btn-save-profile" onclick="saveProfile('${profileData.profile_id}')">Save Profile</button>
+                        <button class="btn-small btn-view-details" onclick="viewProfileDetails('${profileData.profile_id}', ${JSON.stringify(profileData).replace(/'/g, "&apos;")})">View Details</button>
+                        <button class="btn-small btn-save-profile" onclick="saveProfile('${profileData.profile_id}')">Save Profile</button>
                 </div>
             `;
 
@@ -566,6 +627,37 @@
             resultsContainer.style.display = 'block';
             resultsContainer.scrollIntoView({ behavior: 'smooth', block: 'start' });
         }
+
+        // Load assigned profiles for current user on page load
+        function loadAssignedProfiles() {
+            fetch('/assigned-profiles', {
+                method: 'GET',
+                credentials: 'same-origin',
+                headers: { 'Accept': 'application/json' }
+            }).then(res => res.json())
+            .then(resp => {
+                if (!resp) return;
+                // If the controller returns an object like { data: [...] } handle both
+                const list = Array.isArray(resp) ? resp : (Array.isArray(resp.data) ? resp.data : []);
+                list.forEach(svc => {
+                    addProfileToResults({
+                        profile_id: svc.profile_id,
+                        other_site_member_id: svc.other_site_member_id,
+                        profile_source: svc.profile_source,
+                        name: svc.member_name || svc.service_name || svc.member_name || 'Not specified',
+                        service_date: svc.start_date || svc.service_date || '',
+                        contact_numbers: svc.contact_numbers || 'Not specified',
+                        remarks: svc.remarks || 'No remarks'
+                    });
+                });
+            }).catch(err => {
+                console.error('Failed to load assigned profiles', err);
+            });
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            loadAssignedProfiles();
+        });
 
         function handlePhotoUpload(input, profileId) {
             if (input.files && input.files[0]) {
@@ -593,12 +685,12 @@ Remarks: ${profileData.remarks}
             alert(details);
         }
 
-        function saveProfile(profileId) {
+        function saveProfile(profileId, customerId) {
             const fileInput = document.querySelector(`.file-input-${profileId}`);
-            const photoData = fileInput.dataset.photoData || null;
-            
+            const photoData = fileInput ? (fileInput.dataset.photoData || null) : null;
+
             if (confirm('Are you sure you want to save this profile?')) {
-                alert(`Profile ${profileId} saved successfully!${photoData ? '\nPhoto has been uploaded.' : '\nNo photo uploaded.'}`);
+                alert(`Profile ${profileId} (Customer ID: ${customerId || 'N/A'}) saved successfully!${photoData ? '\nPhoto has been uploaded.' : '\nNo photo uploaded.'}`);
                 
                 // Here you can make an AJAX call to save to database
                 // fetch('/save-profile', {
