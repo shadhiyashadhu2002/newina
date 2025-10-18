@@ -672,20 +672,25 @@ class ServiceController extends Controller
 
             // If this save came from the Assign-from-Other flow or includes other-site fields,
             // mark the record with who assigned it so assignedProfiles() can find it.
-            try {
-                $shouldMarkAssigned = ($section === 'others') || (!empty($data['other_site_member_id'])) || (!empty($data['profile_source'])) || (!empty($data['assigned_at']));
-                if ($shouldMarkAssigned) {
-                    $assignedBy = Auth::user()->first_name ?? Auth::user()->name ?? '';
-                    $service->assigned_by = $assignedBy;
-                    // only set assigned_at if not already set
-                    if (empty($service->assigned_at)) {
-                        $service->assigned_at = now();
-                    }
-                    $service->save();
-                }
-            } catch (\Exception $e) {
-                Log::warning('Could not mark service as assigned', ['error' => $e->getMessage(), 'service_id' => $service->id]);
-            }
+           try {
+    $shouldMarkAssigned = ($section === 'others') || (!empty($data['other_site_member_id'])) || (!empty($data['profile_source'])) || (!empty($data['assigned_at']));
+    if ($shouldMarkAssigned) {
+        $assignedBy = Auth::user()->first_name ?? Auth::user()->name ?? '';
+        $service->assigned_by = strtolower(trim($assignedBy)); // NORMALIZE TO LOWERCASE TRIMMED
+        // only set assigned_at if not already set
+        if (empty($service->assigned_at)) {
+            $service->assigned_at = now();
+        }
+        $service->save();
+        Log::info('Service marked as assigned', [
+            'service_id' => $service->id, 
+            'assigned_by' => $service->assigned_by,
+            'profile_id' => $service->profile_id
+        ]);
+    }
+} catch (\Exception $e) {
+    Log::warning('Could not mark service as assigned', ['error' => $e->getMessage(), 'service_id' => $service->id]);
+}
 
             // Handle an uploaded photo (if provided) and link it via uploads table
             try {
