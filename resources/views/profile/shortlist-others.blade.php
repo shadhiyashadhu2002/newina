@@ -94,6 +94,14 @@
             box-shadow: 0 0 0 3px rgba(74, 105, 189, 0.1);
         }
 
+        /* When profile id is taken/auto-filled give it a dimmed appearance but keep it editable */
+        .form-input.taken {
+            background: #e9ecef;
+            color: #333;
+            opacity: 0.85;
+            box-shadow: inset 0 1px 0 rgba(0,0,0,0.02);
+        }
+
         .form-select {
             cursor: pointer;
             appearance: none;
@@ -428,11 +436,8 @@
             <form id="assignProfileForm">
                 <div class="form-group">
                     <label class="form-label">ProfileId <span class="required">*</span></label>
-                    <!-- Always readonly to prevent typing; value is auto-filled via server or JS -->
-                    <input type="text" name="profile_id" class="form-input" placeholder="36584" value="{{ $service->profile_id ?? '' }}" readonly required onkeydown="return false;" onpaste="return false;" style="background:#e9ecef;">
+                    <input type="text" name="profile_id" class="form-input" placeholder="36584" required readonly onkeydown="return false;" onpaste="return false;" style="background:#e9ecef;">
                 </div>
-
-                <!-- Customer ID removed as requested -->
 
                 <div class="form-group">
                     <label class="form-label">Other Site Member ID <span class="required">*</span></label>
@@ -494,79 +499,67 @@
         const today = new Date().toISOString().split('T')[0];
         document.querySelector('input[name="service_date"]').value = today;
 
-        // If profile_id input is empty, request a generated profile id from server and lock the input
-        (function ensureProfileId() {
+        // Auto-generate profile id if empty, visually mark it as taken (dimmed) but keep it editable
+        (function autoFillProfileId() {
             const pidInput = document.querySelector('input[name="profile_id"]');
             if (!pidInput) return;
+            function markTaken() {
+                pidInput.classList.add('taken');
+                pidInput.setAttribute('data-auto-generated', '1');
+            }
+            function clearTaken() {
+                pidInput.classList.remove('taken');
+                pidInput.removeAttribute('data-auto-generated');
+            }
+
             if (!pidInput.value || pidInput.value.trim() === '') {
                 fetch('/generate-profile-id', { credentials: 'same-origin' })
                     .then(resp => resp.json())
                     .then(data => {
                         if (data && data.profile_id) {
                             pidInput.value = data.profile_id;
-                            pidInput.readOnly = true;
-                            pidInput.style.background = '#e9ecef';
+                            markTaken();
                         }
-                    })
-                    .catch(err => console.warn('Could not generate profile id:', err));
+                    }).catch(err => console.warn('Could not generate profile id:', err));
             } else {
-                // If already present (prefilled), ensure it's readonly
-                pidInput.readOnly = true;
-                pidInput.style.background = '#e9ecef';
+                // Already has a value — visually mark as taken
+                markTaken();
             }
         })();
 
         document.getElementById('assignProfileForm').addEventListener('submit', function(e) {
             e.preventDefault();
 
-            const payload = {
-                profile_id: document.querySelector('input[name="profile_id"]').value,
+            const pidInput = document.querySelector('input[name="profile_id"]');
+            const pidVal = pidInput ? pidInput.value : '';
+
+            const formData = {
+                profile_id: pidVal,
                 other_site_member_id: document.querySelector('input[name="other_site_member_id"]').value,
                 profile_source: document.querySelector('select[name="profile_source"]').value,
                 service_date: document.querySelector('input[name="service_date"]').value,
-                name: document.querySelector('input[name="name"]').value || null,
-                contact_numbers: document.querySelector('input[name="contact_numbers"]').value || null,
-                remarks: document.querySelector('textarea[name="remarks"]').value || null
+                name: document.querySelector('input[name="name"]').value || 'Not specified',
+                contact_numbers: document.querySelector('input[name="contact_numbers"]').value || 'Not specified',
+                remarks: document.querySelector('textarea[name="remarks"]').value || 'No remarks'
             };
 
-            fetch('/assign-profile', {
-                method: 'POST',
-                credentials: 'same-origin',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
-                },
-                body: JSON.stringify(payload)
-            }).then(res => res.json())
-            .then(data => {
-                if (data && data.success) {
-                    addProfileToResults({
-                        profile_id: data.data.profile_id,
-                        other_site_member_id: data.data.other_site_member_id,
-                        profile_source: payload.profile_source,
-                        name: payload.name || 'Not specified',
-                        service_date: payload.service_date,
-                        contact_numbers: payload.contact_numbers || 'Not specified',
-                        remarks: payload.remarks || 'No remarks'
-                    });
+            addProfileToResults(formData);
 
-                    // keep profile id after reset
-                    const pidInput = document.querySelector('input[name="profile_id"]');
-                    const pidVal = pidInput ? pidInput.value : '';
-                    this.reset();
-                    if (pidInput) {
-                        pidInput.value = pidVal;
-                        pidInput.readOnly = true;
-                        pidInput.style.background = '#e9ecef';
+            // reset the form and fetch a fresh profile id so user doesn't need to type
+            this.reset();
+            document.querySelector('input[name="service_date"]').value = today;
+            // request a new profile id and mark taken
+            fetch('/generate-profile-id', { credentials: 'same-origin' })
+                .then(resp => resp.json())
+                .then(data => {
+                    if (data && data.profile_id) {
+                        if (pidInput) {
+                            pidInput.value = data.profile_id;
+                            pidInput.classList.add('taken');
+                            pidInput.setAttribute('data-auto-generated','1');
+                        }
                     }
-                    document.querySelector('input[name="service_date"]').value = today;
-                } else {
-                    alert('Failed to assign profile: ' + (data.message || 'Unknown error'));
-                }
-            }).catch(err => {
-                console.error(err);
-                alert('Error assigning profile. See console for details.');
-            });
+                }).catch(err => console.warn('Could not refresh profile id:', err));
         });
 
         function addProfileToResults(profileData) {
@@ -579,7 +572,6 @@
                 <div class="profile-header">
                     <div class="header-left">
                         <h3>${profileData.name}</h3>
-                        <span class="profile-code">ID: ${profileData.profile_id}</span>
                     </div>
                 </div>
 
@@ -591,7 +583,6 @@
                         <div class="profile-field">
                             <strong>Member ID:</strong> ${profileData.other_site_member_id}
                         </div>
-                        <!-- Customer ID removed from display -->
                         <div class="profile-field">
                             <strong>Profile Source:</strong> ${profileData.profile_source}
                         </div>
@@ -618,8 +609,8 @@
                 </div>
 
                 <div class="profile-actions">
-                        <button class="btn-small btn-view-details" onclick="viewProfileDetails('${profileData.profile_id}', ${JSON.stringify(profileData).replace(/'/g, "&apos;")})">View Details</button>
-                        <button class="btn-small btn-save-profile" onclick="saveProfile('${profileData.profile_id}')">Save Profile</button>
+                    <button class="btn-small btn-view-details" onclick="viewProfileDetails('${profileData.profile_id}', ${JSON.stringify(profileData).replace(/'/g, "&apos;")})">View Details</button>
+                    <button class="btn-small btn-save-profile" onclick="saveProfile('${profileData.profile_id}')">Save Profile</button>
                 </div>
             `;
 
@@ -628,86 +619,17 @@
             resultsContainer.scrollIntoView({ behavior: 'smooth', block: 'start' });
         }
 
-        // Load assigned profiles for current user on page load
-        function loadAssignedProfiles() {
-            fetch('/assigned-profiles', {
-                method: 'GET',
-                credentials: 'same-origin',
-                headers: { 'Accept': 'application/json' }
-            }).then(res => res.json())
-            .then(resp => {
-                if (!resp) return;
-                // If the controller returns an object like { data: [...] } handle both
-                const list = Array.isArray(resp) ? resp : (Array.isArray(resp.data) ? resp.data : []);
-                list.forEach(svc => {
-                    addProfileToResults({
-                        profile_id: svc.profile_id,
-                        other_site_member_id: svc.other_site_member_id,
-                        profile_source: svc.profile_source,
-                        name: svc.member_name || svc.service_name || svc.member_name || 'Not specified',
-                        service_date: svc.start_date || svc.service_date || '',
-                        contact_numbers: svc.contact_numbers || 'Not specified',
-                        remarks: svc.remarks || 'No remarks'
-                    });
-                });
-            }).catch(err => {
-                console.error('Failed to load assigned profiles', err);
-            });
-        }
-
-        document.addEventListener('DOMContentLoaded', function() {
-            loadAssignedProfiles();
-        });
-
         function handlePhotoUpload(input, profileId) {
             if (input.files && input.files[0]) {
                 const reader = new FileReader();
                 reader.onload = function(e) {
-                    const photoArea = input.closest('.photo-section').querySelector('.photo-upload-area');
-                    photoArea.classList.add('has-photo');
-                    photoArea.innerHTML = `<img src="${e.target.result}" alt="Profile photo" class="profile-photo">`;
-                    input.dataset.photoData = e.target.result;
+                    const photoArea = document.querySelector(`.photo-upload-area`);
+                    if (photoArea && photoArea.closest('.photo-section').querySelector(`.file-input-${profileId}`).value.includes(input.value.split('\\').pop())) {
+                        photoArea.classList.add('has-photo');
+                        photoArea.innerHTML = `<img src="${e.target.result}" alt="Profile photo" class="profile-photo">`;
+                    }
                 };
                 reader.readAsDataURL(input.files[0]);
-            }
-        }
-
-        function viewProfileDetails(profileId, profileData) {
-            const details = `
-Profile ID: ${profileData.profile_id}
-Name: ${profileData.name}
-Member ID: ${profileData.other_site_member_id}
-Profile Source: ${profileData.profile_source}
-Service Date: ${profileData.service_date}
-Contact Numbers: ${profileData.contact_numbers}
-Remarks: ${profileData.remarks}
-            `;
-            alert(details);
-        }
-
-        function saveProfile(profileId, customerId) {
-            const fileInput = document.querySelector(`.file-input-${profileId}`);
-            const photoData = fileInput ? (fileInput.dataset.photoData || null) : null;
-
-            if (confirm('Are you sure you want to save this profile?')) {
-                alert(`Profile ${profileId} (Customer ID: ${customerId || 'N/A'}) saved successfully!${photoData ? '\nPhoto has been uploaded.' : '\nNo photo uploaded.'}`);
-                
-                // Here you can make an AJAX call to save to database
-                // fetch('/save-profile', {
-                //     method: 'POST',
-                //     headers: {
-                //         'Content-Type': 'application/json',
-                //         'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
-                //     },
-                //     body: JSON.stringify({
-                //         profile_id: profileId,
-                //         photo: photoData
-                //     })
-                // }).then(response => response.json()).then(data => {
-                //     if (data.success) {
-                //         alert('Profile saved successfully!');
-                //     }
-                // });
             }
         }
 
