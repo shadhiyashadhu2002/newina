@@ -372,6 +372,9 @@ Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard
     Route::post('/search-profiles', [ServiceController::class, 'searchProfiles'])->name('search.profiles');
     Route::post('/assign-profile', [ServiceController::class, 'assignProfile'])->name('assign.profile');
     Route::get('/assigned-profiles', [ServiceController::class, 'assignedProfiles'])->name('assigned.profiles');
+    // Shortlist endpoints
+    Route::post('/add-to-shortlist', [ServiceController::class, 'addToShortlist'])->name('shortlist.add');
+    Route::get('/shortlists/{profileId}', [ServiceController::class, 'getShortlistsForProfile'])->name('shortlist.list');
     // Generate a new profile id for Assign-from-Other flow
     Route::get('/generate-profile-id', [ServiceController::class, 'generateProfileId'])->name('generate.profile.id');
     // Upload photo endpoint (uploads file and returns upload id + url)

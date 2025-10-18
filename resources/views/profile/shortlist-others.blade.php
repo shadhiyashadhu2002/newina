@@ -432,11 +432,17 @@
     <div class="page-wrapper">
         <div class="form-container">
             <h1 class="form-title">Assign Profile from Other Sources</h1>
+            <!-- Informational banner: where to find shortlisted profiles -->
+            <div id="shortlist-info-banner" style="background:#fff3cd;color:#856404;padding:12px;border-radius:8px;margin:12px 0;border:1px solid #ffeeba;">
+                Profiles added to shortlist will appear on the <strong>View Prospects</strong> page.
+                <a id="shortlist-info-link" href="#" style="color:#856404;text-decoration:underline;margin-left:8px;">Open View Prospects</a>
+            </div>
             
             <form id="assignProfileForm">
                 <div class="form-group">
                     <label class="form-label">ProfileId <span class="required">*</span></label>
-                    <input type="text" name="profile_id" class="form-input" placeholder="36584" required readonly onkeydown="return false;" onpaste="return false;" style="background:#e9ecef;">
+                    {{-- Prefill with service->profile_id or service->id when present so assigned profiles map to the requested service --}}
+                    <input type="text" name="profile_id" class="form-input" placeholder="36584" required readonly onkeydown="return false;" onpaste="return false;" style="background:#e9ecef;" value="{{ $service->profile_id ?? $service->id ?? '' }}">
                 </div>
 
                 <div class="form-group">
@@ -652,8 +658,16 @@
                 <div class="profile-actions">
                     <button class="btn-small btn-view-details" onclick="viewProfileDetails('${profileData.profile_id}', ${JSON.stringify(profileData).replace(/'/g, "&apos;")})">View Details</button>
                     <button class="btn-small btn-save-profile" onclick="saveProfile('${profileData.profile_id}')">Save Profile</button>
+                    <button class="btn-small btn-shortlist" onclick="shortlistAssigned(this)">📌 Shortlist</button>
                 </div>
             `;
+
+            // store structured data on the card element for later use by shortlistAssigned
+            profileCard.dataset.profileId = profileData.profile_id || '';
+            profileCard.dataset.memberName = profileData.name || '';
+            profileCard.dataset.otherSiteMemberId = profileData.other_site_member_id || '';
+            profileCard.dataset.profileSource = profileData.profile_source || '';
+            profileCard.dataset.contactNumbers = profileData.contact_numbers || '';
 
             resultsGrid.appendChild(profileCard);
             resultsContainer.style.display = 'block';
@@ -772,6 +786,35 @@ Remarks: ${profileData.remarks}
                     if (newPid && newPid !== profileId) {
                         updateCardProfileId(profileId, newPid);
                     }
+                    // Also add to shortlist automatically for 'others' source
+                    try {
+                        fetch('/add-to-shortlist', {
+                            method: 'POST',
+                            credentials: 'same-origin',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                            },
+                            body: JSON.stringify({
+                                profile_id: newPid,
+                                prospect_id: otherSiteMemberId || null,
+                                source: 'others',
+                                prospect_name: memberName || null,
+                                prospect_contact: contactNumbers || null
+                            })
+                        }).then(r2 => r2.json()).then(sresp => {
+                            if (sresp && sresp.success) {
+                                const dest = (sresp.shortlist && sresp.shortlist.profile_id) || newPid || profileId || (resp && resp.profile_id) || '';
+                                showShortlistNotice(dest);
+                                // After adding to shortlist, navigate to view-prospects so the user sees it immediately
+                                if (dest) {
+                                    window.location.href = '/view-prospects/' + encodeURIComponent(dest);
+                                }
+                            }
+                        }).catch(e => console.warn('Could not add to shortlist', e));
+                    } catch(e) {
+                        console.warn('Auto-shortlist skipped', e);
+                    }
                 } else {
                     alert('Failed to save profile: ' + (resp.message || 'Unknown error'));
                 }
@@ -820,6 +863,18 @@ Remarks: ${profileData.remarks}
                         }
                     }
                 });
+                // Update the profile-card element's data attributes so later actions pick up the new id
+                const cardEl = document.querySelector(`.profile-card[data-profile-id='${oldId}']`);
+                if (cardEl) {
+                    cardEl.dataset.profileId = newId;
+                    cardEl.setAttribute('data-profile-id', newId);
+
+                    // Update photo area onclick inside this specific card if present
+                    const photoArea = cardEl.querySelector('.photo-upload-area');
+                    if (photoArea) {
+                        photoArea.setAttribute('onclick', `document.querySelector('.file-input-${newId}').click()`);
+                    }
+                }
             } catch (err) {
                 console.warn('Could not update card profile id', err);
             }
@@ -855,6 +910,78 @@ Remarks: ${profileData.remarks}
         function clearForm() {
             document.getElementById('assignProfileForm').reset();
             document.querySelector('input[name="service_date"]').value = today;
+        }
+
+        // Shortlist an assigned profile card (manual action)
+        function shortlistAssigned(buttonEl) {
+            try {
+                const card = buttonEl.closest('.profile-card');
+                if (!card) return alert('Profile card not found');
+
+                const profileId = card.dataset.profileId || card.getAttribute('data-profile-id') || document.querySelector('input[name="profile_id"]').value;
+                const prospectId = card.dataset.otherSiteMemberId || '';
+                const prospectName = card.dataset.memberName || '';
+                const source = card.dataset.profileSource || 'others';
+                const contact = card.dataset.contactNumbers || '';
+
+                if (!confirm('Add this assigned profile to shortlist?')) return;
+
+                fetch('/add-to-shortlist', {
+                    method: 'POST',
+                    credentials: 'same-origin',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                    },
+                    body: JSON.stringify({
+                        profile_id: profileId,
+                        prospect_id: prospectId || null,
+                        prospect_name: prospectName || null,
+                        prospect_contact: contact || null,
+                        source: source
+                    })
+                }).then(r => r.json()).then(resp => {
+                    if (resp && resp.success) {
+                        const pid = (resp.shortlist && resp.shortlist.profile_id) || profileId || (card && card.dataset && card.dataset.profileId) || '';
+                        showShortlistNotice(pid);
+                        if (pid) {
+                            window.location.href = '/view-prospects/' + encodeURIComponent(pid);
+                        }
+                    } else {
+                        alert('Failed to add to shortlist: ' + (resp && resp.message ? resp.message : 'Unknown'));
+                    }
+                }).catch(err => {
+                    console.error('Shortlist error', err);
+                    alert('Error adding to shortlist');
+                });
+            } catch (e) {
+                console.error(e);
+                alert('Unexpected error');
+            }
+        }
+
+        // show a transient banner with link to view-prospects
+        function showShortlistNotice(profileId) {
+            try {
+                const banner = document.getElementById('shortlist-info-banner');
+                const link = document.getElementById('shortlist-info-link');
+                if (banner && link) {
+                    link.href = '/view-prospects/' + encodeURIComponent(profileId || '');
+                    banner.style.display = 'block';
+                    const origBg = banner.style.background;
+                    banner.style.background = '#d4edda';
+                    banner.style.color = '#155724';
+                    setTimeout(() => {
+                        banner.style.background = origBg;
+                        banner.style.color = '';
+                    }, 5000);
+                } else if (profileId) {
+                    window.location.href = '/view-prospects/' + encodeURIComponent(profileId);
+                }
+            } catch (e) {
+                console.warn('Could not show shortlist notice', e);
+                if (profileId) window.location.href = '/view-prospects/' + encodeURIComponent(profileId);
+            }
         }
     </script>
 </body>

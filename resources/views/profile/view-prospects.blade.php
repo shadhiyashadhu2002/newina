@@ -282,8 +282,8 @@
         <div class="header">
             <h1 class="page-title">View Prospects</h1>
             <p class="page-subtitle">View and manage prospects for the selected profile</p>
-            <div class="profile-info">
-                Profile ID: PYPL22027
+            <div class="profile-info" data-profile-id="{{ $service->profile_id ?? $service->id ?? 'UNKNOWN' }}">
+                Profile ID: {{ $service->profile_id ?? $service->id ?? 'UNKNOWN' }}
             </div>
         </div>
 
@@ -376,7 +376,8 @@
 
     <script>
         function refreshProspects() {
-            location.reload();
+            // Reload prospects and shortlists
+            loadShortlists();
         }
 
         // Add animation for table rows
@@ -426,6 +427,91 @@
                 }
                 closeRemarkModal();
             });
+
+            // Load shortlists for this profile
+            function loadShortlists() {
+                // use profile id passed from the server to avoid parsing UI text
+                const profileInfoEl = document.querySelector('.profile-info');
+                let profileId = profileInfoEl ? (profileInfoEl.dataset.profileId || profileInfoEl.textContent.replace('Profile ID:','').trim()) : '';
+
+                // Fallback: if the server rendered no profile id (UNKNOWN/empty), try using
+                // the last URL segment which is the {serviceId} route param. The controller
+                // will resolve a numeric service id to the actual profile_id when possible.
+                if (!profileId || profileId.toUpperCase() === 'UNKNOWN') {
+                    const path = window.location.pathname.replace(/\/$/, '');
+                    const parts = path.split('/').filter(Boolean);
+                    profileId = parts.length ? parts[parts.length - 1] : profileId;
+                    console.warn('[view-prospects] profileId missing; falling back to URL segment ->', profileId);
+                } else {
+                    console.debug('[view-prospects] resolved profileId ->', profileId);
+                }
+
+                fetch('/shortlists/' + encodeURIComponent(profileId), { 
+                    credentials: 'same-origin',
+                    headers: { 'Accept': 'application/json' }
+                })
+                    .then(response => {
+                        console.debug('[view-prospects] fetch status', response.status, 'content-type:', response.headers.get('content-type'));
+                        // If server redirected to login page or returned HTML, content-type won't be JSON
+                        const contentType = response.headers.get('content-type') || '';
+                        if (!response.ok) {
+                            // show friendly message when unauthorized
+                            if (response.status === 401 || response.status === 403) {
+                                throw new Error('Unauthorized. Please login to view shortlists.');
+                            }
+                            throw new Error('Server returned status ' + response.status);
+                        }
+
+                        if (!contentType.includes('application/json')) {
+                            throw new Error('Unexpected non-JSON response - likely redirected to login.');
+                        }
+
+                        return response.json();
+                    })
+                    .then(resp => {
+                        if (!resp || !resp.success) {
+                            console.warn('Shortlists endpoint returned no success', resp);
+                            return;
+                        }
+                        const data = resp.data || [];
+                        const tbody = document.querySelector('.prospects-table tbody');
+                        if (!tbody) return;
+                        // remove previously injected shortlist rows to avoid duplicates
+                        document.querySelectorAll('.prospects-table tbody tr.shortlist-row').forEach(r => r.remove());
+
+                        if (data.length === 0) {
+                            // show a friendly row when nothing is found
+                            const emptyRow = document.createElement('tr');
+                            emptyRow.classList.add('shortlist-row');
+                            emptyRow.innerHTML = `<td colspan="12" style="text-align:center; padding:30px; color:#666;">No shortlisted prospects found for this profile.</td>`;
+                            tbody.insertBefore(emptyRow, tbody.firstChild);
+                        }
+
+                        data.forEach(item => {
+                            const tr = document.createElement('tr');
+                            tr.classList.add('shortlist-row');
+                            tr.innerHTML = `
+                                <td>${new Date(item.created_at).toLocaleDateString()}</td>
+                                <td class="prospect-id">${item.prospect_id || item.id}</td>
+                                <td class="prospect-name">${item.prospect_name || item.prospect_id || 'Unknown'}</td>
+                                <td>${item.prospect_age || ''}</td>
+                                <td>${item.prospect_education || ''}</td>
+                                <td>${item.prospect_occupation || ''}</td>
+                                <td>${item.prospect_location || ''}</td>
+                                <td>${item.contact_date ? new Date(item.contact_date).toLocaleDateString() : ''}</td>
+                                <td><span class="status-badge status-pending">${item.status || 'new'}</span></td>
+                                <td class="customer-reply">${item.customer_reply || ''}</td>
+                                <td><a href="#" class="action-btn" onclick="editShortlist(${item.id})">✏️ Edit</a></td>
+                                <td class="remark-cell"><button class="remark-btn" data-prospect="${item.prospect_id || item.id}" title="Add remark">📝</button></td>
+                            `;
+                            // prepend so newest appear on top
+                            tbody.insertBefore(tr, tbody.firstChild);
+                        });
+                    }).catch(err => console.warn('Could not load shortlists', err));
+            }
+
+            // initial load
+            loadShortlists();
         });
     </script>
 </body>

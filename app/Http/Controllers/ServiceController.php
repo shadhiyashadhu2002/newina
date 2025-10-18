@@ -886,7 +886,7 @@ class ServiceController extends Controller
         
         if (!$service) {
             // Create a dummy service for the view if service doesn't exist
-            $service = new Service(['id' => $serviceId, 'name' => 'Service ' . $serviceId]);
+            $service = new Service(['id' => $serviceId, 'profile_id' => $serviceId, 'name' => 'Service ' . $serviceId]);
         }
         
         return view('profile.shortlist-ina', compact('service'));
@@ -899,7 +899,7 @@ class ServiceController extends Controller
         
         if (!$service) {
             // Create a dummy service for the view if service doesn't exist
-            $service = new Service(['id' => $serviceId, 'name' => 'Service ' . $serviceId]);
+            $service = new Service(['id' => $serviceId, 'profile_id' => $serviceId, 'name' => 'Service ' . $serviceId]);
         }
         
         return view('profile.shortlist-others', compact('service'));
@@ -912,7 +912,7 @@ class ServiceController extends Controller
         
         if (!$service) {
             // Create a dummy service for the view if service doesn't exist
-            $service = new Service(['id' => $serviceId, 'name' => 'Service ' . $serviceId]);
+            $service = new Service(['id' => $serviceId, 'profile_id' => $serviceId, 'name' => 'Service ' . $serviceId]);
         }
         
         return view('profile.view-prospects', compact('service'));
@@ -1449,6 +1449,132 @@ class ServiceController extends Controller
         } catch (\Exception $e) {
             Log::error('Error uploading photo', ['error' => $e->getMessage(), 'trace' => $e->getTraceAsString()]);
             return response()->json(['success' => false, 'message' => 'Upload failed'], 500);
+        }
+    }
+
+    // Add a prospect to shortlist
+    public function addToShortlist(Request $request)
+    {
+        try {
+            $user = Auth::user();
+            if (!$user) return response()->json(['success' => false, 'message' => 'Unauthorized'], 401);
+
+            // Debug: log incoming payload for troubleshooting 'others' shortlists
+            try {
+                Log::info('addToShortlist incoming', ['user_id' => $user->id ?? null, 'payload' => $request->all()]);
+            } catch (\Exception $e) {
+                // ignore logging errors
+            }
+
+            $data = $request->only([
+                'profile_id','prospect_id','source','prospect_name','prospect_age','prospect_education','prospect_occupation','prospect_location','prospect_religion','prospect_caste','prospect_marital_status','prospect_height','prospect_weight','prospect_contact','contact_date','remark'
+            ]);
+
+            // Basic validation
+            if (empty($data['profile_id'])) return response()->json(['success' => false, 'message' => 'profile_id required'], 422);
+            if (empty($data['prospect_id']) && empty($data['prospect_name'])) return response()->json(['success' => false, 'message' => 'prospect_id or prospect_name required'], 422);
+
+            // Store the user id (integer) in shortlisted_by to be compatible with legacy schema
+            $data['shortlisted_by'] = (int) ($user->id ?? 0);
+            // Legacy schema requires user_id NOT NULL — set to current user id as well
+            $data['user_id'] = (int) ($user->id ?? 0);
+
+            // Ensure prospect_age is an integer when present
+            if (isset($data['prospect_age'])) {
+                $data['prospect_age'] = is_numeric($data['prospect_age']) ? (int) $data['prospect_age'] : null;
+            }
+
+            $short = \App\Models\Shortlist::create($data);
+
+            // Debug: log the created shortlist row
+            try {
+                Log::info('addToShortlist created', ['shortlist_id' => $short->id ?? null, 'profile_id' => $short->profile_id ?? null, 'source' => $short->source ?? null, 'prospect_id' => $short->prospect_id ?? null]);
+            } catch (\Exception $e) {
+                // ignore logging errors
+            }
+
+            return response()->json(['success' => true, 'shortlist' => $short]);
+        } catch (\Exception $e) {
+            Log::error('Error in addToShortlist', ['error' => $e->getMessage(), 'request' => $request->all(), 'trace' => $e->getTraceAsString()]);
+            return response()->json(['success' => false, 'message' => 'Failed to add to shortlist', 'error' => $e->getMessage()], 500);
+        }
+    }
+
+    // Return all shortlist items for a given profile
+    public function getShortlistsForProfile($profileId)
+    {
+        try {
+            $user = Auth::user();
+            if (!$user) return response()->json(['success' => false, 'message' => 'Unauthorized'], 401);
+
+            // Sometimes this route is called with a numeric service DB id instead of the
+            // real profile_id (legacy data uses textual profile_id values). Try to
+            // resolve a Service record first and prefer its profile_id when present.
+            $resolvedProfileId = $profileId;
+            try {
+                $service = Service::find($profileId);
+                if ($service && !empty($service->profile_id)) {
+                    $resolvedProfileId = $service->profile_id;
+                }
+            } catch (\Exception $e) {
+                // ignore resolution errors and fall back to provided param
+            }
+
+            // Query using both resolvedProfileId and the original param to handle
+            // cases where client/server normalization differs (e.g., AUTO-... ids).
+            $candidates = array_filter(array_unique([$resolvedProfileId, $profileId]));
+            if (count($candidates) === 1) {
+                $items = \App\Models\Shortlist::where('profile_id', $candidates[0])
+                            ->whereNull('deleted_at')
+                            ->orderByDesc('created_at')
+                            ->get();
+            } else {
+                $items = \App\Models\Shortlist::whereIn('profile_id', $candidates)
+                            ->whereNull('deleted_at')
+                            ->orderByDesc('created_at')
+                            ->get();
+            }
+
+            // Temporary debug logging: record what was requested and what was found
+            try {
+                $sources = $items->pluck('source')->unique()->values()->all();
+                Log::info('getShortlistsForProfile debug', [
+                    'requested' => $profileId,
+                    'resolved' => $resolvedProfileId,
+                    'found_count' => $items->count(),
+                    'sources' => $sources,
+                    'ids_preview' => $items->pluck('id')->take(10)->values()->all()
+                ]);
+            } catch (\Exception $e) {
+                // ignore logging failures
+            }
+
+            // Ensure each item has a usable prospect_name for display. For INA source
+            // the shortlist often stores only prospect_id; try to resolve the name from
+            // the users table (match by code or id) when prospect_name is empty.
+            $mapped = $items->map(function($it) {
+                $arr = $it->toArray();
+                if (empty($arr['prospect_name']) && !empty($arr['prospect_id'])) {
+                    try {
+                        $u = \App\Models\User::where('code', $arr['prospect_id'])->orWhere('id', $arr['prospect_id'])->first();
+                        if ($u) {
+                            $arr['prospect_name'] = $u->name ?? ($u->first_name ?? null);
+                        }
+                    } catch (\Exception $e) {
+                        // ignore lookup failures — we'll return whatever we have
+                    }
+                }
+                return $arr;
+            })->toArray();
+
+            if (empty($mapped)) {
+                Log::info('No shortlist items found for profile lookup', ['requested' => $profileId, 'resolved' => $resolvedProfileId, 'user_id' => $user->id]);
+            }
+
+            return response()->json(['success' => true, 'data' => $mapped]);
+        } catch (\Exception $e) {
+            Log::error('Error in getShortlistsForProfile: ' . $e->getMessage());
+            return response()->json(['success' => false, 'message' => 'Failed to retrieve shortlists'], 500);
         }
     }
 }

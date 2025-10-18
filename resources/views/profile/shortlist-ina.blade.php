@@ -238,6 +238,11 @@
 <body>
     <div class="form-container">
         <h1 class="form-title">Search Profiles (INA Database)</h1>
+        <!-- Informational banner: where to find shortlisted profiles -->
+        <div id="shortlist-info-banner" style="background:#fff3cd;color:#856404;padding:12px;border-radius:8px;margin:12px 0;border:1px solid #ffeeba;">
+            Profiles you add to the shortlist will appear on the <strong>View Prospects</strong> page.
+            <a id="shortlist-info-link" href="#" style="color:#856404;text-decoration:underline;margin-left:8px;">Open View Prospects</a>
+        </div>
         
         <!-- Success Message -->
         @if(session('success'))
@@ -877,26 +882,74 @@
             };
         }
 
-        // Shortlist profile function
+        // Shortlist profile function - posts to server to create a shortlist record
         function shortlistProfile(userId) {
-            if (confirm('Are you sure you want to add this profile to shortlist?')) {
-                // Here you can implement AJAX call to add to shortlist
-                // For now, just show success message
-                alert('Profile added to shortlist successfully!');
-                
-                // You can make an AJAX call here to save to database
-                // fetch('/add-to-shortlist', {
-                //     method: 'POST',
-                //     headers: {
-                //         'Content-Type': 'application/json',
-                //         'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
-                //     },
-                //     body: JSON.stringify({user_id: userId})
-                // }).then(response => response.json()).then(data => {
-                //     if (data.success) {
-                //         alert('Profile added to shortlist successfully!');
-                //     }
-                // });
+            if (!confirm('Are you sure you want to add this profile to shortlist?')) return;
+
+            const urlParams = new URLSearchParams(window.location.search);
+            const profileId = urlParams.get('profile_id') || '{{ $service->profile_id ?? $service->id ?? "" }}';
+
+            // Ensure profileId is populated - try URL segment if needed
+            let safeProfileId = profileId;
+            if (!safeProfileId || safeProfileId.trim() === '') {
+                const p = window.location.pathname.replace(/\/$/, '').split('/').filter(Boolean).pop();
+                safeProfileId = p || safeProfileId;
+            }
+            if (!safeProfileId || safeProfileId.trim() === '') {
+                return alert('Cannot add to shortlist: profile_id is missing. Please use the Assign/Shortlist flow from a valid service profile.');
+            }
+
+            fetch('/add-to-shortlist', {
+                method: 'POST',
+                credentials: 'same-origin',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                },
+                body: JSON.stringify({
+                    profile_id: safeProfileId,
+                    prospect_id: userId,
+                    source: 'ina'
+                })
+            }).then(r => r.json()).then(resp => {
+                if (resp && resp.success) {
+                    // show unobtrusive notice with link to View Prospects
+                    const destId = safeProfileId || profileId || '{{ $service->id ?? "" }}';
+                    showShortlistNotice(destId);
+                } else {
+                    alert('Failed to add to shortlist: ' + (resp.message || 'Unknown'));
+                }
+            }).catch(err => {
+                console.error('Shortlist failed', err);
+                alert('Error adding to shortlist');
+            });
+        }
+
+        // Display a transient notice with a link to view prospects for the given profile
+        function showShortlistNotice(profileId) {
+            try {
+                const banner = document.getElementById('shortlist-info-banner');
+                const link = document.getElementById('shortlist-info-link');
+                if (banner && link) {
+                    link.href = '/view-prospects/' + encodeURIComponent(profileId);
+                    link.textContent = 'Open View Prospects';
+                    banner.style.display = 'block';
+                    // temporarily highlight it
+                    banner.style.transition = 'background 0.3s ease';
+                    banner.style.background = '#d4edda';
+                    banner.style.color = '#155724';
+                    setTimeout(() => {
+                        // revert after 5s
+                        banner.style.background = '';
+                        banner.style.color = '';
+                    }, 5000);
+                } else {
+                    // fallback: navigate directly if DOM not present
+                    window.location.href = '/view-prospects/' + encodeURIComponent(profileId);
+                }
+            } catch (e) {
+                console.warn('Could not show shortlist notice', e);
+                window.location.href = '/view-prospects/' + encodeURIComponent(profileId);
             }
         }
     </script>

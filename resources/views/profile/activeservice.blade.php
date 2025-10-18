@@ -335,7 +335,7 @@
                 <td>
                   <a href="{{ route('shortlist.ina', $s->profile_id) }}" class="action-btn btn-shortlist-ina">📋 Shortlist from INA</a>
                   <a href="{{ route('shortlist.others', $s->profile_id) }}" class="action-btn btn-shortlist-others">📋 Shortlist from Others</a>
-                  <a href="{{ route('view.prospects', $s->profile_id) }}" class="action-btn btn-view-prospects">👀 View Prospects</a>
+                  <a href="{{ route('view.prospects', $s->profile_id ?? $s->id) }}" class="action-btn btn-view-prospects">👀 View Prospects</a>
                   <a href="{{ route('client.details', $s->profile_id) }}" class="action-btn btn-view-details">👤 View Client Details</a>
                 </td>
               </tr>
