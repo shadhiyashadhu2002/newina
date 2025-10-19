@@ -223,8 +223,8 @@
 <body>
     <div class="container">
         <div class="header">
-            <div class="page-title">Client Details - 38584</div>
-            <div class="profile-id">Profile ID: 38584</div>
+            <div class="page-title">Client Details - {{ $service->profile_id ?? $service->id ?? 'N/A' }}</div>
+            <div class="profile-id">Profile ID: {{ $service->profile_id ?? $service->id ?? 'N/A' }}</div>
         </div>
 
         <div class="details-grid">
@@ -236,31 +236,31 @@
                 </div>
                 <div class="detail-item">
                     <span class="detail-label">Profile ID:</span>
-                    <span class="detail-value">38584</span>
+                    <span class="detail-value">{{ $service->profile_id ?? $service->id ?? 'N/A' }}</span>
                 </div>
                 <div class="detail-item">
                     <span class="detail-label">Service Name:</span>
-                    <span class="detail-value">Elite</span>
+                    <span class="detail-value">{{ $service->service_name ?? $service->name ?? '—' }}</span>
                 </div>
                 <div class="detail-item">
                     <span class="detail-label">Price:</span>
-                    <span class="detail-value">50000.00</span>
+                    <span class="detail-value">{{ $service->amount_paid ?? $service->price ?? '0.00' }}</span>
                 </div>
                 <div class="detail-item">
                     <span class="detail-label">Success Fee:</span>
-                    <span class="detail-value">0.00</span>
+                    <span class="detail-value">{{ $service->success_fee ?? '0.00' }}</span>
                 </div>
                 <div class="detail-item">
                     <span class="detail-label">Start Date:</span>
-                    <span class="detail-value">03-10-2025</span>
+                    <span class="detail-value">{{ $service->start_date ? \Carbon\Carbon::parse($service->start_date)->format('d-m-Y') : '—' }}</span>
                 </div>
                 <div class="detail-item">
                     <span class="detail-label">Expiry Date:</span>
-                    <span class="detail-value">03-10-2026</span>
+                    <span class="detail-value">{{ $service->expiry_date ? \Carbon\Carbon::parse($service->expiry_date)->format('d-m-Y') : '—' }}</span>
                 </div>
                 <div class="detail-item">
                     <span class="detail-label">Description:</span>
-                    <span class="detail-value">Royal service 7 months</span>
+                    <span class="detail-value">{{ $service->service_details ?? $service->description ?? '—' }}</span>
                 </div>
             </div>
 
@@ -272,51 +272,51 @@
                 </div>
                 <div class="detail-item">
                     <span class="detail-label">Name:</span>
-                    <span class="detail-value">Musthafiz</span>
+                    <span class="detail-value">{{ $service->member_name ?? '—' }}</span>
                 </div>
                 <div class="detail-item">
                     <span class="detail-label">Age:</span>
-                    <span class="detail-value">30</span>
+                    <span class="detail-value">{{ $service->member_age ?? '—' }}</span>
                 </div>
                 <div class="detail-item">
                     <span class="detail-label">Education:</span>
-                    <span class="detail-value">B TECH</span>
+                    <span class="detail-value">{{ $service->member_education ?? '—' }}</span>
                 </div>
                 <div class="detail-item">
                     <span class="detail-label">Occupation:</span>
-                    <span class="detail-value">BUSINESS</span>
+                    <span class="detail-value">{{ $service->member_occupation ?? '—' }}</span>
                 </div>
                 <div class="detail-item">
                     <span class="detail-label">Annual Income:</span>
-                    <span class="detail-value">200000</span>
+                    <span class="detail-value">{{ $service->member_income ?? '—' }}</span>
                 </div>
                 <div class="detail-item">
                     <span class="detail-label">Marital Status:</span>
-                    <span class="detail-value">Never Married</span>
+                    <span class="detail-value">{{ $service->member_marital_status ?? '—' }}</span>
                 </div>
                 <div class="detail-item">
                     <span class="detail-label">Family Status:</span>
-                    <span class="detail-value">Wealthy</span>
+                    <span class="detail-value">{{ $service->member_family_status ?? '—' }}</span>
                 </div>
                 <div class="detail-item">
                     <span class="detail-label">Father Details:</span>
-                    <span class="detail-value">Owner afkunjini</span>
+                    <span class="detail-value">{{ $service->member_father_details ?? '—' }}</span>
                 </div>
                 <div class="detail-item">
                     <span class="detail-label">Mother Details:</span>
-                    <span class="detail-value">suj</span>
+                    <span class="detail-value">{{ $service->member_mother_details ?? '—' }}</span>
                 </div>
                 <div class="detail-item">
                     <span class="detail-label">Sibling Details:</span>
-                    <span class="detail-value">Or mouhukihean</span>
+                    <span class="detail-value">{{ $service->member_sibling_details ?? '—' }}</span>
                 </div>
                 <div class="detail-item">
                     <span class="detail-label">Caste:</span>
-                    <span class="detail-value">Anquellen</span>
+                    <span class="detail-value">{{ $service->member_caste ?? '—' }}</span>
                 </div>
                 <div class="detail-item">
                     <span class="detail-label">Subcaste:</span>
-                    <span class="detail-value">muslim</span>
+                    <span class="detail-value">{{ $service->member_subcaste ?? '—' }}</span>
                 </div>
             </div>
 
@@ -384,19 +384,19 @@
                 </div>
                 <div class="detail-item">
                     <span class="detail-label">Customer Name:</span>
-                    <span class="detail-value">Musthafiz</span>
+                    <span class="detail-value">{{ $service->contact_customer_name ?? '—' }}</span>
                 </div>
                 <div class="detail-item">
                     <span class="detail-label">Mobile No:</span>
-                    <span class="detail-value">+971506668472</span>
+                    <span class="detail-value">{{ $service->contact_mobile_no ?? $service->contact_phone ?? '—' }}</span>
                 </div>
                 <div class="detail-item">
                     <span class="detail-label">WhatsApp No:</span>
-                    <span class="detail-value">+971506668472</span>
+                    <span class="detail-value">{{ $service->contact_whatsapp_no ?? '—' }}</span>
                 </div>
                 <div class="detail-item">
                     <span class="detail-label">Email:</span>
-                    <span class="detail-value">preshmaragen@gmail.com</span>
+                    <span class="detail-value">{{ $service->contact_email ?? '—' }}</span>
                 </div>
                 <div class="detail-item">
                     <span class="detail-label">Alternate Contact:</span>
@@ -410,7 +410,7 @@
         </div>
 
         <div class="button-group">
-            <a href="{{ route('view.prospects', 38584) }}" class="btn btn-prospects">👥 View Prospects</a>
+            <a href="{{ route('view.prospects', $service->profile_id ?? $service->id ?? 0) }}" class="btn btn-prospects">👥 View Prospects</a>
             <a href="{{ route('active.service') }}" class="btn btn-back">← Back to Active Services</a>
         </div>
     </div>

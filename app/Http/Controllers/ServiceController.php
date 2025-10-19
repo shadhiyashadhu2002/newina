@@ -926,13 +926,162 @@ class ServiceController extends Controller
     // Client Details
     public function clientDetails($clientId)
     {
+        // Try to find service by primary id first
         $service = Service::find($clientId);
-        
+
         if (!$service) {
-            // Create a dummy service for the view if service doesn't exist
-            $service = new Service(['id' => $clientId, 'name' => 'Client ' . $clientId]);
+            // Try to find by profile_id (some flows pass profile id)
+            $service = Service::where('profile_id', $clientId)->first();
         }
-        
+
+        if (!$service) {
+            // As a last resort make a minimal service object so the view can render
+            $service = new Service();
+            $service->id = $clientId;
+            $service->profile_id = $clientId;
+            $service->service_name = null;
+            $service->service_details = null;
+        }
+
+        // Try to attach related user information (user, member, family, partner expectation)
+        $user = null;
+        if (!empty($service->user_id)) {
+            $user = \App\Models\User::find($service->user_id);
+        }
+
+        // If user not known, try resolving by profile_id/code
+        if (!$user && !empty($service->profile_id)) {
+            $user = \App\Models\User::where('code', $service->profile_id)->first();
+        }
+
+        // If still not found, attempt to find via member/service member_name
+        if (!$user) {
+            $svc = Service::where('id', $service->id)->first();
+            if ($svc && $svc->member_name) {
+                $user = \App\Models\User::where('name', 'like', '%' . $svc->member_name . '%')->first();
+            }
+        }
+
+        // Fill contact/customer fields from user if they are empty on service
+        if ($user) {
+            if (empty($service->contact_customer_name)) {
+                $service->contact_customer_name = $user->first_name ?? $user->name ?? '';
+            }
+            if (empty($service->contact_email)) {
+                $service->contact_email = $user->email ?? '';
+            }
+            if (empty($service->contact_whatsapp_no)) {
+                $service->contact_whatsapp_no = $user->phone ?? '';
+            }
+            if (empty($service->contact_mobile_no)) {
+                $service->contact_mobile_no = $user->phone ?? '';
+            }
+        }
+
+        // Member info
+        $member = null;
+        if ($user) {
+            $member = \App\Models\Member::where('user_id', $user->id)->first();
+            if ($member) {
+                if (empty($service->member_name)) {
+                    $service->member_name = $user->name ?? ($user->first_name . ' ' . ($user->last_name ?? ''));
+                }
+                if (empty($service->member_age) && $member->birthday) {
+                    $service->member_age = \Carbon\Carbon::parse($member->birthday)->age;
+                }
+                if (empty($service->member_education)) {
+                    $education = \App\Models\Education::where('user_id', $user->id)->first();
+                    $service->member_education = $education ? $education->degree : ($member->education ?? null);
+                }
+                if (empty($service->member_occupation)) {
+                    $career = \App\Models\Career::where('user_id', $user->id)->first();
+                    $service->member_occupation = $career ? $career->designation : ($member->occupation ?? null);
+                }
+                if (empty($service->member_income) && $member->annual_salary_range_id) {
+                    $salaryRange = \App\Models\AnnualSalaryRange::find($member->annual_salary_range_id);
+                    if ($salaryRange) {
+                        $service->member_income = number_format($salaryRange->min_salary, 2) . '-' . number_format($salaryRange->max_salary, 2);
+                    }
+                }
+                if (empty($service->member_marital_status) && $member->marital_status_id) {
+                    $ms = \App\Models\MaritalStatus::find($member->marital_status_id);
+                    $service->member_marital_status = $ms ? $ms->name : null;
+                }
+            }
+
+            // Family details
+            $family = \App\Models\Family::where('user_id', $user->id)->first();
+            if ($family) {
+                if (empty($service->member_father_details)) {
+                    $service->member_father_details = $family->father ?? '';
+                    if ($family->father_occupation) {
+                        $service->member_father_details .= $service->member_father_details ? (', ' . $family->father_occupation) : $family->father_occupation;
+                    }
+                }
+                if (empty($service->member_mother_details)) {
+                    $service->member_mother_details = $family->mother ?? '';
+                    if ($family->mother_occupation) {
+                        $service->member_mother_details .= $service->member_mother_details ? (', ' . $family->mother_occupation) : $family->mother_occupation;
+                    }
+                }
+                if (empty($service->member_sibling_details)) {
+                    $parts = [];
+                    if ($family->no_of_sisters && $family->no_of_sisters > 0) {
+                        $parts[] = $family->no_of_sisters . ' sister' . ($family->no_of_sisters > 1 ? 's' : '');
+                    }
+                    if ($family->no_of_brothers && $family->no_of_brothers > 0) {
+                        $parts[] = $family->no_of_brothers . ' brother' . ($family->no_of_brothers > 1 ? 's' : '');
+                    }
+                    if ($family->about_sibling) {
+                        $parts[] = $family->about_sibling;
+                    }
+                    $service->member_sibling_details = count($parts) ? implode(', ', $parts) : null;
+                }
+            }
+        }
+
+        // Partner expectations
+        if ($user) {
+            $pe = \App\Models\PartnerExpectation::where('user_id', $user->id)->first();
+            if ($pe) {
+                if (empty($service->preferred_weight) && ($pe->weight ?? null)) {
+                    $service->preferred_weight = $pe->weight;
+                }
+                if (empty($service->preferred_education) && ($pe->education ?? null)) {
+                    $service->preferred_education = $pe->education;
+                }
+                $religionKey = $pe->religion_id ?? $pe->religion ?? null;
+                if (empty($service->preferred_religion) && $religionKey) {
+                    $service->preferred_religion = is_numeric($religionKey) ? (\App\Models\Religion::find($religionKey)->name ?? $religionKey) : $religionKey;
+                }
+                $casteKey = $pe->caste_id ?? $pe->caste ?? null;
+                if (empty($service->preferred_caste) && $casteKey) {
+                    $service->preferred_caste = is_numeric($casteKey) ? (\App\Models\Caste::find($casteKey)->name ?? $casteKey) : $casteKey;
+                }
+                $subKey = $pe->sub_caste_id ?? $pe->subcaste ?? $pe->sub_cast_id ?? null;
+                if (empty($service->preferred_subcaste) && $subKey) {
+                    $service->preferred_subcaste = is_numeric($subKey) ? (\App\Models\SubCaste::find($subKey)->name ?? $subKey) : $subKey;
+                }
+                if (empty($service->preferred_marital_status) && ($pe->marital_status_id ?? $pe->marital_status ?? null)) {
+                    $msKey = $pe->marital_status_id ?? $pe->marital_status ?? null;
+                    $service->preferred_marital_status = is_numeric($msKey) ? (\App\Models\MaritalStatus::find($msKey)->name ?? $msKey) : $msKey;
+                }
+                if (empty($service->preferred_occupation) && ($pe->profession ?? $pe->profession_title ?? null)) {
+                    $service->preferred_occupation = $pe->profession ?? $pe->profession_title ?? null;
+                }
+                if (empty($service->preferred_family_status) && ($pe->family_value_id ?? $pe->family_value ?? null)) {
+                    $fvKey = $pe->family_value_id ?? $pe->family_value ?? null;
+                    $service->preferred_family_status = is_numeric($fvKey) ? (\App\Models\FamilyValue::find($fvKey)->value ?? $fvKey) : $fvKey;
+                }
+                if (empty($service->preferred_eating_habits) && ($pe->eating_habits ?? $pe->diet ?? null)) {
+                    $service->preferred_eating_habits = $pe->eating_habits ?? $pe->diet ?? null;
+                }
+                if (empty($service->preferred_annual_income) && ($pe->annual_income ?? null)) {
+                    $service->preferred_annual_income = $pe->annual_income ?? null;
+                }
+            }
+        }
+
         return view('profile.view-client-details', compact('service'));
     }
 
