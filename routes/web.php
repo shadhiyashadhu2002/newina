@@ -360,6 +360,9 @@ Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard
     // Client details route
     Route::get('/client-details/{clientId}', [ServiceController::class, 'clientDetails'])->name('client.details');
 
+    // Debug: return resolved client details (service, user, partner expectation and computed partnerPrefs)
+    Route::get('/debug/client-details/{clientId}', [ServiceController::class, 'debugClientDetails'])->name('debug.client.details');
+
     // Active Service page route (dynamic)
     Route::get('/active-service', function () {
         return app(App\Http\Controllers\ServiceController::class)->activeServiceList();
@@ -1169,9 +1172,13 @@ Route::post('/get-member-data', function (Request $request) {
             // Annual income - direct column value
             $preferred_annual_income = $pe->annual_income ?? '';
 
-            // Age - prefer explicit min/max columns if present
-            $preferred_age_min = $pe->preferred_age_min ?? null;
-            $preferred_age_max = $pe->preferred_age_max ?? null;
+            // Age - prefer explicit min/max columns if present and normalize
+            $preferred_age_min = is_numeric($pe->preferred_age_min) ? (int)$pe->preferred_age_min : null;
+            $preferred_age_max = is_numeric($pe->preferred_age_max) ? (int)$pe->preferred_age_max : null;
+            // If both exist and are reversed, swap them
+            if ($preferred_age_min !== null && $preferred_age_max !== null && $preferred_age_min > $preferred_age_max) {
+                [$preferred_age_min, $preferred_age_max] = [$preferred_age_max, $preferred_age_min];
+            }
 
             // Height, complexion, body type, smoking and drinking
             $preferred_height = $pe->height ?? '';
@@ -1209,7 +1216,7 @@ Route::post('/get-member-data', function (Request $request) {
             'preferred_age_min' => $preferred_age_min,
             'preferred_age_max' => $preferred_age_max,
             // For backward compatibility provide preferred_age as string
-            'preferred_age' => ($preferred_age_min && $preferred_age_max) ? ($preferred_age_min . '-' . $preferred_age_max) : ($preferred_age_min ?? ''),
+            'preferred_age' => ($preferred_age_min !== null && $preferred_age_max !== null) ? ($preferred_age_min . '-' . $preferred_age_max) : (($preferred_age_min !== null) ? (string)$preferred_age_min : (($preferred_age_max !== null) ? (string)$preferred_age_max : '')),
             'preferred_weight' => $preferred_weight,
             'preferred_education' => $preferred_education,
             'preferred_religion' => $preferred_religion,

@@ -1040,49 +1040,216 @@ class ServiceController extends Controller
             }
         }
 
-        // Partner expectations
+        // Physical attributes (height, weight, complexion, body_type)
+        $physical = null;
+        if ($user) {
+            $physical = \App\Models\PhysicalAttribute::where('user_id', $user->id)->first();
+        }
+
+        // Build partner preferences to show on client details.
+        $partnerPrefs = [];
+        $pe = null;
         if ($user) {
             $pe = \App\Models\PartnerExpectation::where('user_id', $user->id)->first();
-            if ($pe) {
-                if (empty($service->preferred_weight) && ($pe->weight ?? null)) {
-                    $service->preferred_weight = $pe->weight;
-                }
-                if (empty($service->preferred_education) && ($pe->education ?? null)) {
-                    $service->preferred_education = $pe->education;
-                }
-                $religionKey = $pe->religion_id ?? $pe->religion ?? null;
-                if (empty($service->preferred_religion) && $religionKey) {
-                    $service->preferred_religion = is_numeric($religionKey) ? (\App\Models\Religion::find($religionKey)->name ?? $religionKey) : $religionKey;
-                }
-                $casteKey = $pe->caste_id ?? $pe->caste ?? null;
-                if (empty($service->preferred_caste) && $casteKey) {
-                    $service->preferred_caste = is_numeric($casteKey) ? (\App\Models\Caste::find($casteKey)->name ?? $casteKey) : $casteKey;
-                }
-                $subKey = $pe->sub_caste_id ?? $pe->subcaste ?? $pe->sub_cast_id ?? null;
-                if (empty($service->preferred_subcaste) && $subKey) {
-                    $service->preferred_subcaste = is_numeric($subKey) ? (\App\Models\SubCaste::find($subKey)->name ?? $subKey) : $subKey;
-                }
-                if (empty($service->preferred_marital_status) && ($pe->marital_status_id ?? $pe->marital_status ?? null)) {
-                    $msKey = $pe->marital_status_id ?? $pe->marital_status ?? null;
-                    $service->preferred_marital_status = is_numeric($msKey) ? (\App\Models\MaritalStatus::find($msKey)->name ?? $msKey) : $msKey;
-                }
-                if (empty($service->preferred_occupation) && ($pe->profession ?? $pe->profession_title ?? null)) {
-                    $service->preferred_occupation = $pe->profession ?? $pe->profession_title ?? null;
-                }
-                if (empty($service->preferred_family_status) && ($pe->family_value_id ?? $pe->family_value ?? null)) {
-                    $fvKey = $pe->family_value_id ?? $pe->family_value ?? null;
-                    $service->preferred_family_status = is_numeric($fvKey) ? (\App\Models\FamilyValue::find($fvKey)->value ?? $fvKey) : $fvKey;
-                }
-                if (empty($service->preferred_eating_habits) && ($pe->eating_habits ?? $pe->diet ?? null)) {
-                    $service->preferred_eating_habits = $pe->eating_habits ?? $pe->diet ?? null;
-                }
-                if (empty($service->preferred_annual_income) && ($pe->annual_income ?? null)) {
-                    $service->preferred_annual_income = $pe->annual_income ?? null;
+        }
+
+        // include member and physical attributes for debugging
+        $member = null;
+        if ($user) {
+            $member = \App\Models\Member::where('user_id', $user->id)->first();
+        }
+
+        $physical = null;
+        if ($user) {
+            $physical = \App\Models\PhysicalAttribute::where('user_id', $user->id)->first();
+        }
+
+        // Member and physical fallbacks for debug output
+        $member = null;
+        if ($user) {
+            $member = \App\Models\Member::where('user_id', $user->id)->first();
+        }
+
+        $physical = null;
+        if ($user) {
+            $physical = \App\Models\PhysicalAttribute::where('user_id', $user->id)->first();
+        }
+
+        $resolveLookup = function($modelClass, $idOrVal) {
+            if (!$idOrVal) return null;
+            if (is_numeric($idOrVal)) {
+                $m = $modelClass::find($idOrVal);
+                return $m ? ($m->name ?? ($m->value ?? null)) : null;
+            }
+            return $idOrVal;
+        };
+
+        // Age (format as min-max when both exist). Normalize numbers and swap if reversed.
+        $partnerPrefs['preferred_age'] = null;
+        if ($pe) {
+            $min = is_numeric($pe->preferred_age_min) ? (int)$pe->preferred_age_min : null;
+            $max = is_numeric($pe->preferred_age_max) ? (int)$pe->preferred_age_max : null;
+            if ($min !== null || $max !== null) {
+                if ($min !== null && $max !== null) {
+                    if ($min > $max) {
+                        // swap if values were stored reversed
+                        [$min, $max] = [$max, $min];
+                    }
+                    $partnerPrefs['preferred_age'] = $min . '-' . $max;
+                } elseif ($min !== null) {
+                    $partnerPrefs['preferred_age'] = (string)$min;
+                } else {
+                    $partnerPrefs['preferred_age'] = (string)$max;
                 }
             }
         }
 
-        return view('profile.view-client-details', compact('service'));
+        // Fallback: if not set from PartnerExpectation, try service->preferred_age (string) and normalize it
+        if (empty($partnerPrefs['preferred_age'])) {
+            $svcAge = $service->preferred_age ?? null;
+            if ($svcAge) {
+                // Accept values like '25-30' or single '28' and normalize ordering
+                if (strpos($svcAge, '-') !== false) {
+                    [$a, $b] = array_map('trim', explode('-', $svcAge, 2));
+                    $ai = is_numeric($a) ? (int)$a : null;
+                    $bi = is_numeric($b) ? (int)$b : null;
+                    if ($ai !== null && $bi !== null) {
+                        if ($ai > $bi) [$ai, $bi] = [$bi, $ai];
+                        $partnerPrefs['preferred_age'] = $ai . '-' . $bi;
+                    } elseif ($ai !== null) {
+                        $partnerPrefs['preferred_age'] = (string)$ai;
+                    } elseif ($bi !== null) {
+                        $partnerPrefs['preferred_age'] = (string)$bi;
+                    }
+                } elseif (is_numeric($svcAge)) {
+                    $partnerPrefs['preferred_age'] = (string)((int)$svcAge);
+                }
+            }
+        }
+
+        $partnerPrefs['preferred_height'] = $pe->height ?? $service->preferred_height ?? null;
+        $partnerPrefs['preferred_weight'] = $pe->weight ?? $service->preferred_weight ?? null;
+        $partnerPrefs['preferred_education'] = $pe->education ?? $service->preferred_education ?? null;
+
+        // religion / caste / subcaste
+        $partnerPrefs['preferred_religion'] = $pe ? ($resolveLookup('\\App\\Models\\Religion', $pe->religion_id ?? $pe->religion) ?? $service->preferred_religion ?? null) : ($service->preferred_religion ?? null);
+        $partnerPrefs['preferred_caste'] = $pe ? ($resolveLookup('\\App\\Models\\Caste', $pe->caste_id ?? $pe->caste) ?? $service->preferred_caste ?? null) : ($service->preferred_caste ?? null);
+        $partnerPrefs['preferred_subcaste'] = $pe ? ($resolveLookup('\\App\\Models\\SubCaste', $pe->sub_caste_id ?? $pe->subcaste ?? $pe->sub_cast_id) ?? $service->preferred_subcaste ?? null) : ($service->preferred_subcaste ?? null);
+
+        $partnerPrefs['preferred_marital_status'] = $pe ? ($resolveLookup('\\App\\Models\\MaritalStatus', $pe->marital_status_id ?? $pe->marital_status) ?? $service->preferred_marital_status ?? null) : ($service->preferred_marital_status ?? null);
+
+        $partnerPrefs['preferred_occupation'] = $pe ? ($pe->profession ?? $pe->profession_title ?? $service->preferred_occupation ?? null) : ($service->preferred_occupation ?? null);
+        $partnerPrefs['preferred_family_status'] = $pe ? ($resolveLookup('\\App\\Models\\FamilyValue', $pe->family_value_id ?? $pe->family_value) ?? $service->preferred_family_status ?? null) : ($service->preferred_family_status ?? null);
+        $partnerPrefs['preferred_eating_habits'] = $pe ? ($pe->eating_habits ?? $pe->diet ?? $service->preferred_eating_habits ?? null) : ($service->preferred_eating_habits ?? null);
+        $partnerPrefs['preferred_annual_income'] = $pe ? ($pe->annual_income ?? $service->preferred_annual_income ?? null) : ($service->preferred_annual_income ?? null);
+        // Additional physical preference fields (fallback to physical attributes or member)
+        $partnerPrefs['preferred_complexion'] = $pe->complexion ?? $service->preferred_complexion ?? ($physical->complexion ?? null) ?? null;
+        $partnerPrefs['preferred_body_type'] = $pe->preferred_body_type ?? $pe->body_type ?? $service->preferred_body_type ?? ($physical->body_type ?? null) ?? null;
+        $partnerPrefs['preferred_smoking'] = isset($pe->smoking_acceptable) ? ($pe->smoking_acceptable ? 'Yes' : 'No') : (isset($service->preferred_smoking) ? ($service->preferred_smoking ? 'Yes' : 'No') : null);
+        $partnerPrefs['preferred_drinking'] = isset($pe->drinking_acceptable) ? ($pe->drinking_acceptable ? 'Yes' : 'No') : (isset($service->preferred_drinking) ? ($service->preferred_drinking ? 'Yes' : 'No') : null);
+
+        // If preferred_height missing, fallback to physical height
+        if (empty($partnerPrefs['preferred_height'])) {
+            $partnerPrefs['preferred_height'] = $physical->height ?? $service->preferred_height ?? null;
+        }
+
+        // If preferred_age still missing, fallback to member age (single value)
+        if (empty($partnerPrefs['preferred_age'])) {
+            if ($member && $member->birthday) {
+                $partnerPrefs['preferred_age'] = \Carbon\Carbon::parse($member->birthday)->age;
+            } elseif (!empty($service->member_age)) {
+                $partnerPrefs['preferred_age'] = $service->member_age;
+            }
+        }
+
+        return view('profile.view-client-details', compact('service', 'partnerPrefs'));
+    }
+
+    /**
+     * Debug endpoint to return resolved client details as JSON
+     */
+    public function debugClientDetails($clientId)
+    {
+        // Reuse clientDetails resolution logic by calling the method but avoid rendering the view
+        // We'll duplicate the minimal resolution here to return JSON
+        $service = Service::find($clientId) ?: Service::where('profile_id', $clientId)->first();
+        if (!$service) {
+            $service = new Service();
+            $service->id = $clientId;
+            $service->profile_id = $clientId;
+        }
+
+        $user = null;
+        if (!empty($service->user_id)) {
+            $user = \App\Models\User::find($service->user_id);
+        }
+        if (!$user && !empty($service->profile_id)) {
+            $user = \App\Models\User::where('code', $service->profile_id)->first();
+        }
+
+        $pe = null;
+        if ($user) {
+            $pe = \App\Models\PartnerExpectation::where('user_id', $user->id)->first();
+        }
+
+        // Member and physical fallbacks (match clientDetails) so partnerPrefs can use them
+        $member = null;
+        if ($user) {
+            $member = \App\Models\Member::where('user_id', $user->id)->first();
+        }
+
+        $physical = null;
+        if ($user) {
+            $physical = \App\Models\PhysicalAttribute::where('user_id', $user->id)->first();
+        }
+
+        // Build partnerPrefs the same way as clientDetails
+        $resolveLookup = function($modelClass, $idOrVal) {
+            if (!$idOrVal) return null;
+            if (is_numeric($idOrVal)) {
+                $m = $modelClass::find($idOrVal);
+                return $m ? ($m->name ?? ($m->value ?? null)) : null;
+            }
+            return $idOrVal;
+        };
+
+        $partnerPrefs = [];
+        // Age
+        if ($pe && ($pe->preferred_age_min || $pe->preferred_age_max)) {
+            $min = $pe->preferred_age_min;
+            $max = $pe->preferred_age_max;
+            if ($min && $max) $partnerPrefs['preferred_age'] = $min . '-' . $max;
+            elseif ($min) $partnerPrefs['preferred_age'] = (string)$min;
+            elseif ($max) $partnerPrefs['preferred_age'] = (string)$max;
+            else $partnerPrefs['preferred_age'] = null;
+        } else {
+            $partnerPrefs['preferred_age'] = $service->preferred_age ?? null;
+        }
+
+        $partnerPrefs['preferred_height'] = $pe->height ?? $service->preferred_height ?? null;
+        $partnerPrefs['preferred_weight'] = $pe->weight ?? $service->preferred_weight ?? null;
+        $partnerPrefs['preferred_education'] = $pe->education ?? $service->preferred_education ?? null;
+        $partnerPrefs['preferred_religion'] = $pe ? ($resolveLookup('\\App\\Models\\Religion', $pe->religion_id ?? $pe->religion) ?? $service->preferred_religion ?? null) : ($service->preferred_religion ?? null);
+        $partnerPrefs['preferred_caste'] = $pe ? ($resolveLookup('\\App\\Models\\Caste', $pe->caste_id ?? $pe->caste) ?? $service->preferred_caste ?? null) : ($service->preferred_caste ?? null);
+        $partnerPrefs['preferred_subcaste'] = $pe ? ($resolveLookup('\\App\\Models\\SubCaste', $pe->sub_caste_id ?? $pe->subcaste ?? $pe->sub_cast_id) ?? $service->preferred_subcaste ?? null) : ($service->preferred_subcaste ?? null);
+        $partnerPrefs['preferred_marital_status'] = $pe ? ($resolveLookup('\\App\\Models\\MaritalStatus', $pe->marital_status_id ?? $pe->marital_status) ?? $service->preferred_marital_status ?? null) : ($service->preferred_marital_status ?? null);
+        $partnerPrefs['preferred_occupation'] = $pe ? ($pe->profession ?? $pe->profession_title ?? $service->preferred_occupation ?? null) : ($service->preferred_occupation ?? null);
+        $partnerPrefs['preferred_family_status'] = $pe ? ($resolveLookup('\\App\\Models\\FamilyValue', $pe->family_value_id ?? $pe->family_value) ?? $service->preferred_family_status ?? null) : ($service->preferred_family_status ?? null);
+        $partnerPrefs['preferred_eating_habits'] = $pe ? ($pe->eating_habits ?? $pe->diet ?? $service->preferred_eating_habits ?? null) : ($service->preferred_eating_habits ?? null);
+        $partnerPrefs['preferred_annual_income'] = $pe ? ($pe->annual_income ?? $service->preferred_annual_income ?? null) : ($service->preferred_annual_income ?? null);
+        $partnerPrefs['preferred_complexion'] = $pe ? ($pe->complexion ?? $service->preferred_complexion ?? null) : ($service->preferred_complexion ?? null);
+        $partnerPrefs['preferred_body_type'] = $pe ? ($pe->preferred_body_type ?? $pe->body_type ?? $service->preferred_body_type ?? null) : ($service->preferred_body_type ?? null);
+        $partnerPrefs['preferred_smoking'] = $pe ? (isset($pe->smoking_acceptable) ? ($pe->smoking_acceptable ? 'Yes' : 'No') : null) : (isset($service->preferred_smoking) ? ($service->preferred_smoking ? 'Yes' : 'No') : null);
+        $partnerPrefs['preferred_drinking'] = $pe ? (isset($pe->drinking_acceptable) ? ($pe->drinking_acceptable ? 'Yes' : 'No') : null) : (isset($service->preferred_drinking) ? ($service->preferred_drinking ? 'Yes' : 'No') : null);
+
+        return response()->json([
+            'service' => $service,
+            'user' => $user,
+            'partner_expectation' => $pe,
+            'physical' => $physical,
+            'member' => $member,
+            'partnerPrefs' => $partnerPrefs,
+        ]);
     }
 
     // Search profiles (for shortlist-ina)

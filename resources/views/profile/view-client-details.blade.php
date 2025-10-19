@@ -328,51 +328,67 @@
                 </div>
                 <div class="detail-item">
                     <span class="detail-label">Preferred Age:</span>
-                    <span class="detail-value">22 - 27</span>
+                    <span class="detail-value">{{ $partnerPrefs['preferred_age'] ?? $service->preferred_age ?? '—' }}</span>
                 </div>
                 <div class="detail-item">
                     <span class="detail-label">Preferred Height:</span>
-                    <span class="detail-value">160 - 168</span>
+                    <span class="detail-value">{{ $partnerPrefs['preferred_height'] ?? $service->preferred_height ?? '—' }}</span>
                 </div>
                 <div class="detail-item">
                     <span class="detail-label">Preferred Weight:</span>
-                    <span class="detail-value">50 - 65</span>
+                    <span class="detail-value">{{ $partnerPrefs['preferred_weight'] ?? $service->preferred_weight ?? '—' }}</span>
                 </div>
                 <div class="detail-item">
                     <span class="detail-label">Preferred Education:</span>
-                    <span class="detail-value">ANY</span>
+                    <span class="detail-value">{{ $partnerPrefs['preferred_education'] ?? $service->preferred_education ?? '—' }}</span>
                 </div>
                 <div class="detail-item">
                     <span class="detail-label">Preferred Religion:</span>
-                    <span class="detail-value">Islam</span>
+                    <span class="detail-value">{{ $partnerPrefs['preferred_religion'] ?? $service->preferred_religion ?? '—' }}</span>
                 </div>
                 <div class="detail-item">
                     <span class="detail-label">Preferred Caste:</span>
-                    <span class="detail-value">ANY</span>
+                    <span class="detail-value">{{ $partnerPrefs['preferred_caste'] ?? $service->preferred_caste ?? '—' }}</span>
                 </div>
                 <div class="detail-item">
                     <span class="detail-label">Preferred Sub Caste:</span>
-                    <span class="detail-value">ANY</span>
+                    <span class="detail-value">{{ $partnerPrefs['preferred_subcaste'] ?? $service->preferred_subcaste ?? '—' }}</span>
                 </div>
                 <div class="detail-item">
                     <span class="detail-label">Preferred Marital Status:</span>
-                    <span class="detail-value">Never Married</span>
+                    <span class="detail-value">{{ $partnerPrefs['preferred_marital_status'] ?? $service->preferred_marital_status ?? '—' }}</span>
                 </div>
                 <div class="detail-item">
                     <span class="detail-label">Preferred Annual Income:</span>
-                    <span class="detail-value">0</span>
+                    <span class="detail-value">{{ $partnerPrefs['preferred_annual_income'] ?? $service->preferred_annual_income ?? '—' }}</span>
                 </div>
                 <div class="detail-item">
                     <span class="detail-label">Preferred Occupation:</span>
-                    <span class="detail-value">ANY</span>
+                    <span class="detail-value">{{ $partnerPrefs['preferred_occupation'] ?? $service->preferred_occupation ?? '—' }}</span>
                 </div>
                 <div class="detail-item">
                     <span class="detail-label">Preferred Family Status:</span>
-                    <span class="detail-value">Wealthy</span>
+                    <span class="detail-value">{{ $partnerPrefs['preferred_family_status'] ?? $service->preferred_family_status ?? '—' }}</span>
                 </div>
                 <div class="detail-item">
                     <span class="detail-label">Preferred Eating Habits:</span>
-                    <span class="detail-value">ALL</span>
+                    <span class="detail-value">{{ $partnerPrefs['preferred_eating_habits'] ?? $service->preferred_eating_habits ?? '—' }}</span>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">Preferred Complexion:</span>
+                    <span class="detail-value">{{ $partnerPrefs['preferred_complexion'] ?? $service->preferred_complexion ?? '—' }}</span>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">Preferred Body Type:</span>
+                    <span class="detail-value">{{ $partnerPrefs['preferred_body_type'] ?? $service->preferred_body_type ?? '—' }}</span>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">Preferred Smoking:</span>
+                    <span class="detail-value">{{ $partnerPrefs['preferred_smoking'] ?? ($service->preferred_smoking ? 'Yes' : ($service->preferred_smoking === 0 ? 'No' : '—')) }}</span>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">Preferred Drinking:</span>
+                    <span class="detail-value">{{ $partnerPrefs['preferred_drinking'] ?? ($service->preferred_drinking ? 'Yes' : ($service->preferred_drinking === 0 ? 'No' : '—')) }}</span>
                 </div>
             </div>
 
