@@ -254,6 +254,46 @@ Route::get('/quick-login-sana', function () {
     return 'User not found';
 });
 
+// Quick login for Thasni (testing helper)
+Route::get('/quick-login-thasni', function () {
+    $user = App\Models\User::where('email', 'thasni@service.com')->first();
+    if ($user) {
+        // Ensure password is set to known value for testing
+        $user->password = Illuminate\Support\Facades\Hash::make('thasni123');
+        $user->save();
+
+        // Login manually
+        Auth::login($user);
+
+        if (Auth::check()) {
+            return redirect('/dashboard')->with('success', 'Quick login for Thasni successful!');
+        } else {
+            return 'Login failed even with manual login';
+        }
+    }
+    return 'User not found';
+});
+
+// Quick login for Remsi (testing helper)
+Route::get('/quick-login-remsi', function () {
+    $user = App\Models\User::where('email', 'remsi@service.com')->first();
+    if ($user) {
+        // Ensure password is set to known value for testing
+        $user->password = Illuminate\Support\Facades\Hash::make('remsi123');
+        $user->save();
+
+        // Login manually
+        Auth::login($user);
+
+        if (Auth::check()) {
+            return redirect('/dashboard')->with('success', 'Quick login for Remsi successful!');
+        } else {
+            return 'Login failed even with manual login';
+        }
+    }
+    return 'User not found';
+});
+
 // Debug route to check dashboard controller
 Route::get('/debug-dashboard', function () {
     try {
