@@ -16,15 +16,15 @@ class ServiceController extends Controller
     {
         try {
 
-            
+
             // Basic validation
             $request->validate([
                 'profile_id' => 'required|string',
                 'member_name' => 'required|string',
             ]);
-            
+
             $data = $request->all();
-            
+
             // Handle different field mappings from different forms
             $data['name'] = $data['service_name'] ?? $data['member_name'] ?? null;
             $user = Auth::user();
@@ -32,22 +32,22 @@ class ServiceController extends Controller
             // Normalize service_executive to lowercase trimmed string for consistent filtering
             $data['service_executive'] = strtolower(trim($data['service_executive']));
             $data['tracking_updated_by'] = ($user && $user->first_name && trim($user->first_name) !== '') ? $user->first_name : ($user->name ?? 'Unknown');
-            
+
             // Set default service_name if not provided (for admin modal)
             if (!isset($data['service_name'])) {
                 $data['service_name'] = 'General Service';
             }
-            
+
             // Determine status based on completed fields
             $hasServiceDetails = !empty($data['service_name']) && !empty($data['amount_paid']) && !empty($data['start_date']) && !empty($data['expiry_date']);
             $hasContactDetails = !empty($data['contact_mobile_no']) && !empty($data['contact_customer_name']);
-            
+
             if ($hasServiceDetails && $hasContactDetails) {
                 $data['status'] = 'active';
             } else {
                 $data['status'] = 'new';
             }
-            
+
             // Upsert: update if exists, else create (using only profile_id to prevent duplicates)
             $service = Service::updateOrCreate(
                 [
@@ -55,14 +55,14 @@ class ServiceController extends Controller
                 ],
                 $data
             );
-            
 
-            
+
+
             // Remove only the completed profile from the badge session array
             $pending = session('show_service_badge', []);
             $profileId = $data['profile_id'] ?? null;
             if ($profileId && is_array($pending)) {
-                $pending = array_filter($pending, function($item) use ($profileId) {
+                $pending = array_filter($pending, function ($item) use ($profileId) {
                     return $item['profile_id'] != $profileId;
                 });
                 // Reindex array
@@ -81,23 +81,22 @@ class ServiceController extends Controller
             }
             // Regular form submission - redirect to new services page
             return redirect()->route('new.service')->with('success', 'Service saved successfully!');
-            
         } catch (\Illuminate\Validation\ValidationException $e) {
             Log::error('Validation error in ServiceController store', ['errors' => $e->errors()]);
-            
+
             if ($request->expectsJson() || $request->ajax() || $request->header('X-Requested-With') === 'XMLHttpRequest') {
                 return response()->json(['success' => false, 'message' => 'Validation failed: ' . implode(', ', $e->validator->errors()->all())], 422);
             }
-            
+
             return redirect()->back()->withErrors($e->validator)->withInput();
         } catch (\Exception $e) {
             Log::error('Error in ServiceController store', ['error' => $e->getMessage(), 'trace' => $e->getTraceAsString()]);
-            
+
             // Handle errors
             if ($request->expectsJson() || $request->ajax() || $request->header('X-Requested-With') === 'XMLHttpRequest') {
                 return response()->json(['success' => false, 'message' => 'Error: ' . $e->getMessage()], 500);
             }
-            
+
             return redirect()->back()->withErrors(['error' => 'Failed to save service: ' . $e->getMessage()]);
         }
     }
@@ -107,13 +106,13 @@ class ServiceController extends Controller
     {
         try {
             $service = Service::findOrFail($id);
-            
+
             // Check if user has permission to edit this service
             $user = Auth::user();
             if (!$user->is_admin && $service->service_executive !== $user->first_name) {
                 return response()->json(['error' => 'Unauthorized'], 403);
             }
-            
+
             return response()->json(['service' => $service]);
         } catch (\Exception $e) {
             return response()->json(['error' => 'Service not found'], 404);
@@ -130,13 +129,13 @@ class ServiceController extends Controller
         ]);
         try {
             $service = Service::findOrFail($id);
-            
+
             // Check if user has permission to edit this service
             $user = Auth::user();
             if (!$user->is_admin && $service->service_executive !== $user->first_name) {
                 return response()->json(['error' => 'Unauthorized'], 403);
             }
-            
+
             // Validate request
             $request->validate([
                 'profile_id' => 'required|string|max:255',
@@ -148,7 +147,7 @@ class ServiceController extends Controller
                 'rm_change' => 'nullable|string|max:255',
                 'edit_comment' => 'required|string|min:10|max:500'
             ]);
-            
+
             // Handle RM Change tracking
             $updateData = [
                 'profile_id' => $request->profile_id,
@@ -189,10 +188,9 @@ class ServiceController extends Controller
 
             // Update service
             $service->update($updateData);
-            
+
             return response()->json(['success' => true, 'message' => 'Service updated successfully']);
-            
-    } catch (\Illuminate\Validation\ValidationException $e) {
+        } catch (\Illuminate\Validation\ValidationException $e) {
             $errors = $e->errors();
             $message = 'Validation failed';
             Log::error('ValidationException in update', ['errors' => $errors, 'exception' => $e->getMessage()]);
@@ -216,18 +214,18 @@ class ServiceController extends Controller
     {
         try {
             $service = Service::findOrFail($id);
-            
+
             // Check if user has permission to delete this service
             $user = Auth::user();
             if (!$user->is_admin && !($user->user_type === 'staff' && $service->service_executive === $user->first_name)) {
                 return response()->json(['error' => 'Unauthorized'], 403);
             }
-            
+
             // Validate request - require comment for deletion
             $request->validate([
                 'delete_comment' => 'required|string|min:10|max:500'
             ]);
-            
+
             // Soft delete - update the deleted flag and add comment
             $service->update([
                 'deleted' => 1,
@@ -235,18 +233,17 @@ class ServiceController extends Controller
                 'deleted_at' => now(),
                 'deleted_by' => $user->id
             ]);
-            
+
             return response()->json(['success' => true, 'message' => 'Service deleted successfully']);
-            
         } catch (\Illuminate\Validation\ValidationException $e) {
             $errors = $e->errors();
             $message = 'Validation failed';
-            
+
             // Provide specific message for comment field
             if (isset($errors['delete_comment'])) {
                 $message = 'Please provide a valid comment (minimum 10 characters) explaining the reason for deletion';
             }
-            
+
             return response()->json(['success' => false, 'message' => $message, 'errors' => $errors], 422);
         } catch (\Exception $e) {
             Log::error('Error deleting service', ['error' => $e->getMessage()]);
@@ -258,45 +255,45 @@ class ServiceController extends Controller
     public function expiredServices()
     {
         $user = Auth::user();
-        
+
         // Only admins can view expired services
         if (!$user->is_admin) {
             abort(403, 'Unauthorized');
         }
-        
+
         // Get per page count from request, default to 10
         $perPage = request('per_page', 10);
-        
+
         // Validate per page value
         if (!in_array($perPage, [10, 50, 100])) {
             $perPage = 10;
         }
-        
+
         // Get search query
         $search = request('search');
-        
+
         // Build query with search functionality for deleted services only
         $query = Service::where('deleted', 1);
-        
+
         if ($search) {
-            $query->where(function($q) use ($search) {
+            $query->where(function ($q) use ($search) {
                 $q->where('profile_id', 'LIKE', "%{$search}%")
-                  ->orWhere('name', 'LIKE', "%{$search}%")
-                  ->orWhere('plan_name', 'LIKE', "%{$search}%")
-                  ->orWhere('service_executive', 'LIKE', "%{$search}%")
-                  ->orWhere('contact_mobile_no', 'LIKE', "%{$search}%")
-                  ->orWhere('contact_customer_name', 'LIKE', "%{$search}%");
+                    ->orWhere('name', 'LIKE', "%{$search}%")
+                    ->orWhere('plan_name', 'LIKE', "%{$search}%")
+                    ->orWhere('service_executive', 'LIKE', "%{$search}%")
+                    ->orWhere('contact_mobile_no', 'LIKE', "%{$search}%")
+                    ->orWhere('contact_customer_name', 'LIKE', "%{$search}%");
             });
         }
-        
+
         // Use dynamic pagination - Latest deleted first
         $services = $query->orderByDesc('deleted_at')
-                          ->orderByDesc('created_at')
-                          ->paginate($perPage);
-        
+            ->orderByDesc('created_at')
+            ->paginate($perPage);
+
         // Append parameters to pagination links
         $services->appends(['per_page' => $perPage, 'search' => $search]);
-        
+
         return view('profile.expiredservices', compact('services'));
     }
 
@@ -304,46 +301,46 @@ class ServiceController extends Controller
     public function executiveServices()
     {
         $user = Auth::user();
-        
+
         // Get per page count from request, default to 10
         $perPage = request('per_page', 10);
-        
+
         // Validate per page value
         if (!in_array($perPage, [10, 50, 100])) {
             $perPage = 10;
         }
-        
+
         // Get search query
         $search = request('search');
-        
+
         // Build query with search functionality for executive services (exclude deleted)
-    $execName = strtolower(trim($user->first_name ?? explode('@', $user->email)[0] ?? ''));
-    $query = Service::whereRaw('LOWER(TRIM(service_executive)) = ?', [$execName])
+        $execName = strtolower(trim($user->first_name ?? explode('@', $user->email)[0] ?? ''));
+        $query = Service::whereRaw('LOWER(TRIM(service_executive)) = ?', [$execName])
             ->where('deleted', 0);
-        
+
         if ($search) {
-            $query->where(function($q) use ($search) {
+            $query->where(function ($q) use ($search) {
                 $q->where('profile_id', 'LIKE', "%{$search}%")
-                  ->orWhere('name', 'LIKE', "%{$search}%")
-                  ->orWhere('plan_name', 'LIKE', "%{$search}%")
-                  ->orWhere('contact_mobile_no', 'LIKE', "%{$search}%")
-                  ->orWhere('contact_customer_name', 'LIKE', "%{$search}%");
+                    ->orWhere('name', 'LIKE', "%{$search}%")
+                    ->orWhere('plan_name', 'LIKE', "%{$search}%")
+                    ->orWhere('contact_mobile_no', 'LIKE', "%{$search}%")
+                    ->orWhere('contact_customer_name', 'LIKE', "%{$search}%");
             });
         }
-        
+
         // Use dynamic pagination for executive services - Latest first
         $services = $query->orderByDesc('created_at')
-                          ->orderByDesc('id')
-                          ->paginate($perPage);
-        
+            ->orderByDesc('id')
+            ->paginate($perPage);
+
         // Append parameters to pagination links
         $services->appends(['per_page' => $perPage, 'search' => $search]);
-        
+
         // Get all staff users for dropdown
         $staffUsers = \App\Models\User::where('user_type', 'staff')
-                                     ->orderBy('first_name')
-                                     ->get(['id', 'first_name', 'name']);
-        
+            ->orderBy('first_name')
+            ->get(['id', 'first_name', 'name']);
+
         return view('profile.newservice', compact('services', 'staffUsers', 'perPage', 'search'));
     }
 
@@ -352,42 +349,42 @@ class ServiceController extends Controller
     {
         // Get per page count from request, default to 10
         $perPage = request('per_page', 10);
-        
+
         // Validate per page value
         if (!in_array($perPage, [10, 50, 100])) {
             $perPage = 10;
         }
-        
+
         // Get search query
         $search = request('search');
-        
+
         // Build query with search functionality (exclude deleted)
         $query = Service::where('deleted', 0);
-        
+
         if ($search) {
-            $query->where(function($q) use ($search) {
+            $query->where(function ($q) use ($search) {
                 $q->where('profile_id', 'LIKE', "%{$search}%")
-                  ->orWhere('name', 'LIKE', "%{$search}%")
-                  ->orWhere('plan_name', 'LIKE', "%{$search}%")
-                  ->orWhere('service_executive', 'LIKE', "%{$search}%")
-                  ->orWhere('contact_mobile_no', 'LIKE', "%{$search}%")
-                  ->orWhere('contact_customer_name', 'LIKE', "%{$search}%");
+                    ->orWhere('name', 'LIKE', "%{$search}%")
+                    ->orWhere('plan_name', 'LIKE', "%{$search}%")
+                    ->orWhere('service_executive', 'LIKE', "%{$search}%")
+                    ->orWhere('contact_mobile_no', 'LIKE', "%{$search}%")
+                    ->orWhere('contact_customer_name', 'LIKE', "%{$search}%");
             });
         }
-        
+
         // Use dynamic pagination - Latest services first
         $services = $query->orderByDesc('created_at')
-                          ->orderByDesc('id')
-                          ->paginate($perPage);
-        
+            ->orderByDesc('id')
+            ->paginate($perPage);
+
         // Append parameters to pagination links
         $services->appends(['per_page' => $perPage, 'search' => $search]);
-        
+
         // Get all staff users for dropdown
         $staffUsers = \App\Models\User::where('user_type', 'staff')
-                                     ->orderBy('first_name')
-                                     ->get(['id', 'first_name', 'name']);
-        
+            ->orderBy('first_name')
+            ->get(['id', 'first_name', 'name']);
+
         return view('profile.newservice', compact('services', 'staffUsers', 'perPage', 'search'));
     }
 
@@ -414,17 +411,17 @@ class ServiceController extends Controller
         }
 
         if ($search) {
-            $query->where(function($q) use ($search) {
+            $query->where(function ($q) use ($search) {
                 $q->where('profile_id', 'LIKE', "%{$search}%")
-                  ->orWhere('name', 'LIKE', "%{$search}%")
-                  ->orWhere('service_executive', 'LIKE', "%{$search}%")
-                  ->orWhere('contact_mobile_no', 'LIKE', "%{$search}%");
+                    ->orWhere('name', 'LIKE', "%{$search}%")
+                    ->orWhere('service_executive', 'LIKE', "%{$search}%")
+                    ->orWhere('contact_mobile_no', 'LIKE', "%{$search}%");
             });
         }
 
         $services = $query->orderByDesc('start_date')
-                          ->orderByDesc('created_at')
-                          ->paginate($perPage);
+            ->orderByDesc('created_at')
+            ->paginate($perPage);
 
         // append query params
         $services->appends(['per_page' => $perPage, 'search' => $search]);
@@ -437,11 +434,11 @@ class ServiceController extends Controller
     {
         try {
             $user = Auth::user();
-            
+
             if (!$user) {
                 return redirect()->route('login');
             }
-            
+
             if ($user->is_admin) {
                 // Admin sees all services across all staff (exclude deleted)
                 $totalServices = Service::where('deleted', 0)->count();
@@ -449,54 +446,53 @@ class ServiceController extends Controller
                 $activeServices = Service::where('deleted', 0)->where('status', 'active')->count();
                 $completedServices = Service::where('deleted', 0)->where('status', 'completed')->count();
                 $expiredServices = Service::where('deleted', 1)->count();
-                
+
                 // Get recent services for all staff (last 15 for admin, exclude deleted)
                 $recentServices = Service::where('deleted', 0)
-                                        ->orderBy('created_at', 'desc')
-                                        ->limit(15)
-                                        ->get();
+                    ->orderBy('created_at', 'desc')
+                    ->limit(15)
+                    ->get();
             } else {
                 // Staff sees only their assigned services
                 // Use first_name, or fallback to username/email prefix if first_name is null
                 $executiveName = strtolower(trim($user->first_name ?? explode('@', $user->email)[0] ?? 'Unknown'));
-                
+
                 $totalServices = Service::whereRaw('LOWER(TRIM(service_executive)) = ?', [$executiveName])
-                                        ->where('deleted', 0)->count();
+                    ->where('deleted', 0)->count();
                 $newServices = Service::whereRaw('LOWER(TRIM(service_executive)) = ?', [$executiveName])
-                                     ->where('deleted', 0)
-                                     ->whereIn('status', ['pending', 'new'])
-                                     ->count();
+                    ->where('deleted', 0)
+                    ->whereIn('status', ['pending', 'new'])
+                    ->count();
                 $activeServices = Service::whereRaw('LOWER(TRIM(service_executive)) = ?', [$executiveName])
-                                        ->where('deleted', 0)
-                                        ->where('status', 'active')
-                                        ->count();
+                    ->where('deleted', 0)
+                    ->where('status', 'active')
+                    ->count();
                 $completedServices = Service::whereRaw('LOWER(TRIM(service_executive)) = ?', [$executiveName])
-                                           ->where('deleted', 0)
-                                           ->where('status', 'completed')
-                                           ->count();
+                    ->where('deleted', 0)
+                    ->where('status', 'completed')
+                    ->count();
                 $expiredServices = Service::whereRaw('LOWER(TRIM(service_executive)) = ?', [$executiveName])
-                                         ->where('deleted', 1)
-                                         ->count();
+                    ->where('deleted', 1)
+                    ->count();
 
                 // Get recent services for current service executive (last 10, exclude deleted)
                 $recentServices = Service::whereRaw('LOWER(TRIM(service_executive)) = ?', [$executiveName])
-                                        ->where('deleted', 0)
-                                        ->orderBy('created_at', 'desc')
-                                        ->limit(10)
-                                        ->get();
+                    ->where('deleted', 0)
+                    ->orderBy('created_at', 'desc')
+                    ->limit(10)
+                    ->get();
             }
 
             // Get all staff users for dropdown
             $staffUsers = \App\Models\User::where('user_type', 'staff')
-                                         ->orderBy('first_name')
-                                         ->get(['id', 'first_name', 'name']);
+                ->orderBy('first_name')
+                ->get(['id', 'first_name', 'name']);
 
             return view('profile.services', compact('totalServices', 'newServices', 'activeServices', 'completedServices', 'expiredServices', 'recentServices', 'staffUsers'));
-            
         } catch (\Exception $e) {
             // Log the error and return a fallback response
             Log::error('Services Dashboard Error: ' . $e->getMessage());
-            
+
             // Return with default values if there's an error
             $totalServices = 0;
             $newServices = 0;
@@ -504,12 +500,12 @@ class ServiceController extends Controller
             $completedServices = 0;
             $expiredServices = 0;
             $recentServices = collect([]);
-            
+
             // Get all staff users for dropdown even in error case
             $staffUsers = \App\Models\User::where('user_type', 'staff')
-                                         ->orderBy('first_name')
-                                         ->get(['id', 'first_name', 'name']);
-            
+                ->orderBy('first_name')
+                ->get(['id', 'first_name', 'name']);
+
             return view('profile.services', compact('totalServices', 'newServices', 'activeServices', 'completedServices', 'expiredServices', 'recentServices', 'staffUsers'));
         }
     }
@@ -528,44 +524,43 @@ class ServiceController extends Controller
             $newServices = Service::where('deleted', 0)->whereIn('status', ['pending', 'new'])->count();
             // Active services are those marked 'active' and not expired
             $activeServices = Service::where('deleted', 0)
-                                     ->where('status', 'active')
-                                     ->where('expiry_date', '>=', now())
-                                     ->count();
+                ->where('status', 'active')
+                ->where('expiry_date', '>=', now())
+                ->count();
             $completedServices = Service::where('deleted', 0)->where('status', 'completed')->count();
             $expiredServices = Service::where('deleted', 0)->where('expiry_date', '<', now())->count();
 
             $recentServices = Service::where('deleted', 0)->latest()->take(10)->get();
-
         } else {
             // STAFF VIEW - Show only their assigned services
             $staffName = strtolower(trim($user->first_name ?? explode('@', $user->email)[0] ?? ''));
 
             $totalServices = Service::whereRaw('LOWER(TRIM(service_executive)) = ?', [$staffName])
-                                    ->where('deleted', 0)
-                                    ->count();
+                ->where('deleted', 0)
+                ->count();
             $newServices = Service::whereRaw('LOWER(TRIM(service_executive)) = ?', [$staffName])
-                                 ->where('deleted', 0)
-                                 ->whereIn('status', ['pending', 'new'])
-                                 ->count();
+                ->where('deleted', 0)
+                ->whereIn('status', ['pending', 'new'])
+                ->count();
             $activeServices = Service::whereRaw('LOWER(TRIM(service_executive)) = ?', [$staffName])
-                                    ->where('deleted', 0)
-                                    ->where('status', 'active')
-                                    ->where('expiry_date', '>=', now())
-                                    ->count();
+                ->where('deleted', 0)
+                ->where('status', 'active')
+                ->where('expiry_date', '>=', now())
+                ->count();
             $completedServices = Service::whereRaw('LOWER(TRIM(service_executive)) = ?', [$staffName])
-                                       ->where('deleted', 0)
-                                       ->where('status', 'completed')
-                                       ->count();
+                ->where('deleted', 0)
+                ->where('status', 'completed')
+                ->count();
             $expiredServices = Service::whereRaw('LOWER(TRIM(service_executive)) = ?', [$staffName])
-                                     ->where('deleted', 0)
-                                     ->where('expiry_date', '<', now())
-                                     ->count();
+                ->where('deleted', 0)
+                ->where('expiry_date', '<', now())
+                ->count();
 
             $recentServices = Service::whereRaw('LOWER(TRIM(service_executive)) = ?', [$staffName])
-                                    ->where('deleted', 0)
-                                    ->latest()
-                                    ->take(10)
-                                    ->get();
+                ->where('deleted', 0)
+                ->latest()
+                ->take(10)
+                ->get();
         }
 
         return view('services-dashboard', [
@@ -632,7 +627,7 @@ class ServiceController extends Controller
                     $data['name'] = 'Unknown';
                 }
             }
-            
+
             // If profile_id not provided, generate a unique one server-side
             if (empty($data['profile_id'])) {
                 // Simple generator: timestamp + random suffix to reduce collision chance
@@ -661,7 +656,7 @@ class ServiceController extends Controller
             // Now check the complete service record to determine status
             $hasServiceDetails = !empty($service->service_name) && !empty($service->amount_paid) && !empty($service->start_date) && !empty($service->expiry_date);
             $hasContactDetails = !empty($service->contact_mobile_no) && !empty($service->contact_customer_name);
-            
+
             if ($hasServiceDetails && $hasContactDetails) {
                 $service->status = 'active';
                 $service->save();
@@ -672,25 +667,25 @@ class ServiceController extends Controller
 
             // If this save came from the Assign-from-Other flow or includes other-site fields,
             // mark the record with who assigned it so assignedProfiles() can find it.
-           try {
-    $shouldMarkAssigned = ($section === 'others') || (!empty($data['other_site_member_id'])) || (!empty($data['profile_source'])) || (!empty($data['assigned_at']));
-    if ($shouldMarkAssigned) {
-        $assignedBy = Auth::user()->first_name ?? Auth::user()->name ?? '';
-        $service->assigned_by = strtolower(trim($assignedBy)); // NORMALIZE TO LOWERCASE TRIMMED
-        // only set assigned_at if not already set
-        if (empty($service->assigned_at)) {
-            $service->assigned_at = now();
-        }
-        $service->save();
-        Log::info('Service marked as assigned', [
-            'service_id' => $service->id, 
-            'assigned_by' => $service->assigned_by,
-            'profile_id' => $service->profile_id
-        ]);
-    }
-} catch (\Exception $e) {
-    Log::warning('Could not mark service as assigned', ['error' => $e->getMessage(), 'service_id' => $service->id]);
-}
+            try {
+                $shouldMarkAssigned = ($section === 'others') || (!empty($data['other_site_member_id'])) || (!empty($data['profile_source'])) || (!empty($data['assigned_at']));
+                if ($shouldMarkAssigned) {
+                    $assignedBy = Auth::user()->first_name ?? Auth::user()->name ?? '';
+                    $service->assigned_by = strtolower(trim($assignedBy)); // NORMALIZE TO LOWERCASE TRIMMED
+                    // only set assigned_at if not already set
+                    if (empty($service->assigned_at)) {
+                        $service->assigned_at = now();
+                    }
+                    $service->save();
+                    Log::info('Service marked as assigned', [
+                        'service_id' => $service->id,
+                        'assigned_by' => $service->assigned_by,
+                        'profile_id' => $service->profile_id
+                    ]);
+                }
+            } catch (\Exception $e) {
+                Log::warning('Could not mark service as assigned', ['error' => $e->getMessage(), 'service_id' => $service->id]);
+            }
 
             // Handle an uploaded photo (if provided) and link it via uploads table
             try {
@@ -785,7 +780,7 @@ class ServiceController extends Controller
                             $peData['preferred_weight'] = $request->input('preferred_weight');
                         }
                         if ($request->has('preferred_complexion')) {
-                            $peData['complexion'] = $request->input('preferred_complexion');
+                            $peData['preferred_complexion'] = $request->input('preferred_complexion');
                         }
                         if ($request->has('preferred_body_type')) {
                             $peData['preferred_body_type'] = $request->input('preferred_body_type');
@@ -801,16 +796,10 @@ class ServiceController extends Controller
                         }
                         // smoking/drinking inputs could be strings like 'Yes'/'No' — normalize to boolean/null
                         if ($request->has('preferred_smoking')) {
-                            $v = strtolower($request->input('preferred_smoking'));
-                            if (in_array($v, ['yes','y','true','1'])) $peData['smoking_acceptable'] = 1;
-                            elseif (in_array($v, ['no','n','false','0'])) $peData['smoking_acceptable'] = 0;
-                            else $peData['smoking_acceptable'] = null;
+                            $peData['preferred_smoking'] = $request->input('preferred_smoking');
                         }
                         if ($request->has('preferred_drinking')) {
-                            $v = strtolower($request->input('preferred_drinking'));
-                            if (in_array($v, ['yes','y','true','1'])) $peData['drinking_acceptable'] = 1;
-                            elseif (in_array($v, ['no','n','false','0'])) $peData['drinking_acceptable'] = 0;
-                            else $peData['drinking_acceptable'] = null;
+                            $peData['preferred_drinking'] = $request->input('preferred_drinking');
                         }
                         if ($request->has('preferred_eating_habits')) {
                             $peData['diet'] = $request->input('preferred_eating_habits');
@@ -870,7 +859,6 @@ class ServiceController extends Controller
                 'photo_id' => $service->photo ?? null,
                 'photo_url' => $service->photo ? $this->getPhotoUrl($service->photo) : null,
             ]);
-
         } catch (\Exception $e) {
             Log::error('Error in saveSection', [
                 'error' => $e->getMessage(),
@@ -878,7 +866,7 @@ class ServiceController extends Controller
             ]);
 
             return response()->json([
-                'success' => false, 
+                'success' => false,
                 'message' => 'Error saving section: ' . $e->getMessage()
             ], 500);
         }
@@ -888,12 +876,12 @@ class ServiceController extends Controller
     public function shortlistIna($serviceId)
     {
         $service = Service::find($serviceId);
-        
+
         if (!$service) {
             // Create a dummy service for the view if service doesn't exist
             $service = new Service(['id' => $serviceId, 'profile_id' => $serviceId, 'name' => 'Service ' . $serviceId]);
         }
-        
+
         return view('profile.shortlist-ina', compact('service'));
     }
 
@@ -901,12 +889,12 @@ class ServiceController extends Controller
     public function shortlistOthers($serviceId)
     {
         $service = Service::find($serviceId);
-        
+
         if (!$service) {
             // Create a dummy service for the view if service doesn't exist
             $service = new Service(['id' => $serviceId, 'profile_id' => $serviceId, 'name' => 'Service ' . $serviceId]);
         }
-        
+
         return view('profile.shortlist-others', compact('service'));
     }
 
@@ -914,12 +902,12 @@ class ServiceController extends Controller
     public function viewProspects($serviceId)
     {
         $service = Service::find($serviceId);
-        
+
         if (!$service) {
             // Create a dummy service for the view if service doesn't exist
             $service = new Service(['id' => $serviceId, 'profile_id' => $serviceId, 'name' => 'Service ' . $serviceId]);
         }
-        
+
         return view('profile.view-prospects', compact('service'));
     }
 
@@ -1075,7 +1063,7 @@ class ServiceController extends Controller
             $physical = \App\Models\PhysicalAttribute::where('user_id', $user->id)->first();
         }
 
-        $resolveLookup = function($modelClass, $idOrVal) {
+        $resolveLookup = function ($modelClass, $idOrVal) {
             if (!$idOrVal) return null;
             if (is_numeric($idOrVal)) {
                 $m = $modelClass::find($idOrVal);
@@ -1204,7 +1192,7 @@ class ServiceController extends Controller
         }
 
         // Build partnerPrefs the same way as clientDetails
-        $resolveLookup = function($modelClass, $idOrVal) {
+        $resolveLookup = function ($modelClass, $idOrVal) {
             if (!$idOrVal) return null;
             if (is_numeric($idOrVal)) {
                 $m = $modelClass::find($idOrVal);
@@ -1280,13 +1268,13 @@ class ServiceController extends Controller
                 'user',
                 'user.physicalAttribute',
                 'user.spiritualBackground.religion',
-                'user.spiritualBackground.caste', 
+                'user.spiritualBackground.caste',
                 'user.career',
                 'user.profilePhoto',
                 'user.primaryAddress.city',
                 'maritalStatus'
             ])->whereNotNull('birthday');
-                
+
             // Debug: Let's temporarily remove user restrictions to test age filtering
             // ->whereHas('user', function($q) {
             //     $q->where('approved', 1)
@@ -1307,8 +1295,8 @@ class ServiceController extends Controller
                     'height_min' => $request->height_min,
                     'height_max' => $request->height_max
                 ]);
-                
-                $query->whereHas('user.physicalAttribute', function($q) use ($request) {
+
+                $query->whereHas('user.physicalAttribute', function ($q) use ($request) {
                     if ($request->filled('height_min')) {
                         $q->where('height', '>=', $request->height_min);
                     }
@@ -1328,9 +1316,9 @@ class ServiceController extends Controller
                         'weight_min' => $minWeight,
                         'weight_max' => $maxWeight
                     ]);
-                    $query->whereHas('user.physicalAttribute', function($q) use ($minWeight, $maxWeight) {
+                    $query->whereHas('user.physicalAttribute', function ($q) use ($minWeight, $maxWeight) {
                         $q->where('weight', '>=', $minWeight)
-                          ->where('weight', '<=', $maxWeight);
+                            ->where('weight', '<=', $maxWeight);
                     });
                 }
             }
@@ -1343,7 +1331,7 @@ class ServiceController extends Controller
                 } elseif (strtolower($request->gender) === 'female') {
                     $genderValue = 2;
                 }
-                
+
                 if ($genderValue) {
                     Log::info('Gender filter applied', [
                         'requested_gender' => $request->gender,
@@ -1362,34 +1350,35 @@ class ServiceController extends Controller
             if ($request->filled('district')) {
                 Log::info('District filter applied', ['district' => $request->district]);
                 $district = $request->district;
-                
-                $query->where(function($mainQ) use ($district) {
+
+                $query->where(function ($mainQ) use ($district) {
                     // Search in all addresses
-                    $mainQ->whereHas('user.addresses.city', function($q) use ($district) {
-                        $q->where(function($subQ) use ($district) {
+                    $mainQ->whereHas('user.addresses.city', function ($q) use ($district) {
+                        $q->where(function ($subQ) use ($district) {
                             $subQ->where('name', 'like', '%' . $district . '%')
-                                 ->orWhere('name', strtolower($district))
-                                 ->orWhere('name', strtoupper($district))
-                                 ->orWhere('name', ucfirst(strtolower($district)))
-                                 ->orWhere('name', ucwords(strtolower($district)));
+                                ->orWhere('name', strtolower($district))
+                                ->orWhere('name', strtoupper($district))
+                                ->orWhere('name', ucfirst(strtolower($district)))
+                                ->orWhere('name', ucwords(strtolower($district)));
                         });
                     });
                 });
             }
 
             // Apply registration date filters
-            if (($request->filled('registered_from') && $request->registered_from != '') || 
-                ($request->filled('registered_to') && $request->registered_to != '')) {
-                
+            if (($request->filled('registered_from') && $request->registered_from != '') ||
+                ($request->filled('registered_to') && $request->registered_to != '')
+            ) {
+
                 $fromDate = $request->registered_from;
                 $toDate = $request->registered_to;
-                
+
                 Log::info('Registration date range filter applied', [
                     'from_date' => $fromDate,
                     'to_date' => $toDate
                 ]);
-                
-                $query->whereHas('user', function($q) use ($fromDate, $toDate) {
+
+                $query->whereHas('user', function ($q) use ($fromDate, $toDate) {
                     if ($fromDate && $fromDate != '') {
                         $q->whereDate('created_at', '>=', $fromDate);
                     }
@@ -1404,17 +1393,17 @@ class ServiceController extends Controller
                 Log::info('Religion filter applied', ['religion' => $request->caste]);
                 $religion = strtolower($request->caste);
                 $muslimAliases = ['muslim', 'islam'];
-                $query->whereHas('user.spiritualBackground.religion', function($q) use ($religion, $muslimAliases) {
+                $query->whereHas('user.spiritualBackground.religion', function ($q) use ($religion, $muslimAliases) {
                     if (in_array($religion, $muslimAliases)) {
-                        $q->where(function($subQ) {
+                        $q->where(function ($subQ) {
                             $subQ->where('name', 'like', '%muslim%')
-                                 ->orWhere('name', 'like', '%islam%');
+                                ->orWhere('name', 'like', '%islam%');
                         });
                     } else {
                         $q->where('name', 'like', '%' . $religion . '%')
-                          ->orWhere('name', strtolower($religion))
-                          ->orWhere('name', strtoupper($religion))
-                          ->orWhere('name', ucfirst(strtolower($religion)));
+                            ->orWhere('name', strtolower($religion))
+                            ->orWhere('name', strtoupper($religion))
+                            ->orWhere('name', ucfirst(strtolower($religion)));
                     }
                 });
             }
@@ -1423,12 +1412,12 @@ class ServiceController extends Controller
             if ($request->filled('profile_id')) {
                 Log::info('Profile ID filter applied', ['profile_id' => $request->profile_id]);
                 $profileId = $request->profile_id;
-                
-                $query->whereHas('user', function($userQ) use ($profileId) {
+
+                $query->whereHas('user', function ($userQ) use ($profileId) {
                     $userQ->where('code', $profileId)
-                          ->orWhere('code', 'like', '%' . $profileId . '%');
+                        ->orWhere('code', 'like', '%' . $profileId . '%');
                 });
-                
+
                 Log::info('Profile ID search completed', [
                     'profile_id' => $profileId,
                     'search_method' => 'users.code_field'
@@ -1439,12 +1428,12 @@ class ServiceController extends Controller
             if ($request->filled('location')) {
                 Log::info('Location filter applied', ['location' => $request->location]);
                 $location = $request->location;
-                
-                $query->whereHas('user.primaryAddress.city', function($q) use ($location) {
+
+                $query->whereHas('user.primaryAddress.city', function ($q) use ($location) {
                     $q->where('name', 'like', '%' . $location . '%')
-                      ->orWhere('name', strtolower($location))
-                      ->orWhere('name', strtoupper($location))
-                      ->orWhere('name', ucfirst(strtolower($location)));
+                        ->orWhere('name', strtolower($location))
+                        ->orWhere('name', strtoupper($location))
+                        ->orWhere('name', ucfirst(strtolower($location)));
                 });
             }
 
@@ -1453,36 +1442,36 @@ class ServiceController extends Controller
             // Debug: Count before final execution
             $countBeforeFilters = \App\Models\Member::whereNotNull('birthday')->count();
             Log::info('Count before all filters', ['count' => $countBeforeFilters]);
-            
+
             // Debug: Check some sample user creation dates
             $sampleUsers = \App\Models\User::select('id', 'created_at')->orderBy('created_at', 'desc')->limit(5)->get();
             Log::info('Sample user creation dates', [
-                'users' => $sampleUsers->map(function($user) {
+                'users' => $sampleUsers->map(function ($user) {
                     return ['id' => $user->id, 'created_at' => $user->created_at->format('Y-m-d H:i:s')];
                 })->toArray()
             ]);
-            
+
             // Get total count and execute search
             $totalMembers = \App\Models\Member::count();
-            
+
             // Debug: Count after all filters
             $countAfterFilters = $query->count();
             Log::info('Count after all filters', ['count' => $countAfterFilters]);
-            
+
             // Limit results to prevent memory issues (show first 100 matches)
             $matchingProfiles = $query->limit(100)->get();
             $matchingCount = $countAfterFilters; // Use the total count, not just the limited results
 
             // Prepare search results data with detailed profile information
-            $searchResults = $matchingProfiles->map(function($member) {
+            $searchResults = $matchingProfiles->map(function ($member) {
                 try {
                     $physicalAttr = $member->user->physicalAttribute ?? null;
                     $spiritualBg = $member->user->spiritualBackground ?? null;
                     $career = $member->user->career ?? null;
                     $profilePhoto = $member->user->profilePhoto ?? null;
-                    
 
-                    
+
+
                     return [
                         'id' => $member->id,
                         'user_id' => $member->user_id,
@@ -1493,28 +1482,28 @@ class ServiceController extends Controller
                         'email' => $member->user->email,
                         'phone' => $member->user->phone,
                         'created_at' => $member->user->created_at->format('Y-m-d'),
-                        
+
                         // Physical attributes
                         'height' => $physicalAttr ? $physicalAttr->height : 'Not specified',
                         'weight' => $physicalAttr ? $physicalAttr->weight : 'Not specified',
-                        
+
                         // Spiritual background
                         'religion' => $spiritualBg && $spiritualBg->religion ? $spiritualBg->religion->name : 'Not specified',
                         'caste' => $spiritualBg && $spiritualBg->caste ? $spiritualBg->caste->name : 'Not specified',
-                        
+
                         // Marital status
                         'marital_status' => $member->maritalStatus ? $member->maritalStatus->name : 'Not specified',
-                        
+
                         // Career information
                         'designation' => $career && $career->designation ? $career->designation : 'Not specified',
                         'company' => $career && $career->company ? $career->company : 'Not specified',
                         'career' => $career ? trim(($career->designation ?? '') . ' ' . ($career->company ? 'at ' . $career->company : '')) : 'Not specified',
-                        
+
                         // Location from addresses table via city relationship
-                        'location' => ($member->user->primaryAddress && $member->user->primaryAddress->city) 
-                            ? $member->user->primaryAddress->city->name 
+                        'location' => ($member->user->primaryAddress && $member->user->primaryAddress->city)
+                            ? $member->user->primaryAddress->city->name
                             : ($member->user->district ?? $member->user->city ?? 'Not specified'),
-                        
+
                         // Profile image - try multiple possible paths
                         'photo_url' => $member->user->photo ? $this->getPhotoUrl($member->user->photo) : null,
                         'has_photo' => $member->user->photo ? true : false,
@@ -1551,7 +1540,7 @@ class ServiceController extends Controller
                 'total_found' => $matchingCount,
                 'user' => Auth::user()->first_name ?? 'Unknown'
             ]);
-            
+
             // Check if it's an AJAX request
             if ($request->ajax() || $request->expectsJson()) {
                 return response()->json([
@@ -1571,12 +1560,11 @@ class ServiceController extends Controller
             if ($matchingCount > 100) {
                 $displayMessage .= " (Showing first 100 results)";
             }
-            
+
             return redirect()->back()
                 ->with('success', $displayMessage)
                 ->with('search_results', $searchResults)
                 ->with('search_criteria', $request->all());
-
         } catch (\Exception $e) {
             Log::error('Error in searchProfiles', [
                 'error' => $e->getMessage(),
@@ -1598,25 +1586,25 @@ class ServiceController extends Controller
 
     // Assign profile from other sources (for shortlist-others)
     // Helper method to get photo URL from uploads table
-   private function getPhotoUrl($photoId)
-{
-    if (!$photoId) return null;
-    
-    try {
-        $upload = \App\Models\Upload::find($photoId);
-        if ($upload && $upload->file_name) {
-            // Check if file exists
-            $filePath = public_path($upload->file_name);
-            if (file_exists($filePath)) {
-                return url('laravel/public/' . $upload->file_name);
+    private function getPhotoUrl($photoId)
+    {
+        if (!$photoId) return null;
+
+        try {
+            $upload = \App\Models\Upload::find($photoId);
+            if ($upload && $upload->file_name) {
+                // Check if file exists
+                $filePath = public_path($upload->file_name);
+                if (file_exists($filePath)) {
+                    return url('laravel/public/' . $upload->file_name);
+                }
             }
+        } catch (\Exception $e) {
+            Log::error('Error getting photo URL for ID ' . $photoId, ['error' => $e->getMessage()]);
         }
-    } catch (\Exception $e) {
-        Log::error('Error getting photo URL for ID ' . $photoId, ['error' => $e->getMessage()]);
+
+        return null;
     }
-    
-    return null;
-}
 
     public function assignProfile(Request $request)
     {
@@ -1631,7 +1619,7 @@ class ServiceController extends Controller
 
             // Here you would implement actual profile assignment logic
             // For now, return success message
-            
+
             Log::info('Profile assignment requested', [
                 'profile_id' => $request->profile_id,
                 'other_site_member_id' => $request->other_site_member_id,
@@ -1654,7 +1642,6 @@ class ServiceController extends Controller
 
             // Regular form submission - redirect back with success
             return redirect()->back()->with('success', 'Profile assigned successfully! Profile ID: ' . $request->profile_id . ' has been assigned from other site.');
-
         } catch (\Exception $e) {
             Log::error('Error in assignProfile', [
                 'error' => $e->getMessage(),
@@ -1684,21 +1671,21 @@ class ServiceController extends Controller
 
         // Only return rows that were created via the "Assign Profile from Other Sources" flow.
         // Those rows will have the other_site_member_id or profile_source populated and will have assigned_by set.
-    $assignedByName = strtolower(trim($user->first_name ?? $user->name ?? ''));
+        $assignedByName = strtolower(trim($user->first_name ?? $user->name ?? ''));
 
         $list = Service::where('deleted', 0)
-                ->whereRaw('LOWER(TRIM(assigned_by)) = ?', [$assignedByName])
-                ->where(function($q) {
-                    $q->whereNotNull('other_site_member_id')
-                      ->orWhereNotNull('profile_source')
-                      ->orWhereNotNull('assigned_at');
-                })
-                // order by assigned_at when present, otherwise fallback to created_at
-                ->orderByRaw("COALESCE(assigned_at, created_at) DESC")
-                ->get(['profile_id','other_site_member_id','member_name','profile_source','service_name','start_date','contact_numbers','remarks','assigned_at','id','photo']);
+            ->whereRaw('LOWER(TRIM(assigned_by)) = ?', [$assignedByName])
+            ->where(function ($q) {
+                $q->whereNotNull('other_site_member_id')
+                    ->orWhereNotNull('profile_source')
+                    ->orWhereNotNull('assigned_at');
+            })
+            // order by assigned_at when present, otherwise fallback to created_at
+            ->orderByRaw("COALESCE(assigned_at, created_at) DESC")
+            ->get(['profile_id', 'other_site_member_id', 'member_name', 'profile_source', 'service_name', 'start_date', 'contact_numbers', 'remarks', 'assigned_at', 'id', 'photo']);
 
         // Map to include photo_url for the frontend
-        $mapped = $list->map(function($svc) {
+        $mapped = $list->map(function ($svc) {
             return [
                 'profile_id' => $svc->profile_id,
                 'other_site_member_id' => $svc->other_site_member_id,
@@ -1732,49 +1719,48 @@ class ServiceController extends Controller
 
     // Upload a photo and return upload metadata (id + url)
     public function uploadPhoto(Request $request)
-{
-    try {
-        if (!$request->hasFile('photo')) {
-            return response()->json(['success' => false, 'message' => 'No file uploaded'], 400);
+    {
+        try {
+            if (!$request->hasFile('photo')) {
+                return response()->json(['success' => false, 'message' => 'No file uploaded'], 400);
+            }
+            $file = $request->file('photo');
+            if (!$file->isValid()) {
+                return response()->json(['success' => false, 'message' => 'Invalid uploaded file'], 400);
+            }
+
+            $destPath = public_path('uploads');
+            if (!file_exists($destPath)) mkdir($destPath, 0755, true);
+            $filename = time() . '_' . substr(bin2hex(random_bytes(4)), 0, 8) . '.' . $file->getClientOriginalExtension();
+
+            // Move the uploaded file first
+            $file->move($destPath, $filename);
+
+            // Get size from the moved file on disk to avoid issues with missing tmp file
+            $movedPath = $destPath . DIRECTORY_SEPARATOR . $filename;
+            $size = null;
+            if (file_exists($movedPath)) {
+                $size = filesize($movedPath);
+            }
+
+            $upload = \App\Models\Upload::create([
+                'file_original_name' => $file->getClientOriginalName(),
+                'file_name' => 'uploads/' . $filename,
+                'user_id' => Auth::id() ?? null,
+                'file_size' => $size,
+                'extension' => $file->getClientOriginalExtension(),
+                'type' => $file->getClientMimeType(),
+            ]);
+
+            // Generate correct URL accounting for Laravel app in subdirectory
+            $correctUrl = url('laravel/public/uploads/' . $filename);
+
+            return response()->json(['success' => true, 'upload_id' => $upload->id, 'url' => $correctUrl]);
+        } catch (\Exception $e) {
+            Log::error('Error uploading photo', ['error' => $e->getMessage(), 'trace' => $e->getTraceAsString()]);
+            return response()->json(['success' => false, 'message' => 'Upload failed'], 500);
         }
-        $file = $request->file('photo');
-        if (!$file->isValid()) {
-            return response()->json(['success' => false, 'message' => 'Invalid uploaded file'], 400);
-        }
-
-        $destPath = public_path('uploads');
-        if (!file_exists($destPath)) mkdir($destPath, 0755, true);
-        $filename = time() . '_' . substr(bin2hex(random_bytes(4)), 0, 8) . '.' . $file->getClientOriginalExtension();
-
-        // Move the uploaded file first
-        $file->move($destPath, $filename);
-
-        // Get size from the moved file on disk to avoid issues with missing tmp file
-        $movedPath = $destPath . DIRECTORY_SEPARATOR . $filename;
-        $size = null;
-        if (file_exists($movedPath)) {
-            $size = filesize($movedPath);
-        }
-
-        $upload = \App\Models\Upload::create([
-            'file_original_name' => $file->getClientOriginalName(),
-            'file_name' => 'uploads/' . $filename,
-            'user_id' => Auth::id() ?? null,
-            'file_size' => $size,
-            'extension' => $file->getClientOriginalExtension(),
-            'type' => $file->getClientMimeType(),
-        ]);
-
-        // Generate correct URL accounting for Laravel app in subdirectory
-        $correctUrl = url('laravel/public/uploads/' . $filename);
-
-        return response()->json(['success' => true, 'upload_id' => $upload->id, 'url' => $correctUrl]);
-
-    } catch (\Exception $e) {
-        Log::error('Error uploading photo', ['error' => $e->getMessage(), 'trace' => $e->getTraceAsString()]);
-        return response()->json(['success' => false, 'message' => 'Upload failed'], 500);
     }
-}
     // Add a prospect to shortlist
     public function addToShortlist(Request $request)
     {
@@ -1790,7 +1776,22 @@ class ServiceController extends Controller
             }
 
             $data = $request->only([
-                'profile_id','prospect_id','source','prospect_name','prospect_age','prospect_education','prospect_occupation','prospect_location','prospect_religion','prospect_caste','prospect_marital_status','prospect_height','prospect_weight','prospect_contact','contact_date','remark'
+                'profile_id',
+                'prospect_id',
+                'source',
+                'prospect_name',
+                'prospect_age',
+                'prospect_education',
+                'prospect_occupation',
+                'prospect_location',
+                'prospect_religion',
+                'prospect_caste',
+                'prospect_marital_status',
+                'prospect_height',
+                'prospect_weight',
+                'prospect_contact',
+                'contact_date',
+                'remark'
             ]);
 
             // Basic validation
@@ -1848,14 +1849,14 @@ class ServiceController extends Controller
             $candidates = array_filter(array_unique([$resolvedProfileId, $profileId]));
             if (count($candidates) === 1) {
                 $items = \App\Models\Shortlist::where('profile_id', $candidates[0])
-                            ->whereNull('deleted_at')
-                            ->orderByDesc('created_at')
-                            ->get();
+                    ->whereNull('deleted_at')
+                    ->orderByDesc('created_at')
+                    ->get();
             } else {
                 $items = \App\Models\Shortlist::whereIn('profile_id', $candidates)
-                            ->whereNull('deleted_at')
-                            ->orderByDesc('created_at')
-                            ->get();
+                    ->whereNull('deleted_at')
+                    ->orderByDesc('created_at')
+                    ->get();
             }
 
             // Temporary debug logging: record what was requested and what was found
@@ -1875,7 +1876,7 @@ class ServiceController extends Controller
             // Ensure each item has a usable prospect_name for display. For INA source
             // the shortlist often stores only prospect_id; try to resolve the name from
             // the users table (match by code or id) when prospect_name is empty.
-            $mapped = $items->map(function($it) {
+            $mapped = $items->map(function ($it) {
                 $arr = $it->toArray();
                 if (empty($arr['prospect_name']) && !empty($arr['prospect_id'])) {
                     try {
