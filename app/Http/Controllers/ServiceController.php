@@ -314,9 +314,13 @@ class ServiceController extends Controller
         $search = request('search');
 
         // Build query with search functionality for executive services (exclude deleted)
+        // Also exclude services that already have detailed service information filled
         $execName = strtolower(trim($user->first_name ?? explode('@', $user->email)[0] ?? ''));
         $query = Service::whereRaw('LOWER(TRIM(service_executive)) = ?', [$execName])
-            ->where('deleted', 0);
+            ->where('deleted', 0)
+            ->where(function($q) {
+                $q->whereNull('service_details')->orWhere('service_details', '');
+            });
 
         if ($search) {
             $query->where(function ($q) use ($search) {
@@ -359,7 +363,11 @@ class ServiceController extends Controller
         $search = request('search');
 
         // Build query with search functionality (exclude deleted)
-        $query = Service::where('deleted', 0);
+        // Only show services that do not yet have `service_details` populated
+        $query = Service::where('deleted', 0)
+            ->where(function($q) {
+                $q->whereNull('service_details')->orWhere('service_details', '');
+            });
 
         if ($search) {
             $query->where(function ($q) use ($search) {
