@@ -313,11 +313,28 @@
         List of Active Profiles
       </div>
 
+      <!-- Search / Filters -->
+      <div style="padding:16px; display:flex; gap:12px; align-items:center; flex-wrap:wrap; background:#fff; border-bottom:1px solid #eee;">
+        <form method="GET" action="{{ route('active.service') }}" style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
+          <input type="text" name="search" placeholder="Search by Profile ID or Name" value="{{ request('search') }}" style="padding:8px 10px; border-radius:6px; border:1px solid #ccc; min-width:260px;" />
+          <select name="per_page" style="padding:8px 10px; border-radius:6px; border:1px solid #ccc;">
+            <option value="10" {{ request('per_page', 10) == 10 ? 'selected' : '' }}>10</option>
+            <option value="50" {{ request('per_page') == 50 ? 'selected' : '' }}>50</option>
+            <option value="100" {{ request('per_page') == 100 ? 'selected' : '' }}>100</option>
+          </select>
+          <button type="submit" class="action-btn" style="background:#007bff;color:#fff;padding:8px 12px;border-radius:8px;">Search</button>
+          @if(request()->has('search') || request()->has('per_page'))
+            <a href="{{ route('active.service') }}" class="action-btn" style="background:#6c757d;color:#fff;padding:8px 12px;border-radius:8px;">Reset</a>
+          @endif
+        </form>
+      </div>
+
       <!-- Profiles Table -->
       <table class="profiles-table">
         <thead>
           <tr>
             <th>Profile ID</th>
+            <th>Name</th>
             <th>Start Date</th>
             <th>Expiry Date</th>
             <th>Executive Name</th>
@@ -329,6 +346,7 @@
             @foreach($services as $s)
               <tr>
                 <td><span class="profile-id">{{ $s->profile_id }}</span></td>
+                <td>{{ $s->name ?? $s->member_name ?? '-' }}</td>
                 <td><span class="date">{{ $s->start_date ? \Carbon\Carbon::parse($s->start_date)->format('d-M-Y') : '-' }}</span></td>
                 <td><span class="date">{{ $s->expiry_date ? \Carbon\Carbon::parse($s->expiry_date)->format('d-M-Y') : '-' }}</span></td>
                 <td><span class="executive-name">{{ $s->service_executive }}</span></td>
@@ -342,7 +360,7 @@
             @endforeach
           @else
             <tr>
-              <td colspan="5" class="empty-state">No active services found.</td>
+              <td colspan="6" class="empty-state">No active services found.</td>
             </tr>
           @endif
         </tbody>
@@ -361,7 +379,7 @@
       if(confirm('Are you sure you want to logout?')) {
         const form = document.createElement('form');
         form.method = 'POST';
-        form.action = '{{ route('logout') }}';
+  form.action = "{{ route('logout') }}";
         
         const csrfToken = document.createElement('input');
         csrfToken.type = 'hidden';
