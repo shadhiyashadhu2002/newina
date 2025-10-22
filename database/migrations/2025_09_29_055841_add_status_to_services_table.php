@@ -11,9 +11,12 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('services', function (Blueprint $table) {
-            $table->enum('status', ['new', 'active', 'completed', 'cancelled'])->default('new')->after('service_executive');
-        });
+        // Only add the column if it doesn't already exist (defensive for repeated runs)
+        if (!Schema::hasColumn('services', 'status')) {
+            Schema::table('services', function (Blueprint $table) {
+                $table->enum('status', ['new', 'active', 'completed', 'cancelled'])->default('new')->after('service_executive');
+            });
+        }
     }
 
     /**

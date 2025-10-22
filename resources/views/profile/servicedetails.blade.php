@@ -1030,14 +1030,16 @@ function setupFormNavigation() {
       
       if (!validateStepFields(4)) return;
       
-      saveSection('contact', {
+     saveSection('contact', {
         profile_id: document.getElementById('profile-id-input').value,
         contact_customer_name: document.getElementById('contact-customer-name-input')?.value || '',
         contact_mobile_no: document.getElementById('contact-mobile-no-input')?.value || '',
         contact_whatsapp_no: document.getElementById('contact-whatsapp-no-input')?.value || '',
         contact_email: document.getElementById('contact-email-input')?.value || '',
         contact_alternate: document.getElementById('contact-alternate-input')?.value || '',
-        contact_client: document.getElementById('contact-client-input')?.value || ''
+        contact_client: document.getElementById('contact-client-input')?.value || '',
+        status: 'completed',
+        is_complete: true
       }, function() {
         alert('Service saved successfully!');
         window.location.href = '/new-service';

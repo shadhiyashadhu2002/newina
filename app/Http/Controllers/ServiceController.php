@@ -410,31 +410,45 @@ class ServiceController extends Controller
         $search = request('search');
 
         // Build query for active services
-        $query = Service::where('status', 'active')->where('deleted', 0);
+         $query = Service::where('deleted', 0)
+        ->where(function($q) {
+            $q->where('status', 'active')
+              ->orWhere(function($subQ) {
+                  $subQ->where('is_complete', true)
+                       ->whereNotNull('service_name')
+                       ->whereNotNull('start_date');
+              });
+        });
+  // If not admin, limit to this executive
+    if ($user && !$user->is_admin) {
+        $executiveName = strtolower(trim($user->first_name ?? explode('@', $user->email)[0] ?? 'Unknown'));
+        $query->whereRaw('LOWER(TRIM(service_executive)) = ?', [$executiveName]);
+    }
 
-        // If not admin, limit to this executive
-        if ($user && !$user->is_admin) {
-            $executiveName = strtolower(trim($user->first_name ?? explode('@', $user->email)[0] ?? 'Unknown'));
-            $query->whereRaw('LOWER(TRIM(service_executive)) = ?', [$executiveName]);
-        }
-
-        if ($search) {
-            $query->where(function ($q) use ($search) {
-                $q->where('profile_id', 'LIKE', "%{$search}%")
-                    ->orWhere('name', 'LIKE', "%{$search}%")
-                    ->orWhere('service_executive', 'LIKE', "%{$search}%")
-                    ->orWhere('contact_mobile_no', 'LIKE', "%{$search}%");
-            });
-        }
-
+       if ($search) {
+        $query->where(function ($q) use ($search) {
+            $q->where('profile_id', 'LIKE', "%{$search}%")
+                ->orWhere('name', 'LIKE', "%{$search}%")
+                ->orWhere('member_name', 'LIKE', "%{$search}%")
+                ->orWhere('service_name', 'LIKE', "%{$search}%")
+                ->orWhere('service_executive', 'LIKE', "%{$search}%")
+                ->orWhere('contact_mobile_no', 'LIKE', "%{$search}%")
+                ->orWhere('contact_customer_name', 'LIKE', "%{$search}%");
+        });
+    }
         $services = $query->orderByDesc('start_date')
             ->orderByDesc('created_at')
             ->paginate($perPage);
 
-        // append query params
+        // Append query params
         $services->appends(['per_page' => $perPage, 'search' => $search]);
 
-        return view('profile.activeservice', compact('services', 'perPage', 'search'));
+        // Get staff users for any dropdowns
+        $staffUsers = \App\Models\User::where('user_type', 'staff')
+            ->orderBy('first_name')
+            ->get(['id', 'first_name', 'name']);
+
+        return view('profile.activeservice', compact('services', 'perPage', 'search', 'staffUsers'));
     }
 
     // Service Dashboard with dynamic counts
@@ -662,16 +676,55 @@ class ServiceController extends Controller
             }
 
             // Now check the complete service record to determine status
-            $hasServiceDetails = !empty($service->service_name) && !empty($service->amount_paid) && !empty($service->start_date) && !empty($service->expiry_date);
-            $hasContactDetails = !empty($service->contact_mobile_no) && !empty($service->contact_customer_name);
-
-            if ($hasServiceDetails && $hasContactDetails) {
-                $service->status = 'active';
-                $service->save();
-            } else {
-                $service->status = 'new';
-                $service->save();
+            // Handle status and completion flags
+            // Handle status and completion flags
+            // Handle status and completion flags explicitly
+            if ($request->has('status')) {
+                $service->status = $request->status;
+                Log::info('Status set from request', ['status' => $request->status]);
             }
+
+            if ($request->has('is_complete')) {
+                $service->is_complete = $request->is_complete;
+                Log::info('is_complete set from request', ['is_complete' => $request->is_complete]);
+            }
+
+            // If this is the final completion (mark_as_complete flag), ensure everything is set
+            if ($request->has('mark_as_complete') && $request->mark_as_complete) {
+                $service->status = 'active';
+                $service->is_complete = true;
+
+                Log::info('Service marked as complete', [
+                    'profile_id' => $service->profile_id,
+                    'status' => $service->status,
+                    'is_complete' => $service->is_complete
+                ]);
+            }
+
+            // If status not explicitly set, auto-determine it
+            if (!$request->has('status') && !$request->has('mark_as_complete')) {
+                $hasServiceDetails = !empty($service->service_name) && !empty($service->amount_paid) && !empty($service->start_date) && !empty($service->expiry_date);
+                $hasContactDetails = !empty($service->contact_mobile_no) && !empty($service->contact_customer_name);
+
+                if ($hasServiceDetails && $hasContactDetails) {
+                    $service->status = 'active';
+                    $service->is_complete = true;
+                    Log::info('Service auto-marked as active', ['profile_id' => $service->profile_id]);
+                } else {
+                    $service->status = 'new';
+                    $service->is_complete = false;
+                }
+            }
+
+            $service->save();
+
+            Log::info('Service saved in saveSection', [
+                'id' => $service->id,
+                'profile_id' => $service->profile_id,
+                'status' => $service->status,
+                'is_complete' => $service->is_complete,
+                'section' => $request->section
+            ]);
 
             // If this save came from the Assign-from-Other flow or includes other-site fields,
             // mark the record with who assigned it so assignedProfiles() can find it.
