@@ -6,6 +6,7 @@ use App\Models\Sale;
 use App\Models\User;
 use App\Models\Service;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Schema;
 
 class SaleController extends Controller
 {
@@ -94,10 +95,8 @@ class SaleController extends Controller
         $serviceSales = (clone $query)->where('plan', 'Service')->count();
         $normalSales = $totalSales - $serviceSales;
 
-        // Pass the filter option lists and current request parameters to the view
-        return view('addsale', compact('serviceExecutives', 'sales', 'totalSales', 'serviceSales', 'normalSales', 'totalSalesAmount', 'plans', 'offices', 'statuses', 'cashTypes'));
-
-        return view('addsale', compact('serviceExecutives', 'sales', 'totalSales', 'serviceSales', 'normalSales', 'totalSalesAmount'));
+    // Pass the filter option lists and current request parameters to the view
+    return view('addsale', compact('serviceExecutives', 'sales', 'totalSales', 'serviceSales', 'normalSales', 'totalSalesAmount', 'plans', 'offices', 'statuses', 'cashTypes'));
     }
 
     // Get profile information for auto-fetch
@@ -137,12 +136,14 @@ class SaleController extends Controller
     {
         $validated = $request->validate([
             'date' => 'required|date',
-            'profile_id' => 'required',
+            'profile_id' => 'nullable',
+            'phone' => 'nullable|string',
             'name' => 'required|string',
             'executive' => 'required|string',
             'amount' => 'required|numeric|min:0',
             'paid_amount' => 'nullable|numeric|min:0',
             'success_fee' => 'nullable|numeric|min:0',
+            'discount' => 'nullable|numeric|min:0',
             'plan' => 'required|string',
             'status' => 'required|string',
             'office' => 'required|string',
@@ -158,21 +159,47 @@ class SaleController extends Controller
                 return back()->withErrors(['error' => 'Selected executive not found in staff users.'])->withInput();
             }
 
-            $sale = Sale::create([
+            // Compute paid, discount and success fee per rule:
+            // success_fee = amount - paid_amount - discount
+            // if discount not provided, it's treated as 0 (so success_fee = amount - paid_amount)
+            $amountVal = isset($validated['amount']) ? floatval($validated['amount']) : 0.0;
+            $paid = isset($validated['paid_amount']) ? floatval($validated['paid_amount']) : 0.0;
+            $discount = isset($validated['discount']) ? floatval($validated['discount']) : 0.0;
+            $computedSuccessFee = max(0, $amountVal - $paid - $discount);
+
+            // Build payload and only include columns that actually exist to avoid SQL errors if migration not run
+            $payload = [
                 'date' => $validated['date'],
-                'profile_id' => $validated['profile_id'],
+                // DB requires profile_id non-nullable; if not provided, store empty string
+                'profile_id' => $validated['profile_id'] ?? '',
                 'name' => $validated['name'],
                 'executive' => $validated['executive'],
                 'amount' => $validated['amount'],
-                'paid_amount' => $validated['paid_amount'] ?? 0,
-                'success_fee' => $validated['success_fee'] ?? 0,
+                'paid_amount' => $paid,
                 'plan' => $validated['plan'],
                 'status' => $validated['status'],
                 'office' => $validated['office'],
                 'notes' => $validated['notes'],
                 'created_by' => Auth::id(),
                 'staff_id' => $staffUser->id
-            ]);
+            ];
+
+            // Add success_fee if column exists
+            if (Schema::hasColumn('sales', 'success_fee')) {
+                $payload['success_fee'] = $computedSuccessFee;
+            }
+
+            // Add discount if column exists
+            if (Schema::hasColumn('sales', 'discount')) {
+                $payload['discount'] = $discount;
+            }
+
+            // Add phone if column exists
+            if (Schema::hasColumn('sales', 'phone')) {
+                $payload['phone'] = $validated['phone'] ?? null;
+            }
+
+            $sale = Sale::create($payload);
 
             // If plan is 'Service', add to session array for badge and prefill (support multiple)
             if (strtolower($validated['plan']) === 'service') {

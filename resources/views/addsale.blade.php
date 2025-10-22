@@ -564,11 +564,13 @@
                 <tr>
                     <th>Date</th>
                     <th>ID</th>
+                    <th>Phone</th>
                     <th>Customer Name</th>
                     <th>Plan</th>
                     <th>Amount</th>
                     <th>Paid Amount</th>
                     <th>Success Fee</th>
+                    <th>Discount</th>
                     <th>Service Executive</th>
                     <th>Status</th>
                     <th>Office</th>
@@ -580,11 +582,13 @@
                 <tr>
                     <td>{{ \Carbon\Carbon::parse($sale->date)->format('d-M-Y') }}</td>
                     <td><a href="#" class="profile-link">{{ $sale->profile_id }}</a></td>
+                    <td>{{ $sale->phone ?? '-' }}</td>
                     <td>{{ $sale->name }}</td>
                     <td><strong>{{ $sale->plan }}</strong></td>
                     <td>₹{{ number_format($sale->amount, 2) }}</td>
                     <td>₹{{ number_format($sale->paid_amount ?? 0, 2) }}</td>
                     <td>₹{{ number_format($sale->success_fee ?? 0, 2) }}</td>
+                    <td>₹{{ number_format($sale->discount ?? 0, 2) }}</td>
                     <td><span style="color: #ac0742; font-weight: 600;">{{ $sale->executive }}</span></td>
                     <td>
                         <?php
@@ -606,7 +610,7 @@
                 </tr>
                 @empty
                 <tr>
-                    <td colspan="11" style="text-align: center; padding: 20px; color: #666;">
+                    <td colspan="13" style="text-align: center; padding: 20px; color: #666;">
                         No sales records found. Click "Add New Sale" to create your first sale.
                     </td>
                 </tr>
@@ -661,8 +665,14 @@
                     </div>
 
                     <div style="display: flex; flex-direction: column;">
-                        <label style="font-weight: 600; color: #2c3e50; margin-bottom: 8px; font-size: 14px;">ID<span style="color: #ac0742;">*</span></label>
-                        <input type="text" name="profile_id" class="modal-profile-id" value="{{ old('profile_id') }}" placeholder="Enter ID" required
+                        <label style="font-weight: 600; color: #2c3e50; margin-bottom: 8px; font-size: 14px;">ID</label>
+                        <input type="text" name="profile_id" class="modal-profile-id" value="{{ old('profile_id') }}" placeholder="Enter ID (optional)"
+                               style="padding: 12px; border: 2px solid #e0e0e0; border-radius: 8px; font-size: 15px;">
+                    </div>
+
+                    <div style="display: flex; flex-direction: column;">
+                        <label style="font-weight: 600; color: #2c3e50; margin-bottom: 8px; font-size: 14px;">Phone Number</label>
+                        <input type="text" name="phone" class="modal-phone" value="{{ old('phone') }}" placeholder="Enter phone number (optional)"
                                style="padding: 12px; border: 2px solid #e0e0e0; border-radius: 8px; font-size: 15px;">
                     </div>
 
@@ -696,6 +706,12 @@
                         <label style="font-weight: 600; color: #2c3e50; margin-bottom: 8px; font-size: 14px;">Paid Amount</label>
                         <input type="number" name="paid_amount" id="modal-paid-amount" value="{{ old('paid_amount') }}" placeholder="0.00" step="0.01"
                                style="padding: 12px; border: 2px solid #e0e0e0; border-radius: 8px; font-size: 15px;">
+                    </div>
+
+                    <div style="display: flex; flex-direction: column;">
+                        <label style="font-weight: 600; color: #2c3e50; margin-bottom: 8px; font-size: 14px;">Discount</label>
+                        <input type="number" name="discount" id="modal-discount" value="{{ old('discount', 0) }}" placeholder="0.00" step="0.01"
+                                       style="padding: 12px; border: 2px solid #e0e0e0; border-radius: 8px; font-size: 15px;">
                     </div>
 
                     <div style="display: flex; flex-direction: column;">
@@ -778,6 +794,7 @@
         const planSelect = document.getElementById('modal-plan-select');
         const amountInput = document.getElementById('modal-amount');
     const paidInput = document.getElementById('modal-paid-amount');
+    const discountInput = document.getElementById('modal-discount');
     const successFeeInput = document.getElementById('modal-success-fee');
 
         function debugLog() {
@@ -827,20 +844,25 @@
             planSelect.addEventListener('change', function() {
                 const price = planPrices[this.value] || '';
                 amountInput.value = price;
+                // Recalculate success fee because paid/discount might have changed
                 updateSuccessFee();
             });
         }
 
-        // Success fee calculation (total - paid)
+        // Success fee calculation per rule: success_fee = amount - paid_amount - discount
+        // if discount absent, treat as 0 (so success_fee = amount - paid_amount)
         function updateSuccessFee() {
-            if (amountInput && paidInput && successFeeInput) {
-                const total = parseFloat(amountInput.value) || 0;
+            if (amountInput && paidInput && discountInput && successFeeInput) {
+                const amount = parseFloat(amountInput.value) || 0;
                 const paid = parseFloat(paidInput.value) || 0;
-                successFeeInput.value = Math.max(0, total - paid);
+                const discount = parseFloat(discountInput.value) || 0;
+                const success = Math.max(0, amount - paid - discount);
+                successFeeInput.value = success.toFixed(2);
             }
         }
 
         if (paidInput) paidInput.addEventListener('input', updateSuccessFee);
+        if (discountInput) discountInput.addEventListener('input', updateSuccessFee);
         if (amountInput) amountInput.addEventListener('input', updateSuccessFee);
 
         // Logout functionality
