@@ -279,6 +279,146 @@
         margin: 1px;
       }
     }
+
+    /* Pager buttons */
+    .pager-btn {
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      padding:8px 12px;
+      border-radius:10px;
+      border:1px solid rgba(0,0,0,0.06);
+      background:#fff;
+      color:#2c3e50;
+      font-weight:600;
+      text-decoration:none;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+      transition: all 0.18s ease;
+      margin:0 6px;
+    }
+
+    .pager-btn.primary {
+      background: linear-gradient(135deg,#28a745,#218838);
+      color:#fff;
+      border:none;
+      box-shadow: 0 6px 18px rgba(40,167,69,0.14);
+    }
+
+    .pager-btn:hover { transform: translateY(-2px); }
+    .pager-btn.disabled { opacity:0.55; cursor:default; transform:none; box-shadow:none; }
+    
+    /* Cleaner compact pagination styles (user requested) */
+    /* Pagination Container */
+    .pagination-wrapper {
+      margin-top: 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: rgba(255, 255, 255, 0.95);
+      padding: 15px 20px;
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    }
+
+    .pagination-info {
+      color: #555;
+      font-size: 14px;
+      font-weight: 500;
+    }
+
+    .pagination-controls {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    /* Laravel Pagination Links - Clean compact style */
+    .pagination {
+      display: flex;
+      list-style: none;
+      gap: 5px;
+      margin: 0;
+      padding: 0;
+      align-items: center;
+    }
+
+    .pagination li {
+      display: inline-block;
+    }
+
+    .pagination a,
+    .pagination span {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 32px;
+      height: 32px;
+      padding: 0 10px;
+      border-radius: 6px;
+      border: 1px solid rgba(0, 0, 0, 0.1);
+      background: #fff;
+      color: #2c3e50;
+      font-weight: 600;
+      text-decoration: none;
+      font-size: 13px;
+      transition: all 0.2s ease;
+    }
+
+    .pagination a:hover {
+      background: linear-gradient(135deg, #28a745, #218838);
+      color: #fff;
+      border-color: #28a745;
+      transform: translateY(-1px);
+      box-shadow: 0 2px 8px rgba(40, 167, 69, 0.25);
+    }
+
+    /* Active page - using your brand color */
+    .pagination .active span,
+    .pagination li.active span {
+      background: linear-gradient(135deg, #ac0742, #9d1955);
+      color: #fff;
+      border-color: #ac0742;
+      box-shadow: 0 2px 8px rgba(172, 7, 66, 0.25);
+    }
+
+    /* Disabled state */
+    .pagination .disabled span,
+    .pagination li.disabled span {
+      opacity: 0.4;
+      cursor: not-allowed;
+      background: #f8f9fa;
+      color: #999;
+    }
+
+    /* Remove arrow styling, make Previous/Next text-only */
+    .pagination a[rel="prev"],
+    .pagination a[rel="next"],
+    .pagination span[rel="prev"],
+    .pagination span[rel="next"] {
+      font-size: 13px;
+      padding: 0 12px;
+    }
+
+    /* Hide SVG arrows if Laravel adds them */
+    .pagination svg {
+      display: none !important;
+    }
+
+    @media (max-width: 768px) {
+      .pagination-wrapper {
+        flex-direction: column;
+        gap: 12px;
+        padding: 12px 15px;
+      }
+      
+      .pagination a,
+      .pagination span {
+        min-width: 28px;
+        height: 28px;
+        font-size: 12px;
+        padding: 0 8px;
+      }
+    }
   </style>
 </head>
 <body>
@@ -367,11 +507,120 @@
       </table>
     </div>
 
-    @if(isset($services))
-      <div style="margin-top: 20px;">
-        {{ $services->links() }}
+    @if(isset($services) && $services->total() > 0)
+      <div class="pagination-wrapper">
+        <div class="pagination-info">
+          Showing {{ $services->firstItem() ?? 0 }}-{{ $services->lastItem() ?? 0 }} of {{ $services->total() }}
+        </div>
+        
+        <div class="pagination-controls">
+          <!-- Previous Button -->
+          @if($services->onFirstPage())
+            <span class="page-btn disabled">Previous</span>
+          @else
+            <a href="{{ $services->previousPageUrl() }}" class="page-btn">Previous</a>
+          @endif
+
+          <!-- Page Numbers -->
+          @for($i = 1; $i <= $services->lastPage(); $i++)
+            @if($i == $services->currentPage())
+              <span class="page-btn active">{{ $i }}</span>
+            @else
+              <a href="{{ $services->url($i) }}" class="page-btn">{{ $i }}</a>
+            @endif
+          @endfor
+
+          <!-- Next Button -->
+          @if($services->hasMorePages())
+            <a href="{{ $services->nextPageUrl() }}" class="page-btn">Next</a>
+          @else
+            <span class="page-btn disabled">Next</span>
+          @endif
+        </div>
       </div>
     @endif
+
+    <style>
+    /* Simple clean pagination - NO Laravel default pagination */
+    .pagination-wrapper {
+      margin-top: 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: rgba(255, 255, 255, 0.95);
+      padding: 15px 20px;
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    }
+
+    .pagination-info {
+      color: #555;
+      font-size: 14px;
+      font-weight: 500;
+    }
+
+    .pagination-controls {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    .page-btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 32px;
+      height: 32px;
+      padding: 0 12px;
+      border-radius: 6px;
+      border: 1px solid rgba(0, 0, 0, 0.1);
+      background: #fff;
+      color: #2c3e50;
+      font-weight: 600;
+      text-decoration: none;
+      font-size: 13px;
+      transition: all 0.2s ease;
+      cursor: pointer;
+    }
+
+    .page-btn:hover:not(.disabled):not(.active) {
+      background: linear-gradient(135deg, #28a745, #218838);
+      color: #fff;
+      border-color: #28a745;
+      transform: translateY(-1px);
+      box-shadow: 0 2px 8px rgba(40, 167, 69, 0.25);
+    }
+
+    .page-btn.active {
+      background: linear-gradient(135deg, #ac0742, #9d1955);
+      color: #fff;
+      border-color: #ac0742;
+      box-shadow: 0 2px 8px rgba(172, 7, 66, 0.25);
+      cursor: default;
+    }
+
+    .page-btn.disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+      background: #f8f9fa;
+      color: #999;
+    }
+
+    @media (max-width: 768px) {
+      .pagination-wrapper {
+        flex-direction: column;
+        gap: 12px;
+        padding: 12px 15px;
+      }
+      
+      .page-btn {
+        min-width: 28px;
+        height: 28px;
+        font-size: 12px;
+        padding: 0 8px;
+      }
+    }
+    </style>
   </main>
 
   <script>

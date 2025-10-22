@@ -10,7 +10,7 @@ use Illuminate\Support\Facades\Auth;
 class SaleController extends Controller
 {
     // Show the add sale form
-    public function create()
+    public function create(Request $request)
     {
         // Get all unique service executives from the users table where user_type is 'staff'
         $serviceExecutives = User::where('user_type', 'staff')
@@ -19,7 +19,85 @@ class SaleController extends Controller
             ->orderBy('first_name')
             ->get(['id', 'first_name', 'name']);
         
-        return view('addsale', compact('serviceExecutives'));
+        // Build base query depending on user role (staff see only their records)
+        if (Auth::check() && Auth::user()->user_type === 'staff') {
+            $staffId = Auth::id();
+            $query = Sale::where('staff_id', $staffId);
+        } else {
+            $query = Sale::query();
+        }
+
+        // Available filter option lists (used by the view)
+        $plans = ['Elite','Assisted','Premium','Basic','Standard','Service'];
+    // Offices updated per request
+    $offices = ['Tirur','Vadakara'];
+        // Statuses updated per UI request
+        // We'll store display labels but filter/compare using a normalized key
+        $statuses = [
+            'full_paid' => 'Full Paid',
+            'pending' => 'Pending',
+            'not_received' => 'Not Received',
+            'refund' => 'Refund',
+            'partially_paid' => 'Partially Paid'
+        ];
+        $cashTypes = ['all','paid','partial','unpaid'];
+
+        // Apply filters from query string (month in YYYY-MM format, cash_type, plan, status, staff, office)
+        if ($month = $request->query('month')) {
+            if (preg_match('/^(\d{4})-(\d{2})$/', $month, $m)) {
+                $year = $m[1];
+                $mon = $m[2];
+                $query->whereYear('date', $year)->whereMonth('date', $mon);
+            }
+        }
+
+        if ($plan = $request->query('plan')) {
+            if ($plan !== '') $query->where('plan', $plan);
+        }
+
+        if ($status = $request->query('status')) {
+            if ($status !== '') $query->where('status', $status);
+        }
+
+        if ($staff = $request->query('staff')) {
+            if ($staff !== '') $query->where('staff_id', $staff);
+        }
+
+        if ($office = $request->query('office')) {
+            if ($office !== '') $query->where('office', $office);
+        }
+
+        if ($cashType = $request->query('cash_type')) {
+            switch ($cashType) {
+                case 'paid':
+                    // Fully paid (paid_amount == amount)
+                    $query->whereColumn('paid_amount', 'amount');
+                    break;
+                case 'unpaid':
+                    $query->where('paid_amount', 0);
+                    break;
+                case 'partial':
+                    $query->where('paid_amount', '>', 0)->whereColumn('paid_amount', '<', 'amount');
+                    break;
+                default:
+                    // 'all' or unknown -> no filter
+                    break;
+            }
+        }
+
+        // Paginate filtered results and keep query string so filters persist in links
+        $sales = $query->orderBy('date', 'desc')->orderBy('id', 'desc')->paginate(20)->withQueryString();
+
+        // Compute aggregates based on the same filtered scope (so cards reflect filters)
+        $totalSales = (clone $query)->count();
+        $totalSalesAmount = (clone $query)->sum('paid_amount');
+        $serviceSales = (clone $query)->where('plan', 'Service')->count();
+        $normalSales = $totalSales - $serviceSales;
+
+        // Pass the filter option lists and current request parameters to the view
+        return view('addsale', compact('serviceExecutives', 'sales', 'totalSales', 'serviceSales', 'normalSales', 'totalSalesAmount', 'plans', 'offices', 'statuses', 'cashTypes'));
+
+        return view('addsale', compact('serviceExecutives', 'sales', 'totalSales', 'serviceSales', 'normalSales', 'totalSalesAmount'));
     }
 
     // Get profile information for auto-fetch
@@ -63,6 +141,7 @@ class SaleController extends Controller
             'name' => 'required|string',
             'executive' => 'required|string',
             'amount' => 'required|numeric|min:0',
+            'paid_amount' => 'nullable|numeric|min:0',
             'success_fee' => 'nullable|numeric|min:0',
             'plan' => 'required|string',
             'status' => 'required|string',
@@ -85,6 +164,7 @@ class SaleController extends Controller
                 'name' => $validated['name'],
                 'executive' => $validated['executive'],
                 'amount' => $validated['amount'],
+                'paid_amount' => $validated['paid_amount'] ?? 0,
                 'success_fee' => $validated['success_fee'] ?? 0,
                 'plan' => $validated['plan'],
                 'status' => $validated['status'],

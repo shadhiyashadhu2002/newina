@@ -464,6 +464,9 @@
             <div class="card-content">
                 <h3>{{ $totalSales ?? 0 }}</h3>
                 <p>Total Sales</p>
+                @if(isset($totalSalesAmount))
+                    <p style="margin-top:6px; font-size:14px; color:#666;">₹{{ number_format($totalSalesAmount, 2) }} total</p>
+                @endif
             </div>
         </div>
 
@@ -494,6 +497,68 @@
             <a href="#" id="open-add-sale" class="btn-add">+ Add New Sale</a>
         </div>
 
+        <!-- Filters -->
+        <form method="GET" action="" style="margin-bottom:16px; display:flex; gap:12px; flex-wrap:wrap; align-items:center;">
+            <div>
+                <label style="font-size:12px; color:#666; display:block;">Month</label>
+                <input type="month" name="month" value="{{ request('month') }}" style="padding:8px; border-radius:6px; border:1px solid #ddd;">
+            </div>
+
+            <div>
+                <label style="font-size:12px; color:#666; display:block;">Cash Type</label>
+                <select name="cash_type" style="padding:8px; border-radius:6px; border:1px solid #ddd;">
+                    @foreach(($cashTypes ?? ['all','paid','partial','unpaid']) as $ct)
+                        <option value="{{ $ct }}" {{ request('cash_type') == $ct ? 'selected' : '' }}>{{ ucfirst($ct) }}</option>
+                    @endforeach
+                </select>
+            </div>
+
+            <div>
+                <label style="font-size:12px; color:#666; display:block;">Plan</label>
+                <select name="plan" style="padding:8px; border-radius:6px; border:1px solid #ddd;">
+                    <option value="">All</option>
+                    @foreach(($plans ?? ['Elite','Assisted','Premium','Basic','Standard','Service']) as $p)
+                        <option value="{{ $p }}" {{ request('plan') == $p ? 'selected' : '' }}>{{ $p }}</option>
+                    @endforeach
+                </select>
+            </div>
+
+            <div>
+                <label style="font-size:12px; color:#666; display:block;">Status</label>
+                <select name="status" style="padding:8px; border-radius:6px; border:1px solid #ddd;">
+                    <option value="">All</option>
+                    @foreach(($statuses ?? []) as $key => $label)
+                        <option value="{{ $key }}" {{ request('status') == $key ? 'selected' : '' }}>{{ $label }}</option>
+                    @endforeach
+                </select>
+            </div>
+
+            <div>
+                <label style="font-size:12px; color:#666; display:block;">Staff</label>
+                <select name="staff" style="padding:8px; border-radius:6px; border:1px solid #ddd;">
+                    <option value="">All</option>
+                    @foreach($serviceExecutives ?? [] as $exec)
+                        <option value="{{ $exec->id }}" {{ request('staff') == $exec->id ? 'selected' : '' }}>{{ $exec->first_name }}</option>
+                    @endforeach
+                </select>
+            </div>
+
+            <div>
+                <label style="font-size:12px; color:#666; display:block;">Office</label>
+                <select name="office" style="padding:8px; border-radius:6px; border:1px solid #ddd;">
+                    <option value="">All</option>
+                    @foreach(($offices ?? ['Head Office','Branch 1','Branch 2','Regional Office']) as $o)
+                        <option value="{{ $o }}" {{ request('office') == $o ? 'selected' : '' }}>{{ $o }}</option>
+                    @endforeach
+                </select>
+            </div>
+
+            <div style="display:flex; align-items:end; gap:8px;">
+                <button type="submit" style="padding:8px 12px; border-radius:6px; background:#ac0742; color:#fff; border:none;">Filter</button>
+                <a href="{{ route('addsale.page') }}" style="padding:8px 12px; border-radius:6px; background:#eee; color:#333; text-decoration:none;">Reset</a>
+            </div>
+        </form>
+
         <table>
             <thead>
                 <tr>
@@ -503,7 +568,7 @@
                     <th>Plan</th>
                     <th>Amount</th>
                     <th>Paid Amount</th>
-                    <th>Discount</th>
+                    <th>Success Fee</th>
                     <th>Service Executive</th>
                     <th>Status</th>
                     <th>Office</th>
@@ -519,12 +584,22 @@
                     <td><strong>{{ $sale->plan }}</strong></td>
                     <td>₹{{ number_format($sale->amount, 2) }}</td>
                     <td>₹{{ number_format($sale->paid_amount ?? 0, 2) }}</td>
-                    <td>₹{{ number_format($sale->discount ?? 0, 2) }}</td>
+                    <td>₹{{ number_format($sale->success_fee ?? 0, 2) }}</td>
                     <td><span style="color: #ac0742; font-weight: 600;">{{ $sale->executive }}</span></td>
                     <td>
-                        <span class="status-badge {{ strtolower($sale->status) }}">
-                            {{ ucfirst($sale->status) }}
-                        </span>
+                        <?php
+                            // Normalize sale status to a key that matches controller-provided $statuses keys
+                            $statusKey = null;
+                            if (!empty($sale->status)) {
+                                // Common normalization: lowercase, replace spaces with underscore
+                                $statusKey = strtolower(str_replace(' ', '_', $sale->status));
+                            }
+                        ?>
+                        @if(isset($statuses) && is_array($statuses) && isset($statuses[$statusKey]))
+                            <span class="status-badge {{ $statusKey }}">{{ $statuses[$statusKey] }}</span>
+                        @else
+                            <span class="status-badge {{ $statusKey ?? strtolower($sale->status) }}">{{ $sale->status ? ucfirst($sale->status) : '-' }}</span>
+                        @endif
                     </td>
                     <td>{{ $sale->office }}</td>
                     <td>{{ Str::limit($sale->notes ?? '-', 30) }}</td>
@@ -538,6 +613,11 @@
                 @endforelse
             </tbody>
         </table>
+
+        <!-- Pagination -->
+        <div style="margin-top:12px; display:flex; justify-content:flex-end;">
+            {{ $sales->links() ?? '' }}
+        </div>
     </div>
 
     <!-- Add Sale Modal (Hidden by default) -->
@@ -619,8 +699,8 @@
                     </div>
 
                     <div style="display: flex; flex-direction: column;">
-                        <label style="font-weight: 600; color: #2c3e50; margin-bottom: 8px; font-size: 14px;">Discount</label>
-                        <input type="number" name="discount" id="modal-discount" value="{{ old('discount') }}" placeholder="0.00" step="0.01"
+               <label style="font-weight: 600; color: #2c3e50; margin-bottom: 8px; font-size: 14px;">Success Fee</label>
+               <input type="number" name="success_fee" id="modal-success-fee" value="{{ old('success_fee') }}" placeholder="0.00" step="0.01"
                                style="padding: 12px; border: 2px solid #e0e0e0; border-radius: 8px; font-size: 15px;">
                     </div>
 
@@ -642,11 +722,9 @@
                         <select name="status" required
                                 style="padding: 12px; border: 2px solid #e0e0e0; border-radius: 8px; font-size: 15px;">
                             <option value="">Select Status</option>
-                            <option value="new">New</option>
-                            <option value="active" selected>Active</option>
-                            <option value="completed">Completed</option>
-                            <option value="pending">Pending</option>
-                            <option value="cancelled">Cancelled</option>
+                            @foreach(($statuses ?? []) as $key => $label)
+                                <option value="{{ $key }}" {{ old('status') == $key ? 'selected' : (request('status') == $key ? 'selected' : '') }}>{{ $label }}</option>
+                            @endforeach
                         </select>
                     </div>
 
@@ -655,10 +733,9 @@
                         <select name="office" required
                                 style="padding: 12px; border: 2px solid #e0e0e0; border-radius: 8px; font-size: 15px;">
                             <option value="">Select Office</option>
-                            <option value="Head Office">Head Office</option>
-                            <option value="Branch 1">Branch 1</option>
-                            <option value="Branch 2">Branch 2</option>
-                            <option value="Regional Office">Regional Office</option>
+                            @foreach(($offices ?? []) as $office)
+                                <option value="{{ $office }}">{{ $office }}</option>
+                            @endforeach
                         </select>
                     </div>
 
@@ -700,8 +777,8 @@
         const cancelBtn = document.getElementById('cancel-modal');
         const planSelect = document.getElementById('modal-plan-select');
         const amountInput = document.getElementById('modal-amount');
-        const paidInput = document.getElementById('modal-paid-amount');
-        const discountInput = document.getElementById('modal-discount');
+    const paidInput = document.getElementById('modal-paid-amount');
+    const successFeeInput = document.getElementById('modal-success-fee');
 
         function debugLog() {
             // Safe console logging if present
@@ -750,21 +827,21 @@
             planSelect.addEventListener('change', function() {
                 const price = planPrices[this.value] || '';
                 amountInput.value = price;
-                updateDiscount();
+                updateSuccessFee();
             });
         }
 
-        // Discount calculation
-        function updateDiscount() {
-            if (amountInput && paidInput && discountInput) {
+        // Success fee calculation (total - paid)
+        function updateSuccessFee() {
+            if (amountInput && paidInput && successFeeInput) {
                 const total = parseFloat(amountInput.value) || 0;
                 const paid = parseFloat(paidInput.value) || 0;
-                discountInput.value = Math.max(0, total - paid);
+                successFeeInput.value = Math.max(0, total - paid);
             }
         }
 
-        if (paidInput) paidInput.addEventListener('input', updateDiscount);
-        if (amountInput) amountInput.addEventListener('input', updateDiscount);
+        if (paidInput) paidInput.addEventListener('input', updateSuccessFee);
+        if (amountInput) amountInput.addEventListener('input', updateSuccessFee);
 
         // Logout functionality
         const logoutBtn = document.getElementById('logout-btn');

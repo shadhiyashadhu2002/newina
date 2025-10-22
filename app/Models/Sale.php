@@ -12,7 +12,7 @@ class Sale extends Model
         'name',
         'executive',
         'amount',
-        'discount',
+        'paid_amount',
         'success_fee',
         'plan',
         'status',
@@ -25,7 +25,7 @@ class Sale extends Model
     protected $casts = [
         'date' => 'date',
         'amount' => 'decimal:2',
-        'discount' => 'decimal:2',
+        'paid_amount' => 'decimal:2',
         'success_fee' => 'decimal:2'
     ];
     
