@@ -521,8 +521,32 @@
             <a href="{{ $services->previousPageUrl() }}" class="page-btn">Previous</a>
           @endif
 
-          <!-- Page Numbers -->
-          @for($i = 1; $i <= $services->lastPage(); $i++)
+          <!-- Page Numbers (max 25 visible) -->
+          @php
+            $total = $services->lastPage();
+            $current = $services->currentPage();
+            $maxVisible = 25;
+
+            if ($total <= $maxVisible) {
+                $start = 1;
+                $end = $total;
+            } else {
+                if ($current <= $maxVisible) {
+                    // show first 1..25
+                    $start = 1;
+                    $end = $maxVisible;
+                } else {
+                    // center the window around current page
+                    $half = intdiv($maxVisible, 2);
+                    $start = max(1, $current - $half);
+                    $end = min($total, $start + $maxVisible - 1);
+                    // adjust start if we're at the upper bound
+                    $start = max(1, $end - $maxVisible + 1);
+                }
+            }
+          @endphp
+
+          @for($i = $start; $i <= $end; $i++)
             @if($i == $services->currentPage())
               <span class="page-btn active">{{ $i }}</span>
             @else
