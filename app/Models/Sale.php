@@ -9,10 +9,10 @@ class Sale extends Model
     protected $fillable = [
         'date',
         'profile_id',
+        'phone',
         'name',
         'executive',
         'amount',
-        'phone',
         'paid_amount',
         'success_fee',
         'discount',
@@ -28,8 +28,8 @@ class Sale extends Model
         'date' => 'date',
         'amount' => 'decimal:2',
         'paid_amount' => 'decimal:2',
-        'success_fee' => 'decimal:2',
-        'discount' => 'decimal:2'
+        'success_fee' => 'decimal:2'
+        , 'discount' => 'decimal:2'
     ];
     
     public function staff()

@@ -6,7 +6,7 @@ use App\Models\Sale;
 use App\Models\User;
 use App\Models\Service;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Facades\Log;
 
 class SaleController extends Controller
 {
@@ -19,84 +19,100 @@ class SaleController extends Controller
             ->where('first_name', '!=', '')
             ->orderBy('first_name')
             ->get(['id', 'first_name', 'name']);
-        
-        // Build base query depending on user role (staff see only their records)
+        // Use the project's canonical statuses and cash types
+        $statuses = [
+            'new' => 'New',
+            'active' => 'Active',
+            'completed' => 'Completed',
+            'pending' => 'Pending',
+            'cancelled' => 'Cancelled'
+        ];
+
+        $cashTypes = ['all', 'paid', 'partial', 'unpaid'];
+
+        $plans = ['Elite','Assisted','Premium','Basic','Standard','Service'];
+        $offices = ['Tirur','Vadakara'];
+
+        // Build the query for filtering sales
+        $salesQuery = Sale::query();
+
+        // If the logged-in user is a staff member, restrict to their sales
         if (Auth::check() && Auth::user()->user_type === 'staff') {
             $staffId = Auth::id();
-            $query = Sale::where('staff_id', $staffId);
-        } else {
-            $query = Sale::query();
+            $salesQuery->where('staff_id', $staffId);
         }
 
-        // Available filter option lists (used by the view)
-        $plans = ['Elite','Assisted','Premium','Basic','Standard','Service'];
-    // Offices updated per request
-    $offices = ['Tirur','Vadakara'];
-        // Statuses updated per UI request
-        // We'll store display labels but filter/compare using a normalized key
-        $statuses = [
-            'full_paid' => 'Full Paid',
-            'pending' => 'Pending',
-            'not_received' => 'Not Received',
-            'refund' => 'Refund',
-            'partially_paid' => 'Partially Paid'
-        ];
-        $cashTypes = ['all','paid','partial','unpaid'];
-
-        // Apply filters from query string (month in YYYY-MM format, cash_type, plan, status, staff, office)
-        if ($month = $request->query('month')) {
-            if (preg_match('/^(\d{4})-(\d{2})$/', $month, $m)) {
-                $year = $m[1];
-                $mon = $m[2];
-                $query->whereYear('date', $year)->whereMonth('date', $mon);
-            }
+        // Apply filters based on request parameters
+        if ($request->filled('month')) {
+            $salesQuery->whereYear('date', substr($request->month, 0, 4))
+                      ->whereMonth('date', substr($request->month, 5, 2));
         }
 
-        if ($plan = $request->query('plan')) {
-            if ($plan !== '') $query->where('plan', $plan);
-        }
-
-        if ($status = $request->query('status')) {
-            if ($status !== '') $query->where('status', $status);
-        }
-
-        if ($staff = $request->query('staff')) {
-            if ($staff !== '') $query->where('staff_id', $staff);
-        }
-
-        if ($office = $request->query('office')) {
-            if ($office !== '') $query->where('office', $office);
-        }
-
-        if ($cashType = $request->query('cash_type')) {
-            switch ($cashType) {
+        if ($request->filled('cash_type') && $request->cash_type !== 'all') {
+            // For cash_type filter, we'll map the filter values to database logic
+            switch ($request->cash_type) {
                 case 'paid':
-                    // Fully paid (paid_amount == amount)
-                    $query->whereColumn('paid_amount', 'amount');
-                    break;
-                case 'unpaid':
-                    $query->where('paid_amount', 0);
+                    $salesQuery->whereColumn('paid_amount', '>=', 'amount');
                     break;
                 case 'partial':
-                    $query->where('paid_amount', '>', 0)->whereColumn('paid_amount', '<', 'amount');
+                    $salesQuery->where('paid_amount', '>', 0)
+                              ->whereColumn('paid_amount', '<', 'amount');
                     break;
-                default:
-                    // 'all' or unknown -> no filter
+                case 'unpaid':
+                    $salesQuery->where('paid_amount', '<=', 0);
                     break;
             }
         }
 
-        // Paginate filtered results and keep query string so filters persist in links
-        $sales = $query->orderBy('date', 'desc')->orderBy('id', 'desc')->paginate(20)->withQueryString();
+        if ($request->filled('plan')) {
+            $salesQuery->where('plan', $request->plan);
+        }
 
-        // Compute aggregates based on the same filtered scope (so cards reflect filters)
-        $totalSales = (clone $query)->count();
-        $totalSalesAmount = (clone $query)->sum('paid_amount');
-        $serviceSales = (clone $query)->where('plan', 'Service')->count();
-        $normalSales = $totalSales - $serviceSales;
+        if ($request->filled('status')) {
+            $salesQuery->where('status', $request->status);
+        }
 
-    // Pass the filter option lists and current request parameters to the view
-    return view('addsale', compact('serviceExecutives', 'sales', 'totalSales', 'serviceSales', 'normalSales', 'totalSalesAmount', 'plans', 'offices', 'statuses', 'cashTypes'));
+        if ($request->filled('staff')) {
+            $salesQuery->where('staff_id', $request->staff);
+        }
+
+        if ($request->filled('office')) {
+            $salesQuery->where('office', $request->office);
+        }
+
+        // Get filtered sales with pagination
+        $sales = $salesQuery->orderBy('date', 'desc')
+                           ->orderBy('id', 'desc')
+                           ->paginate(20)
+                           ->appends($request->query());
+
+        // Calculate aggregates based on the current user's permissions
+        if (Auth::check() && Auth::user()->user_type === 'staff') {
+            $staffId = Auth::id();
+            $totalSales = Sale::where('staff_id', $staffId)->count();
+            $totalSalesAmount = Sale::where('staff_id', $staffId)->sum('paid_amount');
+            $serviceSales = Sale::where('staff_id', $staffId)->where('plan', 'Service')->count();
+            $normalSales = $totalSales - $serviceSales;
+        } else {
+            // Aggregate counts for dashboard cards (global)
+            $totalSales = Sale::count();
+            $totalSalesAmount = Sale::sum('paid_amount');
+            $serviceSales = Sale::where('plan', 'Service')->count();
+            $normalSales = $totalSales - $serviceSales;
+        }
+
+        return view('addsale', compact(
+            'serviceExecutives',
+            'sales',
+            'totalSales',
+            'serviceSales',
+            'normalSales',
+            'totalSalesAmount',
+            'statuses',
+            'cashTypes',
+            'plans',
+            'offices'
+        ));
     }
 
     // Get profile information for auto-fetch
@@ -134,99 +150,83 @@ class SaleController extends Controller
     // Store new sale
     public function store(Request $request)
     {
-        $validated = $request->validate([
-            'date' => 'required|date',
-            'profile_id' => 'nullable',
-            'phone' => 'nullable|string',
-            'name' => 'required|string',
-            'executive' => 'required|string',
-            'amount' => 'required|numeric|min:0',
-            'paid_amount' => 'nullable|numeric|min:0',
-            'success_fee' => 'nullable|numeric|min:0',
-            'discount' => 'nullable|numeric|min:0',
-            'plan' => 'required|string',
-            'status' => 'required|string',
-            'office' => 'required|string',
-            'notes' => 'nullable|string'
-        ]);
-
+        Log::info('SaleController@store called', ['method' => $request->method(), 'inputs' => array_keys($request->all())]);
+        
         try {
+            // Single unified validation that matches the add sale form
+            $validatedData = $request->validate([
+                'date' => 'required|date',
+                'profile_id' => 'nullable|string|max:255',
+                'phone' => 'nullable|string|max:20',
+                'name' => 'required|string|max:255',
+                'executive' => 'required|string|max:255',
+                'plan' => 'required|string|in:Elite,Assisted,Premium,Basic,Standard,Service',
+                'amount' => 'required|numeric|min:0',
+                'paid_amount' => 'nullable|numeric|min:0',
+                'discount' => 'nullable|numeric|min:0',
+                'success_fee' => 'nullable|numeric|min:0',
+                'status' => 'required|string|in:new,active,completed,pending,cancelled',
+                'office' => 'required|string|max:255',
+                'notes' => 'nullable|string|max:1000',
+                'cash_type' => 'nullable|string',
+            ]);
+
             // Find staff user by executive name
             $staffUser = User::where('user_type', 'staff')
-                ->where('first_name', $validated['executive'])
+                ->where('first_name', $validatedData['executive'])
                 ->first();
+            
             if (!$staffUser) {
-                return back()->withErrors(['error' => 'Selected executive not found in staff users.'])->withInput();
+                Log::error('Staff user not found', ['executive' => $validatedData['executive']]);
+                return back()
+                    ->withErrors(['executive' => 'Selected executive not found in staff users.'])
+                    ->withInput();
             }
 
-            // Compute paid, discount and success fee per rule:
-            // success_fee = amount - paid_amount - discount
-            // if discount not provided, it's treated as 0 (so success_fee = amount - paid_amount)
-            $amountVal = isset($validated['amount']) ? floatval($validated['amount']) : 0.0;
-            $paid = isset($validated['paid_amount']) ? floatval($validated['paid_amount']) : 0.0;
-            $discount = isset($validated['discount']) ? floatval($validated['discount']) : 0.0;
-            $computedSuccessFee = max(0, $amountVal - $paid - $discount);
+            // Compute success_fee server-side to ensure correctness
+            $amount = floatval($validatedData['amount'] ?? 0);
+            $paid = floatval($validatedData['paid_amount'] ?? 0);
+            $discount = floatval($validatedData['discount'] ?? 0);
+            $success_fee = max(0, $amount - $paid - $discount);
 
-            // Build payload and only include columns that actually exist to avoid SQL errors if migration not run
-            $payload = [
-                'date' => $validated['date'],
-                // DB requires profile_id non-nullable; if not provided, store empty string
-                'profile_id' => $validated['profile_id'] ?? '',
-                'name' => $validated['name'],
-                'executive' => $validated['executive'],
-                'amount' => $validated['amount'],
+            $sale = Sale::create([
+                'date' => $validatedData['date'],
+                'profile_id' => $validatedData['profile_id'] ?? null,
+                'phone' => $validatedData['phone'] ?? null,
+                'name' => $validatedData['name'],
+                'executive' => $validatedData['executive'],
+                'plan' => $validatedData['plan'],
+                'amount' => $amount,
                 'paid_amount' => $paid,
-                'plan' => $validated['plan'],
-                'status' => $validated['status'],
-                'office' => $validated['office'],
-                'notes' => $validated['notes'],
+                'discount' => $discount,
+                'success_fee' => $success_fee,
+                'status' => $validatedData['status'],
+                'office' => $validatedData['office'],
+                'notes' => $validatedData['notes'] ?? null,
+                'staff_id' => $staffUser->id,
+                'cash_type' => $validatedData['cash_type'] ?? null,
                 'created_by' => Auth::id(),
-                'staff_id' => $staffUser->id
-            ];
+            ]);
 
-            // Add success_fee if column exists
-            if (Schema::hasColumn('sales', 'success_fee')) {
-                $payload['success_fee'] = $computedSuccessFee;
-            }
+            Log::info('Sale created successfully', ['sale_id' => $sale->id]);
 
-            // Add discount if column exists
-            if (Schema::hasColumn('sales', 'discount')) {
-                $payload['discount'] = $discount;
-            }
+            return redirect()->back()->with('success', 'Sale added successfully!');
 
-            // Add phone if column exists
-            if (Schema::hasColumn('sales', 'phone')) {
-                $payload['phone'] = $validated['phone'] ?? null;
-            }
-
-            $sale = Sale::create($payload);
-
-            // If plan is 'Service', add to session array for badge and prefill (support multiple)
-            if (strtolower($validated['plan']) === 'service') {
-                $pending = session('show_service_badge', []);
-                // Only add if not already present
-                $exists = false;
-                foreach ($pending as $item) {
-                    if ($item['profile_id'] == $validated['profile_id']) {
-                        $exists = true;
-                        break;
-                    }
-                }
-                if (!$exists) {
-                    $pending[] = [
-                        'profile_id' => $validated['profile_id'],
-                        'member_name' => $validated['name']
-                    ];
-                }
-                session(['show_service_badge' => $pending]);
-            }
-            // Always return to addsale page after sale
-            return redirect()->route('addsale.page')
-                           ->with('success', 'Sale added successfully!');
-
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            Log::error('Validation error', ['errors' => $e->errors()]);
+            return back()
+                ->withErrors($e->errors())
+                ->withInput();
+                
         } catch (\Exception $e) {
-            return back()->withErrors(['error' => 'Error saving sale: ' . $e->getMessage()])
-                        ->withInput();
+            Log::error('Error saving sale', [
+                'message' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            
+            return back()
+                ->withErrors(['error' => 'Error saving sale: ' . $e->getMessage()])
+                ->withInput();
         }
     }
 }
