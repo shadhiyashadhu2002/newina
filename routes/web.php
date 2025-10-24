@@ -7,6 +7,7 @@ use App\Http\Controllers\AdminMemberController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\Auth\LoginController; // Add this import
 use App\Http\Controllers\ServiceController;
+use App\Http\Controllers\ExpenseController;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Route;
@@ -964,9 +965,15 @@ Route::get('/staff-productivity', function () {
     return view('staffproductivity');
 })->name('staffproductivity.page');
 
-Route::get('/expense-page', function () {
-    return view('expense');
-})->name('expense.page');
+// Expense routes
+Route::middleware('auth')->group(function () {
+    Route::get('/expense-page', [ExpenseController::class, 'index'])->name('expense.page');
+    Route::post('/expense', [ExpenseController::class, 'store'])->name('expense.store');
+    Route::put('/expense/{expense}', [ExpenseController::class, 'update'])->name('expense.update');
+    Route::delete('/expense/{expense}', [ExpenseController::class, 'destroy'])->name('expense.delete');
+    Route::get('/expense/{expense}', [ExpenseController::class, 'show'])->name('expense.show');
+});
+
 Route::middleware('auth')->group(function () {
     // Sales form page
     Route::get('/add-sale', [SaleController::class, 'create'])->name('addsale.page');
