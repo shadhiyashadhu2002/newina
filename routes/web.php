@@ -8,6 +8,7 @@ use App\Http\Controllers\UserController;
 use App\Http\Controllers\Auth\LoginController; // Add this import
 use App\Http\Controllers\ServiceController;
 use App\Http\Controllers\ExpenseController;
+use App\Models\User;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Route;
@@ -957,9 +958,84 @@ Route::get('/debug/partner-expectations/{profileId}', function ($profileId) {
     }
 });
 
-Route::get('/staff-target-assign', function () {
-    return view('stafftarget');
+Route::get('/staff-target-assign', function (\Illuminate\Http\Request $request) {
+    $staffUsers = User::where('user_type', 'staff')
+        ->orderBy('first_name')
+        ->get(['id', 'first_name', 'name']);
+
+    // Load assigned targets and compute achieved sums for the month filter (if provided)
+    $month = $request->get('month'); // optional, format YYYY-MM
+
+    $targetsQuery = \App\Models\StaffTarget::with('staff')->orderBy('month', 'desc');
+    if ($month) {
+        $targetsQuery->where('month', $month);
+    }
+
+    $staffTargets = $targetsQuery->get();
+
+    // For each target compute achieved amount from sales
+    $prepared = $staffTargets->map(function ($t) {
+        $year = substr($t->month, 0, 4);
+        $mon = substr($t->month, 5, 2);
+        $achieved = \App\Models\Sale::where('staff_id', $t->staff_id)
+            ->whereYear('date', $year)
+            ->whereMonth('date', $mon)
+            ->sum('paid_amount');
+
+        $percentage = $t->target_amount > 0 ? round(($achieved / $t->target_amount) * 100) : 0;
+
+        return (object) [
+            'id' => $t->id,
+            'staff_id' => $t->staff_id,
+            'staff_first_name' => $t->staff ? $t->staff->first_name : null,
+            'month' => $t->month,
+            'target_amount' => $t->target_amount,
+            'achieved' => $achieved,
+            'percentage' => $percentage,
+            'status' => $percentage >= 100 ? 'achieved' : 'in-progress'
+        ];
+    });
+
+    return view('stafftarget', compact('staffUsers', 'prepared'));
 })->name('stafftarget.page');
+
+// Accept form submission from the Assign New Target modal
+Route::middleware('auth')->post('/staff-target-assign', function (\Illuminate\Http\Request $request) {
+    $validated = $request->validate([
+        'service_executive' => ['required', 'exists:users,id'],
+        'month' => ['required', 'date_format:Y-m'],
+        'branch' => ['required', 'in:Tirur,Vadakara'],
+        'target_amount' => ['required', 'numeric', 'min:0']
+    ]);
+
+    // Persist the target: create or update existing target for the staff + month
+    $staffId = $validated['service_executive'];
+    $month = $validated['month'];
+    $branch = $validated['branch'];
+    $amount = $validated['target_amount'];
+
+    $existing = \App\Models\StaffTarget::where('staff_id', $staffId)
+        ->where('month', $month)
+        ->first();
+
+    if ($existing) {
+        $existing->update([
+            'target_amount' => $amount,
+            'branch' => $branch,
+            'created_by' => auth()->id(),
+        ]);
+    } else {
+        \App\Models\StaffTarget::create([
+            'staff_id' => $staffId,
+            'month' => $month,
+            'branch' => $branch,
+            'target_amount' => $amount,
+            'created_by' => auth()->id(),
+        ]);
+    }
+
+    return redirect()->route('stafftarget.page')->with('success', 'Target assigned successfully.');
+})->name('stafftarget.assign');
 
 Route::get('/staff-productivity', function () {
     return view('staffproductivity');

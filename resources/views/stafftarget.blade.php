@@ -432,24 +432,32 @@
     <div id="addTargetModal" style="display:none; position:fixed; top:0; left:0; width:100vw; height:100vh; background:rgba(0,0,0,0.3); z-index:9999; align-items:center; justify-content:center;">
         <div style="background:#fff; border-radius:12px; padding:32px; min-width:350px; max-width:95vw; box-shadow:0 8px 32px rgba(0,0,0,0.25);">
             <h2 style="margin-bottom:18px; color:#ac0742;">Assign New Target</h2>
-            <form method="POST" action="#">
+            <form method="POST" action="{{ route('stafftarget.assign') }}">
                 @csrf
                 <div style="margin-bottom:16px;">
                     <label style="font-weight:600; color:#2c3e50;">Service Executive<span style="color:#ac0742;">*</span></label>
                     <select name="service_executive" required style="width:100%; padding:10px; border-radius:8px; border:1px solid #e0e0e0;">
                         <option value="">Select Service Executive</option>
-                        @if(isset($staffUsers))
+                        @if(isset($staffUsers) && $staffUsers->count() > 0)
                             @foreach($staffUsers as $staff)
-                                <option value="{{ $staff->first_name }}" {{ (Auth::user()->first_name == $staff->first_name) ? 'selected' : '' }}>{{ $staff->first_name }}</option>
+                                <option value="{{ $staff->id }}" {{ (Auth::id() == $staff->id) ? 'selected' : '' }}>{{ $staff->first_name }}</option>
                             @endforeach
                         @else
-                            <option value="{{ Auth::user()->first_name ?? 'admin' }}" selected>{{ Auth::user()->first_name ?? 'admin' }}</option>
+                            <option value="{{ Auth::id() ?? 0 }}" selected>{{ Auth::user()->first_name ?? 'admin' }}</option>
                         @endif
                     </select>
                 </div>
                 <div style="margin-bottom:16px;">
                     <label style="font-weight:600; color:#2c3e50;">Month<span style="color:#ac0742;">*</span></label>
                     <input type="month" name="month" required style="width:100%; padding:10px; border-radius:8px; border:1px solid #e0e0e0;">
+                </div>
+                <div style="margin-bottom:16px;">
+                    <label style="font-weight:600; color:#2c3e50;">Branch<span style="color:#ac0742;">*</span></label>
+                    <select name="branch" required style="width:100%; padding:10px; border-radius:8px; border:1px solid #e0e0e0;">
+                        <option value="">Select Branch</option>
+                        <option value="Tirur">Tirur</option>
+                        <option value="Vadakara">Vadakara</option>
+                    </select>
                 </div>
                 <div style="margin-bottom:16px;">
                     <label style="font-weight:600; color:#2c3e50;">Target Amount<span style="color:#ac0742;">*</span></label>
@@ -512,21 +520,7 @@
                 <h2 class="section-title">Staff Targets Overview</h2>
             </div>
             <div class="filter-group">
-                <select class="filter-select" id="monthFilter">
-                    <option value="">All Months</option>
-                    <option value="2025-01">January 2025</option>
-                    <option value="2025-02">February 2025</option>
-                    <option value="2025-03">March 2025</option>
-                    <option value="2025-04">April 2025</option>
-                    <option value="2025-05">May 2025</option>
-                    <option value="2025-06">June 2025</option>
-                    <option value="2025-07">July 2025</option>
-                    <option value="2025-08">August 2025</option>
-                    <option value="2025-09">September 2025</option>
-                    <option value="2025-10" selected>October 2025</option>
-                    <option value="2025-11">November 2025</option>
-                    <option value="2025-12">December 2025</option>
-                </select>
+                <input type="month" id="monthFilter" class="filter-select" value="2025-10" />
             </div>
         </div>
 
@@ -543,156 +537,38 @@
                 </tr>
             </thead>
             <tbody>
-                <!-- Sample data rows -->
-                <tr>
-                    <td>
-                        <div class="staff-name">
-                            <div class="staff-avatar">SA</div>
-                            <span>Sana Ahmed</span>
-                        </div>
-                    </td>
-                    <td>October 2025</td>
-                    <td><span class="target-amount">₹5,00,000</span></td>
-                    <td>₹4,50,000</td>
-                    <td>
-                        <div class="achievement-bar">
-                            <div class="achievement-fill" style="width: 90%;"></div>
-                        </div>
-                        <div class="achievement-text">90%</div>
-                    </td>
-                    <td><span class="status-badge in-progress">In Progress</span></td>
-                    <td>
-                        <div class="action-buttons">
-                            <button class="btn-action btn-edit" onclick="editTarget(1)">✏️ Edit</button>
-                            <button class="btn-action btn-view" onclick="viewDetails(1)">👁️ View</button>
-                        </div>
-                    </td>
-                </tr>
-
-                <tr>
-                    <td>
-                        <div class="staff-name">
-                            <div class="staff-avatar">RK</div>
-                            <span>Rahul Kumar</span>
-                        </div>
-                    </td>
-                    <td>October 2025</td>
-                    <td><span class="target-amount">₹4,00,000</span></td>
-                    <td>₹4,20,000</td>
-                    <td>
-                        <div class="achievement-bar">
-                            <div class="achievement-fill" style="width: 100%;"></div>
-                        </div>
-                        <div class="achievement-text">105%</div>
-                    </td>
-                    <td><span class="status-badge achieved">Achieved</span></td>
-                    <td>
-                        <div class="action-buttons">
-                            <button class="btn-action btn-edit" onclick="editTarget(2)">✏️ Edit</button>
-                            <button class="btn-action btn-view" onclick="viewDetails(2)">👁️ View</button>
-                        </div>
-                    </td>
-                </tr>
-
-                <tr>
-                    <td>
-                        <div class="staff-name">
-                            <div class="staff-avatar">PS</div>
-                            <span>Priya Sharma</span>
-                        </div>
-                    </td>
-                    <td>October 2025</td>
-                    <td><span class="target-amount">₹3,50,000</span></td>
-                    <td>₹2,10,000</td>
-                    <td>
-                        <div class="achievement-bar">
-                            <div class="achievement-fill" style="width: 60%;"></div>
-                        </div>
-                        <div class="achievement-text">60%</div>
-                    </td>
-                    <td><span class="status-badge in-progress">In Progress</span></td>
-                    <td>
-                        <div class="action-buttons">
-                            <button class="btn-action btn-edit" onclick="editTarget(3)">✏️ Edit</button>
-                            <button class="btn-action btn-view" onclick="viewDetails(3)">👁️ View</button>
-                        </div>
-                    </td>
-                </tr>
-
-                <tr>
-                    <td>
-                        <div class="staff-name">
-                            <div class="staff-avatar">AV</div>
-                            <span>Amit Verma</span>
-                        </div>
-                    </td>
-                    <td>October 2025</td>
-                    <td><span class="target-amount">₹6,00,000</span></td>
-                    <td>₹5,85,000</td>
-                    <td>
-                        <div class="achievement-bar">
-                            <div class="achievement-fill" style="width: 97%;"></div>
-                        </div>
-                        <div class="achievement-text">97%</div>
-                    </td>
-                    <td><span class="status-badge in-progress">In Progress</span></td>
-                    <td>
-                        <div class="action-buttons">
-                            <button class="btn-action btn-edit" onclick="editTarget(4)">✏️ Edit</button>
-                            <button class="btn-action btn-view" onclick="viewDetails(4)">👁️ View</button>
-                        </div>
-                    </td>
-                </tr>
-
-                <tr>
-                    <td>
-                        <div class="staff-name">
-                            <div class="staff-avatar">NK</div>
-                            <span>Neha Kapoor</span>
-                        </div>
-                    </td>
-                    <td>October 2025</td>
-                    <td><span class="target-amount">₹4,50,000</span></td>
-                    <td>₹1,35,000</td>
-                    <td>
-                        <div class="achievement-bar">
-                            <div class="achievement-fill" style="width: 30%;"></div>
-                        </div>
-                        <div class="achievement-text">30%</div>
-                    </td>
-                    <td><span class="status-badge in-progress">In Progress</span></td>
-                    <td>
-                        <div class="action-buttons">
-                            <button class="btn-action btn-edit" onclick="editTarget(5)">✏️ Edit</button>
-                            <button class="btn-action btn-view" onclick="viewDetails(5)">👁️ View</button>
-                        </div>
-                    </td>
-                </tr>
-
-                <tr>
-                    <td>
-                        <div class="staff-name">
-                            <div class="staff-avatar">VJ</div>
-                            <span>Vikram Joshi</span>
-                        </div>
-                    </td>
-                    <td>September 2025</td>
-                    <td><span class="target-amount">₹5,50,000</span></td>
-                    <td>₹5,65,000</td>
-                    <td>
-                        <div class="achievement-bar">
-                            <div class="achievement-fill" style="width: 100%;"></div>
-                        </div>
-                        <div class="achievement-text">103%</div>
-                    </td>
-                    <td><span class="status-badge achieved">Achieved</span></td>
-                    <td>
-                        <div class="action-buttons">
-                            <button class="btn-action btn-edit" onclick="editTarget(6)">✏️ Edit</button>
-                            <button class="btn-action btn-view" onclick="viewDetails(6)">👁️ View</button>
-                        </div>
-                    </td>
-                </tr>
+                @if(isset($prepared) && $prepared->count() > 0)
+                    @foreach($prepared as $index => $row)
+                        <tr>
+                            <td>
+                                <div class="staff-name">
+                                    <div class="staff-avatar">{{ strtoupper(substr($row->staff_first_name ?? 'U',0,1)) }}{{ strtoupper(substr($row->staff_first_name ?? 'U', -1)) }}</div>
+                                    <span>{{ $row->staff_first_name ?? 'Unknown' }}</span>
+                                </div>
+                            </td>
+                            <td>{{ \Carbon\Carbon::parse($row->month . '-01')->format('F Y') }}</td>
+                            <td><span class="target-amount">₹{{ number_format($row->target_amount, 2) }}</span></td>
+                            <td>₹{{ number_format($row->achieved, 2) }}</td>
+                            <td>
+                                <div class="achievement-bar">
+                                    <div class="achievement-fill" style="width: {{ max(0, min(100, $row->percentage)) }}%;"></div>
+                                </div>
+                                <div class="achievement-text">{{ $row->percentage }}%</div>
+                            </td>
+                            <td><span class="status-badge {{ $row->status == 'achieved' ? 'achieved' : 'in-progress' }}">{{ $row->status == 'achieved' ? 'Achieved' : 'In Progress' }}</span></td>
+                            <td>
+                                <div class="action-buttons">
+                                    <button class="btn-action btn-edit" onclick="editTarget({{ $row->id }})">✏️ Edit</button>
+                                    <button class="btn-action btn-view" onclick="viewDetails({{ $row->id }})">👁️ View</button>
+                                </div>
+                            </td>
+                        </tr>
+                    @endforeach
+                @else
+                    <tr>
+                        <td colspan="7" style="text-align:center; padding:30px; color:#666;">No targets assigned yet.</td>
+                    </tr>
+                @endif
             </tbody>
         </table>
     </div>
@@ -714,7 +590,7 @@ document.getElementById('monthFilter').addEventListener('change', function() {
         }
     });
 });
-
+ 
 function getMonthName(monthValue) {
     const months = {
         '2025-01': 'January 2025',
