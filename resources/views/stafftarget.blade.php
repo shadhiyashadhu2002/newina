@@ -531,6 +531,7 @@
                     <th>Month</th>
                     <th>Target Amount</th>
                     <th>Achieved</th>
+                    <th>Balance</th>
                     <th>Achievement %</th>
                     <th>Status</th>
                     <th>Actions</th>
@@ -549,6 +550,7 @@
                             <td>{{ \Carbon\Carbon::parse($row->month . '-01')->format('F Y') }}</td>
                             <td><span class="target-amount">₹{{ number_format($row->target_amount, 2) }}</span></td>
                             <td>₹{{ number_format($row->achieved, 2) }}</td>
+                            <td><span class="target-amount">₹{{ number_format(($row->target_amount - $row->achieved), 2) }}</span></td>
                             <td>
                                 <div class="achievement-bar">
                                     <div class="achievement-fill" style="width: {{ max(0, min(100, $row->percentage)) }}%;"></div>
@@ -566,7 +568,7 @@
                     @endforeach
                 @else
                     <tr>
-                        <td colspan="7" style="text-align:center; padding:30px; color:#666;">No targets assigned yet.</td>
+                        <td colspan="8" style="text-align:center; padding:30px; color:#666;">No targets assigned yet.</td>
                     </tr>
                 @endif
             </tbody>

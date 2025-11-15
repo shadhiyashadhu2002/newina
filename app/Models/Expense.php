@@ -12,6 +12,7 @@ class Expense extends Model
         'description', 
         'notes',
         'amount',
+        'manager',
         'created_by'
     ];
 

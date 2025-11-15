@@ -21,7 +21,7 @@ class ExpenseController extends Controller
         $expenses = Expense::with('createdBy')
             ->orderBy('date', 'desc')
             ->orderBy('id', 'desc')
-            ->paginate(20);
+            ->paginate(10);
 
         return view('expense', compact(
             'todayExpense',
@@ -37,13 +37,18 @@ class ExpenseController extends Controller
         $validated = $request->validate([
             'date' => 'required|date',
             'description' => 'required|string|max:255',
-            'notes' => 'nullable|string',
-            'amount' => 'required|numeric|min:0'
+            'notes' => ['nullable', 'in:salary,recharge,mobile/pc,repair,rent,electricity,water,festival,travel,data,tea,EMI,stationary,incentive,cleaning,print,refund,markrting,digital marketing,others'],
+            'amount' => 'required|numeric|min:0',
+            'manager' => 'nullable|in:benazir,afnas,prabhakaran,rafeeque,others'
         ]);
 
         $validated['created_by'] = Auth::id();
 
-        Expense::create($validated);
+        $expense = Expense::create($validated);
+
+        if ($request->expectsJson()) {
+            return response()->json(['message' => 'Expense added successfully', 'expense' => $expense], 201);
+        }
 
         return redirect()->route('expense.page')->with('success', 'Expense added successfully!');
     }
@@ -53,11 +58,16 @@ class ExpenseController extends Controller
         $validated = $request->validate([
             'date' => 'required|date',
             'description' => 'required|string|max:255',
-            'notes' => 'nullable|string',
-            'amount' => 'required|numeric|min:0'
+            'notes' => ['nullable', 'in:salary,recharge,mobile/pc,repair,rent,electricity,water,festival,travel,data,tea,EMI,stationary,incentive,cleaning,print,refund,markrting,digital marketing,others'],
+            'amount' => 'required|numeric|min:0',
+            'manager' => 'nullable|in:benazir,afnas,prabhakaran,rafeeque,others'
         ]);
 
         $expense->update($validated);
+
+        if ($request->expectsJson()) {
+            return response()->json(['message' => 'Expense updated successfully', 'expense' => $expense], 200);
+        }
 
         return redirect()->route('expense.page')->with('success', 'Expense updated successfully!');
     }
@@ -65,6 +75,11 @@ class ExpenseController extends Controller
     public function destroy(Expense $expense)
     {
         $expense->delete();
+
+        if (request()->expectsJson()) {
+            return response()->json(['message' => 'Expense deleted successfully'], 200);
+        }
+
         return redirect()->route('expense.page')->with('success', 'Expense deleted successfully!');
     }
 

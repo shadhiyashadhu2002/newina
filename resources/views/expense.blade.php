@@ -598,9 +598,10 @@
                 <thead>
                     <tr>
                         <th style="width: 60px;">Sl No</th>
-                        <th style="width: 140px;">Date</th>
-                        <th style="width: 200px;">Description</th>
+                        <th style="width: 120px;">Date</th>
+                        <th style="width: 180px;">Manager</th>
                         <th>Notes</th>
+                        <th style="width: 200px;">Description</th>
                         <th style="width: 120px;">Amount</th>
                         <th style="width: 140px;">Actions</th>
                     </tr>
@@ -617,18 +618,47 @@
                                    data-field="date">
                         </td>
                         <td>
+                            <select class="editable-input" data-field="manager">
+                                <option value="">Select</option>
+                                <option value="benazir" {{ ($expense->manager ?? '') == 'benazir' ? 'selected' : '' }}>benazir</option>
+                                <option value="afnas" {{ ($expense->manager ?? '') == 'afnas' ? 'selected' : '' }}>afnas</option>
+                                <option value="prabhakaran" {{ ($expense->manager ?? '') == 'prabhakaran' ? 'selected' : '' }}>prabhakaran</option>
+                                <option value="rafeeque" {{ ($expense->manager ?? '') == 'rafeeque' ? 'selected' : '' }}>rafeeque</option>
+                                <option value="others" {{ ($expense->manager ?? '') == 'others' ? 'selected' : '' }}>others</option>
+                            </select>
+                        </td>
+                        <td>
+                            <select class="editable-input" data-field="notes">
+                                <option value="">Select</option>
+                                <option value="salary" {{ ($expense->notes ?? '') == 'salary' ? 'selected' : '' }}>salary</option>
+                                <option value="recharge" {{ ($expense->notes ?? '') == 'recharge' ? 'selected' : '' }}>recharge</option>
+                                <option value="mobile/pc" {{ ($expense->notes ?? '') == 'mobile/pc' ? 'selected' : '' }}>mobile/pc</option>
+                                <option value="repair" {{ ($expense->notes ?? '') == 'repair' ? 'selected' : '' }}>repair</option>
+                                <option value="rent" {{ ($expense->notes ?? '') == 'rent' ? 'selected' : '' }}>rent</option>
+                                <option value="electricity" {{ ($expense->notes ?? '') == 'electricity' ? 'selected' : '' }}>electricity</option>
+                                <option value="water" {{ ($expense->notes ?? '') == 'water' ? 'selected' : '' }}>water</option>
+                                <option value="festival" {{ ($expense->notes ?? '') == 'festival' ? 'selected' : '' }}>festival</option>
+                                <option value="travel" {{ ($expense->notes ?? '') == 'travel' ? 'selected' : '' }}>travel</option>
+                                <option value="data" {{ ($expense->notes ?? '') == 'data' ? 'selected' : '' }}>data</option>
+                                <option value="tea" {{ ($expense->notes ?? '') == 'tea' ? 'selected' : '' }}>tea</option>
+                                <option value="EMI" {{ ($expense->notes ?? '') == 'EMI' ? 'selected' : '' }}>EMI</option>
+                                <option value="stationary" {{ ($expense->notes ?? '') == 'stationary' ? 'selected' : '' }}>stationary</option>
+                                <option value="incentive" {{ ($expense->notes ?? '') == 'incentive' ? 'selected' : '' }}>incentive</option>
+                                <option value="cleaning" {{ ($expense->notes ?? '') == 'cleaning' ? 'selected' : '' }}>cleaning</option>
+                                <option value="print" {{ ($expense->notes ?? '') == 'print' ? 'selected' : '' }}>print</option>
+                                <option value="refund" {{ ($expense->notes ?? '') == 'refund' ? 'selected' : '' }}>refund</option>
+                                <option value="markrting" {{ ($expense->notes ?? '') == 'markrting' ? 'selected' : '' }}>markrting</option>
+                                <option value="digital marketing" {{ ($expense->notes ?? '') == 'digital marketing' ? 'selected' : '' }}>digital marketing</option>
+                                <option value="others" {{ ($expense->notes ?? '') == 'others' ? 'selected' : '' }}>others</option>
+                            </select>
+                        </td>
+                        <td>
                             <input type="text" 
                                    class="editable-input" 
                                    name="description_{{ $expense->id }}"
                                    value="{{ $expense->description }}" 
                                    placeholder="Enter description"
                                    data-field="description">
-                        </td>
-                        <td>
-                            <textarea class="editable-textarea" 
-                                      name="notes_{{ $expense->id }}"
-                                      placeholder="Enter notes..."
-                                      data-field="notes">{{ $expense->notes }}</textarea>
                         </td>
                         <td>
                             <input type="number" 
@@ -641,8 +671,7 @@
                                    onchange="updateTotal()">
                         </td>
                         <td>
-                            <button type="button" class="btn-save" onclick="saveExpense({{ $expense->id }})">Save</button>
-                            <button type="button" class="btn-delete" onclick="deleteExpense({{ $expense->id }})">Delete</button>
+                            <button type="button" class="btn-save" onclick="openEditModal({{ $expense->id }})">Edit</button>
                         </td>
                     </tr>
                     @empty
@@ -659,15 +688,45 @@
                                    data-field="date">
                         </td>
                         <td>
+                            <select class="editable-input" data-field="manager">
+                                <option value="">Select</option>
+                                <option value="benazir">benazir</option>
+                                <option value="afnas">afnas</option>
+                                <option value="prabhakaran">prabhakaran</option>
+                                <option value="rafeeque">rafeeque</option>
+                                <option value="others">others</option>
+                            </select>
+                        </td>
+                        <td>
+                            <select class="editable-input" data-field="notes">
+                                <option value="">Select</option>
+                                <option value="salary">salary</option>
+                                <option value="recharge">recharge</option>
+                                <option value="mobile/pc">mobile/pc</option>
+                                <option value="repair">repair</option>
+                                <option value="rent">rent</option>
+                                <option value="electricity">electricity</option>
+                                <option value="water">water</option>
+                                <option value="festival">festival</option>
+                                <option value="travel">travel</option>
+                                <option value="data">data</option>
+                                <option value="tea">tea</option>
+                                <option value="EMI">EMI</option>
+                                <option value="stationary">stationary</option>
+                                <option value="incentive">incentive</option>
+                                <option value="cleaning">cleaning</option>
+                                <option value="print">print</option>
+                                <option value="refund">refund</option>
+                                <option value="markrting">markrting</option>
+                                <option value="digital marketing">digital marketing</option>
+                                <option value="others">others</option>
+                            </select>
+                        </td>
+                        <td>
                             <input type="text" 
                                    class="editable-input" 
                                    placeholder="Enter description"
                                    data-field="description">
-                        </td>
-                        <td>
-                            <textarea class="editable-textarea" 
-                                      placeholder="Enter notes..."
-                                      data-field="notes"></textarea>
                         </td>
                         <td>
                             <input type="number" 
@@ -680,7 +739,6 @@
                         </td>
                         <td>
                             <button type="button" class="btn-save" onclick="saveNewExpense(this)">Save</button>
-                            <button type="button" class="btn-delete" onclick="removeNewRow(this)">Remove</button>
                         </td>
                     </tr>
                 </tbody>
@@ -696,13 +754,27 @@
 
         <button type="button" class="btn-add-row" onclick="addNewRow()">+ Add New Row</button>
 
-        <!-- Pagination -->
-        @if(isset($expenses) && $expenses->hasPages())
-        <div style="margin-top: 16px; display: flex; justify-content: flex-end;">
-            {{ $expenses->links() }}
-        </div>
-        @endif
-    </div>
+     <!-- Pagination -->
+@if(isset($expenses) && method_exists($expenses, 'links'))
+<div style="margin-top: 8px; color:#666; font-size:13px;">
+    Showing <strong>{{ $expenses->count() }}</strong> of <strong>{{ $expenses->total() ?? '0' }}</strong> records — page <strong>{{ $expenses->currentPage() ?? 1 }}</strong> ({{ $expenses->perPage() ?? 10 }} per page)
+</div>
+<div style="margin-top: 16px; display: flex; justify-content: center; gap: 10px;">
+    @if($expenses->onFirstPage())
+        <button disabled style="padding: 10px 20px; border: 1px solid #ddd; border-radius: 8px; background: #f5f5f5; color: #999; cursor: not-allowed; font-weight: 600;">← Previous</button>
+    @else
+        <a href="{{ $expenses->previousPageUrl() }}" style="padding: 10px 20px; border: 1px solid #ac0742; border-radius: 8px; background: white; color: #ac0742; text-decoration: none; font-weight: 600; transition: all 0.3s ease;">← Previous</a>
+    @endif
+    
+    <span style="padding: 10px 20px; background: linear-gradient(135deg, #ac0742, #9d1955); color: white; border-radius: 8px; font-weight: 600;">Page {{ $expenses->currentPage() }} of {{ $expenses->lastPage() }}</span>
+    
+    @if($expenses->hasMorePages())
+        <a href="{{ $expenses->nextPageUrl() }}" style="padding: 10px 20px; border: 1px solid #ac0742; border-radius: 8px; background: white; color: #ac0742; text-decoration: none; font-weight: 600; transition: all 0.3s ease;">Next →</a>
+    @else
+        <button disabled style="padding: 10px 20px; border: 1px solid #ddd; border-radius: 8px; background: #f5f5f5; color: #999; cursor: not-allowed; font-weight: 600;">Next →</button>
+    @endif
+</div>
+@endif
 </main>
 
 <script>
@@ -759,82 +831,78 @@
 
     // Save existing expense
     async function saveExpense(expenseId) {
-        const row = document.querySelector(`tr[data-expense-id="${expenseId}"]`);
-        const data = {
-            date: row.querySelector('[data-field="date"]').value,
-            description: row.querySelector('[data-field="description"]').value,
-            notes: row.querySelector('[data-field="notes"]').value,
-            amount: row.querySelector('[data-field="amount"]').value,
-            _token: csrfToken,
-            _method: 'PUT'
-        };
-
-        try {
-            const response = await fetch(`/expense/${expenseId}`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': csrfToken
-                },
-                body: JSON.stringify(data)
-            });
-
-            if (response.ok) {
-                showMessage('Expense updated successfully!', 'success');
-                updateTotal();
-            } else {
-                showMessage('Error updating expense', 'error');
-            }
-        } catch (error) {
-            console.error('Error:', error);
-            showMessage('Error updating expense', 'error');
-        }
+        // kept for compatibility if called elsewhere; prefer modal save
+        console.warn('saveExpense is deprecated; use modal save.');
     }
 
     // Save new expense
-    async function saveNewExpense(button) {
-        const row = button.closest('tr');
-        const data = {
-            date: row.querySelector('[data-field="date"]').value,
-            description: row.querySelector('[data-field="description"]').value,
-            notes: row.querySelector('[data-field="notes"]').value,
-            amount: row.querySelector('[data-field="amount"]').value,
-            _token: csrfToken
-        };
+   async function saveNewExpense(button) {
+    const row = button.closest('tr');
+    const data = {
+        date: row.querySelector('[data-field="date"]').value,
+        description: row.querySelector('[data-field="description"]').value,
+        notes: row.querySelector('[data-field="notes"]').value,
+        amount: row.querySelector('[data-field="amount"]').value,
+        manager: row.querySelector('[data-field="manager"]').value,
+        _token: csrfToken
+    };
 
-        // Validation
-        if (!data.description || !data.amount) {
-            alert('Please enter description and amount');
-            return;
-        }
-
-        try {
-            const response = await fetch('{{ route("expense.store") }}', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': csrfToken
-                },
-                body: JSON.stringify(data)
-            });
-
-            const result = await response.json();
-
-            if (response.ok) {
-                showMessage('Expense added successfully!', 'success');
-                // Reload page to show new expense
-                setTimeout(() => {
-                    window.location.reload();
-                }, 1000);
-            } else {
-                showMessage(result.message || 'Error adding expense', 'error');
-            }
-        } catch (error) {
-            console.error('Error:', error);
-            showMessage('Error adding expense', 'error');
-        }
+    // Validation
+    if (!data.description || !data.amount) {
+        alert('Please enter description and amount');
+        return;
     }
 
+    // Show loading state
+    const originalText = button.textContent;
+    button.textContent = 'Saving...';
+    button.disabled = true;
+
+    try {
+        const response = await fetch('{{ route("expense.store") }}', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json',
+                'X-CSRF-TOKEN': csrfToken
+            },
+            body: JSON.stringify(data)
+        });
+
+        const result = await response.json();
+
+        if (response.ok && result.expense) {
+            // Set the expense ID on the row
+            row.setAttribute('data-expense-id', result.expense.id);
+            
+            // Change button text to "Edit"
+            button.textContent = 'Edit';
+            button.disabled = false;
+            
+            // Remove the old onclick and add new one
+            button.removeAttribute('onclick');
+            button.onclick = function() { 
+                openEditModal(result.expense.id); 
+            };
+            
+            // Show success message
+            showMessage('✓ Expense added successfully!', 'success');
+            
+            // Update the total
+            updateTotal();
+            
+        } else {
+            showMessage(result.message || 'Error adding expense', 'error');
+            button.textContent = originalText;
+            button.disabled = false;
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        showMessage('⚠ Error adding expense', 'error');
+        button.textContent = originalText;
+        button.disabled = false;
+    }
+}
     // Delete expense
     async function deleteExpense(expenseId) {
         if (!confirm('Are you sure you want to delete this expense?')) {
@@ -846,6 +914,7 @@
                 method: 'DELETE',
                 headers: {
                     'Content-Type': 'application/json',
+                    'Accept': 'application/json',
                     'X-CSRF-TOKEN': csrfToken
                 }
             });
@@ -864,20 +933,181 @@
         }
     }
 
-    // Show message
-    function showMessage(message, type) {
-        const existingMsg = document.querySelector('.success-message, .error-message');
-        if (existingMsg) existingMsg.remove();
-
-        const msgDiv = document.createElement('div');
-        msgDiv.className = type === 'success' ? 'success-message' : 'error-message';
-        msgDiv.innerHTML = `${type === 'success' ? '✓' : '⚠'} ${message}`;
-        
-        const section = document.querySelector('.expense-section');
-        section.insertBefore(msgDiv, section.querySelector('.filters-container'));
-
-        setTimeout(() => msgDiv.remove(), 3000);
+    // Edit modal logic
+    function createEditModalHtml() {
+        return `
+        <div id="editExpenseModal" style="display:none; position:fixed; top:0; left:0; width:100vw; height:100vh; background:rgba(0,0,0,0.4); z-index:9999; align-items:center; justify-content:center;">
+            <div style="background:#fff; border-radius:12px; padding:20px; min-width:320px; max-width:90vw; box-shadow:0 8px 32px rgba(0,0,0,0.25);">
+                <h3 style="margin-top:0; color:#ac0742;">Edit Expense</h3>
+                <input type="hidden" id="modal-expense-id" />
+                <div style="margin-bottom:8px;"><label>Date</label><input id="modal-date" type="date" class="editable-input date-input" style="width:100%;" /></div>
+                <div style="margin-bottom:8px;"><label>Manager</label>
+                    <select id="modal-manager" class="editable-input" style="width:100%;">
+                        <option value="">Select</option>
+                        <option value="benazir">benazir</option>
+                        <option value="afnas">afnas</option>
+                        <option value="prabhakaran">prabhakaran</option>
+                        <option value="rafeeque">rafeeque</option>
+                        <option value="others">others</option>
+                    </select>
+                </div>
+                <div style="margin-bottom:8px;"><label>Notes</label>
+                    <select id="modal-notes" class="editable-input" style="width:100%;">
+                        <option value="">Select</option>
+                        <option value="salary">salary</option>
+                        <option value="recharge">recharge</option>
+                        <option value="mobile/pc">mobile/pc</option>
+                        <option value="repair">repair</option>
+                        <option value="rent">rent</option>
+                        <option value="electricity">electricity</option>
+                        <option value="water">water</option>
+                        <option value="festival">festival</option>
+                        <option value="travel">travel</option>
+                        <option value="data">data</option>
+                        <option value="tea">tea</option>
+                        <option value="EMI">EMI</option>
+                        <option value="stationary">stationary</option>
+                        <option value="incentive">incentive</option>
+                        <option value="cleaning">cleaning</option>
+                        <option value="print">print</option>
+                        <option value="refund">refund</option>
+                        <option value="markrting">markrting</option>
+                        <option value="digital marketing">digital marketing</option>
+                        <option value="others">others</option>
+                    </select>
+                </div>
+                <div style="margin-bottom:8px;"><label>Description</label><input id="modal-description" type="text" class="editable-input" style="width:100%;" /></div>
+                <div style="margin-bottom:8px;"><label>Amount</label><input id="modal-amount" type="number" step="0.01" class="editable-input amount-input" style="width:100%;" /></div>
+                <div style="display:flex; gap:8px; justify-content:flex-end; margin-top:10px;">
+                    <button type="button" class="btn-filter secondary" onclick="closeEditModal()">Cancel</button>
+                    <button type="button" class="btn-save" onclick="saveExpenseFromModal()">Save</button>
+                </div>
+            </div>
+        </div>
+        `;
     }
+
+    function ensureEditModal() {
+        if (!document.getElementById('editExpenseModal')) {
+            const wrapper = document.createElement('div');
+            wrapper.innerHTML = createEditModalHtml();
+            document.body.appendChild(wrapper.firstElementChild);
+        }
+    }
+
+    function openEditModal(expenseId) {
+        ensureEditModal();
+        const modal = document.getElementById('editExpenseModal');
+        // fetch expense data
+        fetch(`/expense/${expenseId}`, { headers: { 'Accept': 'application/json' } })
+            .then(r => r.json())
+            .then(data => {
+                document.getElementById('modal-expense-id').value = data.id;
+                document.getElementById('modal-date').value = data.date ? data.date.split('T')[0] : '';
+                document.getElementById('modal-manager').value = data.manager || '';
+                document.getElementById('modal-description').value = data.description || '';
+                document.getElementById('modal-notes').value = data.notes || '';
+                document.getElementById('modal-amount').value = data.amount || '';
+                modal.style.display = 'flex';
+            }).catch(err => {
+                console.error(err);
+                showMessage('Error fetching expense', 'error');
+            });
+    }
+
+    function closeEditModal() {
+        const modal = document.getElementById('editExpenseModal');
+        if (modal) modal.style.display = 'none';
+    }
+
+async function saveExpenseFromModal() {
+    const id = document.getElementById('modal-expense-id').value;
+    const payload = {
+        date: document.getElementById('modal-date').value,
+        manager: document.getElementById('modal-manager').value,
+        description: document.getElementById('modal-description').value,
+        notes: document.getElementById('modal-notes').value,
+        amount: document.getElementById('modal-amount').value,
+        _token: csrfToken
+    };
+
+    try {
+        const res = await fetch(`/expense/${id}`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json',
+                'X-CSRF-TOKEN': csrfToken
+            },
+            body: JSON.stringify(payload)
+        });
+
+        if (res.ok) {
+            const updated = await res.json().catch(() => null);
+            
+            // Close modal first
+            closeEditModal();
+            
+            // Update DOM row if present
+            const row = document.querySelector(`tr[data-expense-id="${id}"]`);
+            if (row) {
+                row.querySelector('[data-field="date"]').value = payload.date;
+                const managerSelect = row.querySelector('[data-field="manager"]');
+                if (managerSelect) managerSelect.value = payload.manager;
+                row.querySelector('[data-field="description"]').value = payload.description;
+                row.querySelector('[data-field="notes"]').value = payload.notes;
+                row.querySelector('[data-field="amount"]').value = payload.amount;
+                
+                // Add visual feedback to the updated row
+                row.style.background = '#d4edda';
+                setTimeout(() => {
+                    row.style.background = '';
+                }, 2000);
+            }
+            
+            // Show success message
+            showMessage('✓ Expense updated successfully!', 'success');
+            updateTotal();
+            
+        } else {
+            const body = await res.json().catch(() => ({}));
+            showMessage(body.message || 'Error saving expense', 'error');
+        }
+    } catch (err) {
+        console.error(err);
+        showMessage('Error saving expense', 'error');
+    }
+}
+
+   // Show message
+function showMessage(message, type) {
+    const existingMsg = document.querySelector('.success-message, .error-message');
+    if (existingMsg) existingMsg.remove();
+
+    const msgDiv = document.createElement('div');
+    msgDiv.className = type === 'success' ? 'success-message' : 'error-message';
+    msgDiv.innerHTML = `${type === 'success' ? '✓' : '⚠'} ${message}`;
+    
+    const section = document.querySelector('.expense-section');
+    const sectionHeader = section.querySelector('.section-header');
+    
+    // Insert after section header
+    if (sectionHeader.nextElementSibling) {
+        section.insertBefore(msgDiv, sectionHeader.nextElementSibling);
+    } else {
+        section.appendChild(msgDiv);
+    }
+    
+    // Scroll to message
+    msgDiv.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+
+    // Auto-remove after 3 seconds
+    setTimeout(() => {
+        if (msgDiv.parentElement) {
+            msgDiv.remove();
+        }
+    }, 3000);
+}
 
     // Logout functionality
     document.getElementById('logout-btn')?.addEventListener('click', function(e) {
