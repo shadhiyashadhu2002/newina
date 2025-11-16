@@ -9,28 +9,55 @@ use Carbon\Carbon;
 
 class ExpenseController extends Controller
 {
-    public function index(Request $request)
-    {
-        // Calculate expense summaries
-        $todayExpense = Expense::today()->sum('amount');
-        $weekExpense = Expense::thisWeek()->sum('amount');
-        $monthExpense = Expense::thisMonth()->sum('amount');
-        $totalExpense = Expense::sum('amount');
+   public function index(Request $request)
+{
+    // Calculate expense summaries
+    $todayExpense = Expense::today()->sum('amount');
+    $weekExpense = Expense::thisWeek()->sum('amount');
+    $monthExpense = Expense::thisMonth()->sum('amount');
+    $totalExpense = Expense::sum('amount');
 
-        // Get expenses with pagination
-        $expenses = Expense::with('createdBy')
-            ->orderBy('date', 'desc')
-            ->orderBy('id', 'desc')
-            ->paginate(10);
+    // Build query with filters - INITIALIZE QUERY FIRST
+    $query = Expense::with('createdBy');
 
-        return view('expense', compact(
-            'todayExpense',
-            'weekExpense', 
-            'monthExpense',
-            'totalExpense',
-            'expenses'
-        ));
+    // Date range filter
+    if ($request->filled('date_from')) {
+        $query->whereDate('date', '>=', $request->date_from);
     }
+    
+    if ($request->filled('date_to')) {
+        $query->whereDate('date', '<=', $request->date_to);
+    }
+
+    // Manager filter
+    if ($request->filled('manager')) {
+        $query->where('manager', $request->manager);
+    }
+
+    // Notes filter
+    if ($request->filled('notes')) {
+        $query->where('notes', $request->notes);
+    }
+
+    // Search filter
+    if ($request->filled('search')) {
+        $query->where('description', 'like', '%' . $request->search . '%');
+    }
+
+    // Get expenses with pagination - NOW USE $query VARIABLE
+    $expenses = $query->orderBy('date', 'desc')
+        ->orderBy('id', 'desc')
+        ->paginate(10)
+        ->appends($request->all()); // Keep filters in pagination
+
+    return view('expense', compact(
+        'todayExpense',
+        'weekExpense', 
+        'monthExpense',
+        'totalExpense',
+        'expenses'
+    ));
+}
 
     public function store(Request $request)
     {

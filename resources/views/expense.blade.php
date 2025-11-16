@@ -2,6 +2,12 @@
 
 @section('content')
 <style>
+ .editable-input:disabled,
+.editable-textarea:disabled {
+    background: #f5f5f5;
+    cursor: not-allowed;
+    opacity: 0.7;
+}
     * {
         margin: 0;
         padding: 0;
@@ -581,6 +587,26 @@
                 <label>Date To</label>
                 <input type="date" name="date_to" value="{{ request('date_to') }}">
             </div>
+            <div class="filter-group">
+    <label>Manager</label>
+    <select name="manager">
+        <option value="">All Managers</option>
+        <option value="benazir" {{ request('manager') == 'benazir' ? 'selected' : '' }}>Benazir</option>
+        <option value="afnas" {{ request('manager') == 'afnas' ? 'selected' : '' }}>Afnas</option>
+        <option value="prabhakaran" {{ request('manager') == 'prabhakaran' ? 'selected' : '' }}>Prabhakaran</option>
+        <option value="rafeeque" {{ request('manager') == 'rafeeque' ? 'selected' : '' }}>Rafeeque</option>
+        <option value="others" {{ request('manager') == 'others' ? 'selected' : '' }}>Others</option>
+    </select>
+</div>
+
+<div class="filter-group">
+    <label>Notes</label>
+    <select name="notes">
+        <option value="">All Notes</option>
+        <option value="SALARY" {{ request('notes') == 'SALARY' ? 'selected' : '' }}>Salary</option>
+        <!-- Add all other note options similarly -->
+    </select>
+</div>
 
             <div class="filter-group">
                 <label>Search</label>
@@ -600,8 +626,8 @@
                         <th style="width: 60px;">Sl No</th>
                         <th style="width: 120px;">Date</th>
                         <th style="width: 180px;">Manager</th>
-                        <th>Notes</th>
-                        <th style="width: 200px;">Description</th>
+                        <th style="width: 200px;">Notes</th>
+                        <th style="width: 400px;">Description</th>
                         <th style="width: 120px;">Amount</th>
                         <th style="width: 140px;">Actions</th>
                     </tr>
@@ -614,11 +640,11 @@
                             <input type="date" 
                                    class="editable-input date-input" 
                                    name="date_{{ $expense->id }}"
-                                   value="{{ $expense->date }}" 
-                                   data-field="date">
+                                  value="{{ \Carbon\Carbon::parse($expense->date)->format('Y-m-d') }}"
+                                   data-field="date" disabled>
                         </td>
                         <td>
-                            <select class="editable-input" data-field="manager">
+                            <select class="editable-input" data-field="manager"disabled>
                                 <option value="">Select</option>
                                 <option value="benazir" {{ ($expense->manager ?? '') == 'benazir' ? 'selected' : '' }}>benazir</option>
                                 <option value="afnas" {{ ($expense->manager ?? '') == 'afnas' ? 'selected' : '' }}>afnas</option>
@@ -628,28 +654,29 @@
                             </select>
                         </td>
                         <td>
-                            <select class="editable-input" data-field="notes">
+                            <select class="editable-input" data-field="notes"disabled>
                                 <option value="">Select</option>
-                                <option value="salary" {{ ($expense->notes ?? '') == 'salary' ? 'selected' : '' }}>salary</option>
-                                <option value="recharge" {{ ($expense->notes ?? '') == 'recharge' ? 'selected' : '' }}>recharge</option>
-                                <option value="mobile/pc" {{ ($expense->notes ?? '') == 'mobile/pc' ? 'selected' : '' }}>mobile/pc</option>
-                                <option value="repair" {{ ($expense->notes ?? '') == 'repair' ? 'selected' : '' }}>repair</option>
-                                <option value="rent" {{ ($expense->notes ?? '') == 'rent' ? 'selected' : '' }}>rent</option>
-                                <option value="electricity" {{ ($expense->notes ?? '') == 'electricity' ? 'selected' : '' }}>electricity</option>
-                                <option value="water" {{ ($expense->notes ?? '') == 'water' ? 'selected' : '' }}>water</option>
-                                <option value="festival" {{ ($expense->notes ?? '') == 'festival' ? 'selected' : '' }}>festival</option>
-                                <option value="travel" {{ ($expense->notes ?? '') == 'travel' ? 'selected' : '' }}>travel</option>
-                                <option value="data" {{ ($expense->notes ?? '') == 'data' ? 'selected' : '' }}>data</option>
-                                <option value="tea" {{ ($expense->notes ?? '') == 'tea' ? 'selected' : '' }}>tea</option>
+                                <option value="SALARY" {{ ($expense->notes ?? '') == 'SALARY' ? 'selected' : '' }}>SALARY</option>
+                                <option value="RECHARGE" {{ ($expense->notes ?? '') == 'RECHARGE' ? 'selected' : '' }}>RECHARGE</option>
+                                <option value="MOBILE/PC" {{ ($expense->notes ?? '') == 'MOBILE/PC' ? 'selected' : '' }}>mobile/pc</option>
+                                <option value="REPAIR" {{ ($expense->notes ?? '') == 'REPAIR' ? 'selected' : '' }}>REPAIR</option>
+                                <option value="RENT" {{ ($expense->notes ?? '') == 'RENT' ? 'selected' : '' }}>RENT</option>
+                                <option value="ELECTRICITY" {{ ($expense->notes ?? '') == 'ELECTRICITY' ? 'selected' : '' }}>ELECTRICITY</option>
+                                <option value="WATER" {{ ($expense->notes ?? '') == 'WATER' ? 'selected' : '' }}>WATER</option>
+                                <option value="FESTIVAL" {{ ($expense->notes ?? '') == 'FESTIVAL' ? 'selected' : '' }}>FESTIVAL</option>
+                                <option value="TRAVEL" {{ ($expense->notes ?? '') == 'TRAVEL' ? 'selected' : '' }}>TRAVEL</option>
+                                <option value="DATA" {{ ($expense->notes ?? '') == 'DATA' ? 'selected' : '' }}>DATA</option>
+                                <option value="TEA" {{ ($expense->notes ?? '') == 'TEA' ? 'selected' : '' }}>TEA</option>
                                 <option value="EMI" {{ ($expense->notes ?? '') == 'EMI' ? 'selected' : '' }}>EMI</option>
-                                <option value="stationary" {{ ($expense->notes ?? '') == 'stationary' ? 'selected' : '' }}>stationary</option>
-                                <option value="incentive" {{ ($expense->notes ?? '') == 'incentive' ? 'selected' : '' }}>incentive</option>
-                                <option value="cleaning" {{ ($expense->notes ?? '') == 'cleaning' ? 'selected' : '' }}>cleaning</option>
-                                <option value="print" {{ ($expense->notes ?? '') == 'print' ? 'selected' : '' }}>print</option>
-                                <option value="refund" {{ ($expense->notes ?? '') == 'refund' ? 'selected' : '' }}>refund</option>
-                                <option value="markrting" {{ ($expense->notes ?? '') == 'markrting' ? 'selected' : '' }}>markrting</option>
-                                <option value="digital marketing" {{ ($expense->notes ?? '') == 'digital marketing' ? 'selected' : '' }}>digital marketing</option>
-                                <option value="others" {{ ($expense->notes ?? '') == 'others' ? 'selected' : '' }}>others</option>
+                                <option value="STATIONARY" {{ ($expense->notes ?? '') == 'STATIONARY' ? 'selected' : '' }}>STATIONARY</option>
+                                <option value="INCENTIVE" {{ ($expense->notes ?? '') == 'INCENTIVE' ? 'selected' : '' }}>INCENTIVE</option>
+                                <option value="CLEANING" {{ ($expense->notes ?? '') == 'CLEANING' ? 'selected' : '' }}>CLEANING</option>
+                                <option value="PRINT" {{ ($expense->notes ?? '') == 'PRINT' ? 'selected' : '' }}>PRINT</option>
+                                <option value="REFUND" {{ ($expense->notes ?? '') == 'REFUND' ? 'selected' : '' }}>REFUND</option>
+                                <option value="MARKETING" {{ ($expense->notes ?? '') == 'MARKETING' ? 'selected' : '' }}>MARKETING</option>
+                                <option value="DIGITAL MARKETING" {{ ($expense->notes ?? '') == 'DIGITAL MARKETING' ? 'selected' : '' }}>DIGITAL MARKETING</option>
+                                <option value="WI-FI" {{ ($expense->notes ?? '') == 'WI-FI' ? 'selected' : '' }}>WI-FI</option>
+                                <option value="OTHERS" {{ ($expense->notes ?? '') == 'OTHERS' ? 'selected' : '' }}>OTHERS</option>
                             </select>
                         </td>
                         <td>
@@ -658,7 +685,7 @@
                                    name="description_{{ $expense->id }}"
                                    value="{{ $expense->description }}" 
                                    placeholder="Enter description"
-                                   data-field="description">
+                                   data-field="description"disabled>
                         </td>
                         <td>
                             <input type="number" 
@@ -668,7 +695,7 @@
                                    step="0.01"
                                    placeholder="0.00"
                                    data-field="amount"
-                                   onchange="updateTotal()">
+                                   onchange="updateTotal()"disabled>
                         </td>
                         <td>
                             <button type="button" class="btn-save" onclick="openEditModal({{ $expense->id }})">Edit</button>
@@ -689,37 +716,38 @@
                         </td>
                         <td>
                             <select class="editable-input" data-field="manager">
-                                <option value="">Select</option>
-                                <option value="benazir">benazir</option>
-                                <option value="afnas">afnas</option>
-                                <option value="prabhakaran">prabhakaran</option>
-                                <option value="rafeeque">rafeeque</option>
-                                <option value="others">others</option>
+                                <option value="">select</option>
+                                <option value="BENAZIR">BENAZIR</option>
+                                <option value="AFNAS">AFNAS</option>
+                                <option value="P">PRABHAKARAN</option>
+                                <option value="RAFEEQUE">RAFEEQUE</option>
+                                <option value="OTHERS">OTHERS</option>
                             </select>
                         </td>
                         <td>
                             <select class="editable-input" data-field="notes">
                                 <option value="">Select</option>
-                                <option value="salary">salary</option>
-                                <option value="recharge">recharge</option>
-                                <option value="mobile/pc">mobile/pc</option>
-                                <option value="repair">repair</option>
-                                <option value="rent">rent</option>
-                                <option value="electricity">electricity</option>
-                                <option value="water">water</option>
-                                <option value="festival">festival</option>
-                                <option value="travel">travel</option>
-                                <option value="data">data</option>
-                                <option value="tea">tea</option>
+                                <option value="SALARY">SALARY</option>
+                                <option value="RECHARGE">RECHARGE</option>
+                                <option value="MOBILE/PC">MOBILE/PC</option>
+                                <option value="REPAIR">REPAIR</option>
+                                <option value="RENT">RENT</option>
+                                <option value="ELECTRICITY">ELECTRICITY</option>
+                                <option value="WATER">WATER</option>
+                                <option value="FESTIVAL">FESTIVAL</option>
+                                <option value="TRAVEL">TRAVEL</option>
+                                <option value="DATA">DATA</option>
+                                <option value="TEA">TEA</option>
                                 <option value="EMI">EMI</option>
-                                <option value="stationary">stationary</option>
-                                <option value="incentive">incentive</option>
-                                <option value="cleaning">cleaning</option>
-                                <option value="print">print</option>
-                                <option value="refund">refund</option>
-                                <option value="markrting">markrting</option>
-                                <option value="digital marketing">digital marketing</option>
-                                <option value="others">others</option>
+                                <option value="STATIONARY">STATIONARY</option>
+                                <option value="INCENTIVE">INCENTIVE</option>
+                                <option value="CLEANING">CLEANING</option>
+                                <option value="PRINT">PRINT</option>
+                                <option value="REFUND">REFUND</option>
+                                <option value="MARKETING">MARKETING</option>
+                                <option value="DIGITAL MARKETING">DIGITAL MARKETING</option>
+                                 <option value="WI-FI">WI-FI</option>
+                                <option value="OTHERS">OTHERS</option>
                             </select>
                         </td>
                         <td>
@@ -871,9 +899,10 @@
 
         const result = await response.json();
 
-        if (response.ok && result.expense) {
-            // Set the expense ID on the row
-            row.setAttribute('data-expense-id', result.expense.id);
+       if (response.ok && result.expense) {
+    // Redirect to first page to show new expense at top
+    window.location.href = '{{ route("expense.page") }}';
+
             
             // Change button text to "Edit"
             button.textContent = 'Edit';
