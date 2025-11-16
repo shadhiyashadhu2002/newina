@@ -603,8 +603,27 @@
     <label>Notes</label>
     <select name="notes">
         <option value="">All Notes</option>
-        <option value="SALARY" {{ request('notes') == 'SALARY' ? 'selected' : '' }}>Salary</option>
-        <!-- Add all other note options similarly -->
+        <option value="SALARY" {{ request('notes') == 'SALARY' ? 'selected' : '' }}>SALARY</option>
+        <option value="RECHARGE" {{ request('notes') == 'RECHARGE' ? 'selected' : '' }}>RECHARGE</option>
+        <option value="MOBILE/PC" {{ request('notes') == 'MOBILE/PC' ? 'selected' : '' }}>MOBILE/PC</option>
+        <option value="REPAIR" {{ request('notes') == 'REPAIR' ? 'selected' : '' }}>REPAIR</option>
+        <option value="RENT" {{ request('notes') == 'RENT' ? 'selected' : '' }}>RENT</option>
+        <option value="ELECTRICITY" {{ request('notes') == 'ELECTRICITY' ? 'selected' : '' }}>ELECTRICITY</option>
+        <option value="WATER" {{ request('notes') == 'WATER' ? 'selected' : '' }}>WATER</option>
+        <option value="FESTIVAL" {{ request('notes') == 'FESTIVAL' ? 'selected' : '' }}>FESTIVAL</option>
+        <option value="TRAVEL" {{ request('notes') == 'TRAVEL' ? 'selected' : '' }}>TRAVEL</option>
+        <option value="DATA" {{ request('notes') == 'DATA' ? 'selected' : '' }}>DATA</option>
+        <option value="TEA" {{ request('notes') == 'TEA' ? 'selected' : '' }}>TEA</option>
+        <option value="EMI" {{ request('notes') == 'EMI' ? 'selected' : '' }}>EMI</option>
+        <option value="STATIONARY" {{ request('notes') == 'STATIONARY' ? 'selected' : '' }}>STATIONARY</option>
+        <option value="INCENTIVE" {{ request('notes') == 'INCENTIVE' ? 'selected' : '' }}>INCENTIVE</option>
+        <option value="CLEANING" {{ request('notes') == 'CLEANING' ? 'selected' : '' }}>CLEANING</option>
+        <option value="PRINT" {{ request('notes') == 'PRINT' ? 'selected' : '' }}>PRINT</option>
+        <option value="REFUND" {{ request('notes') == 'REFUND' ? 'selected' : '' }}>REFUND</option>
+        <option value="MARKETING" {{ request('notes') == 'MARKETING' ? 'selected' : '' }}>MARKETING</option>
+        <option value="DIGITAL MARKETING" {{ request('notes') == 'DIGITAL MARKETING' ? 'selected' : '' }}>DIGITAL MARKETING</option>
+        <option value="WI-FI" {{ request('notes') == 'WI-FI' ? 'selected' : '' }}>WI-FI</option>
+        <option value="OTHERS" {{ request('notes') == 'OTHERS' ? 'selected' : '' }}>OTHERS</option>
     </select>
 </div>
 
@@ -973,37 +992,38 @@
                 <div style="margin-bottom:8px;"><label>Manager</label>
                     <select id="modal-manager" class="editable-input" style="width:100%;">
                         <option value="">Select</option>
-                        <option value="benazir">benazir</option>
-                        <option value="afnas">afnas</option>
-                        <option value="prabhakaran">prabhakaran</option>
-                        <option value="rafeeque">rafeeque</option>
-                        <option value="others">others</option>
+                        <option value="BENAZIR">BENAZIR</option>
+                        <option value="AFNAS">AFNAS</option>
+                        <option value="PRABHAKARAN">PRABHAKARAN</option>
+                        <option value="RAFEEQUE">RAFEEQUE</option>
+                        <option value="OTHERS">OTHERS</option>
                     </select>
                 </div>
                 <div style="margin-bottom:8px;"><label>Notes</label>
-                    <select id="modal-notes" class="editable-input" style="width:100%;">
-                        <option value="">Select</option>
-                        <option value="salary">salary</option>
-                        <option value="recharge">recharge</option>
-                        <option value="mobile/pc">mobile/pc</option>
-                        <option value="repair">repair</option>
-                        <option value="rent">rent</option>
-                        <option value="electricity">electricity</option>
-                        <option value="water">water</option>
-                        <option value="festival">festival</option>
-                        <option value="travel">travel</option>
-                        <option value="data">data</option>
-                        <option value="tea">tea</option>
-                        <option value="EMI">EMI</option>
-                        <option value="stationary">stationary</option>
-                        <option value="incentive">incentive</option>
-                        <option value="cleaning">cleaning</option>
-                        <option value="print">print</option>
-                        <option value="refund">refund</option>
-                        <option value="markrting">markrting</option>
-                        <option value="digital marketing">digital marketing</option>
-                        <option value="others">others</option>
-                    </select>
+                   <select id="modal-notes" class="editable-input" style="width:100%;">
+    <option value="">Select</option>
+    <option value="SALARY">SALARY</option>
+    <option value="RECHARGE">RECHARGE</option>
+    <option value="MOBILE/PC">MOBILE/PC</option>
+    <option value="REPAIR">REPAIR</option>
+    <option value="RENT">RENT</option>
+    <option value="ELECTRICITY">ELECTRICITY</option>
+    <option value="WATER">WATER</option>
+    <option value="FESTIVAL">FESTIVAL</option>
+    <option value="TRAVEL">TRAVEL</option>
+    <option value="DATA">DATA</option>
+    <option value="TEA">TEA</option>
+    <option value="EMI">EMI</option>
+    <option value="STATIONARY">STATIONARY</option>
+    <option value="INCENTIVE">INCENTIVE</option>
+    <option value="CLEANING">CLEANING</option>
+    <option value="PRINT">PRINT</option>
+    <option value="REFUND">REFUND</option>
+    <option value="MARKETING">MARKETING</option>
+    <option value="DIGITAL MARKETING">DIGITAL MARKETING</option>
+    <option value="WI-FI">WI-FI</option>
+    <option value="OTHERS">OTHERS</option>
+</select>
                 </div>
                 <div style="margin-bottom:8px;"><label>Description</label><input id="modal-description" type="text" class="editable-input" style="width:100%;" /></div>
                 <div style="margin-bottom:8px;"><label>Amount</label><input id="modal-amount" type="number" step="0.01" class="editable-input amount-input" style="width:100%;" /></div>
