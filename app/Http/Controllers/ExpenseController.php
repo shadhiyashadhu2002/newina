@@ -66,7 +66,7 @@ class ExpenseController extends Controller
             'description' => 'required|string|max:255',
            'notes' => ['nullable', 'in:SALARY,RECHARGE,MOBILE/PC,REPAIR,RENT,ELECTRICITY,WATER,FESTIVAL,TRAVEL,DATA,TEA,EMI,STATIONARY,INCENTIVE,CLEANING,PRINT,REFUND,MARKETING,DIGITAL MARKETING,WI-FI,OTHERS'],
             'amount' => 'required|numeric|min:0',
-            'manager' => 'nullable|in:benazir,afnas,prabhakaran,rafeeque,others'
+            'manager' => 'nullable|in:BENAZIR,AFNAS,PRABHAKARAN,RAFEEQUE,OTHERS'
         ]);
 
         $validated['created_by'] = Auth::id();
@@ -85,9 +85,9 @@ class ExpenseController extends Controller
         $validated = $request->validate([
             'date' => 'required|date',
             'description' => 'required|string|max:255',
-            'notes' => ['nullable', 'in:salary,recharge,mobile/pc,repair,rent,electricity,water,festival,travel,data,tea,EMI,stationary,incentive,cleaning,print,refund,markrting,digital marketing,others'],
+            'notes' => ['nullable', 'in:SALARY,RECHARGE,MOBILE/PC,REPAIR,RENT,ELECTRICITY,WATER,FESTIVAL,TRAVEL,DATA,TEA,EMI,STATIONARY,INCENTIVE,CLEANING,PRINT,REFUND,MARKETING,DIGITAL MARKETING,OTHERS'],
             'amount' => 'required|numeric|min:0',
-            'manager' => 'nullable|in:benazir,afnas,prabhakaran,rafeeque,others'
+            'manager' => 'nullable|in:BENAZIR,AFNAS,PRABHAKARAN,RAFEEQUE,OTHERS'
         ]);
 
         $expense->update($validated);
