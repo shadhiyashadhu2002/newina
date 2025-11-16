@@ -590,12 +590,11 @@
             <div class="filter-group">
     <label>Manager</label>
     <select name="manager">
-        <option value="">All Managers</option>
-        <option value="benazir" {{ request('manager') == 'benazir' ? 'selected' : '' }}>Benazir</option>
-        <option value="afnas" {{ request('manager') == 'afnas' ? 'selected' : '' }}>Afnas</option>
-        <option value="prabhakaran" {{ request('manager') == 'prabhakaran' ? 'selected' : '' }}>Prabhakaran</option>
-        <option value="rafeeque" {{ request('manager') == 'rafeeque' ? 'selected' : '' }}>Rafeeque</option>
-        <option value="others" {{ request('manager') == 'others' ? 'selected' : '' }}>Others</option>
+       <option value="BENAZIR" {{ ($expense->manager ?? '') == 'BENAZIR' ? 'selected' : '' }}>BENAZIR</option>
+<option value="AFNAS" {{ ($expense->manager ?? '') == 'AFNAS' ? 'selected' : '' }}>AFNAS</option>
+<option value="PRABHAKARAN" {{ ($expense->manager ?? '') == 'PRABHAKARAN' ? 'selected' : '' }}>PRABHAKARAN</option>
+<option value="RAFEEQUE" {{ ($expense->manager ?? '') == 'RAFEEQUE' ? 'selected' : '' }}>RAFEEQUE</option>
+<option value="OTHERS" {{ ($expense->manager ?? '') == 'OTHERS' ? 'selected' : '' }}>OTHERS</option>
     </select>
 </div>
 
@@ -665,11 +664,11 @@
                         <td>
                             <select class="editable-input" data-field="manager"disabled>
                                 <option value="">Select</option>
-                                <option value="benazir" {{ ($expense->manager ?? '') == 'benazir' ? 'selected' : '' }}>benazir</option>
-                                <option value="afnas" {{ ($expense->manager ?? '') == 'afnas' ? 'selected' : '' }}>afnas</option>
-                                <option value="prabhakaran" {{ ($expense->manager ?? '') == 'prabhakaran' ? 'selected' : '' }}>prabhakaran</option>
-                                <option value="rafeeque" {{ ($expense->manager ?? '') == 'rafeeque' ? 'selected' : '' }}>rafeeque</option>
-                                <option value="others" {{ ($expense->manager ?? '') == 'others' ? 'selected' : '' }}>others</option>
+                                <option value="BENAZIR" {{ ($expense->manager ?? '') == 'BENAZIR' ? 'selected' : '' }}>BENAZIR</option>
+                                <option value="AFNAS" {{ ($expense->manager ?? '') == 'AFNAS' ? 'selected' : '' }}>AFNAS</option>
+                                <option value="PRABHAKARAN" {{ ($expense->manager ?? '') == 'PRABHAKARAN' ? 'selected' : '' }}>PRABHAKARAN</option>
+                                <option value="RAFEEQUE" {{ ($expense->manager ?? '') == 'RAFEEQUE' ? 'selected' : '' }}>RAFEEQUE</option>
+                                <option value="OTHERS" {{ ($expense->manager ?? '') == 'OTHERS' ? 'selected' : '' }}>OTHERS</option>
                             </select>
                         </td>
                         <td>
