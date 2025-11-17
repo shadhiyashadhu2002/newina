@@ -575,6 +575,7 @@
                     <th>Status</th>
                     <th>Office</th>
                     <th>Note</th>
+                    <th>Actions</th>
                 </tr>
             </thead>
             <tbody>
@@ -607,6 +608,11 @@
                     </td>
                     <td>{{ $sale->office }}</td>
                     <td>{{ Str::limit($sale->notes ?? '-', 30) }}</td>
+                    <td>
+                        <button type="button" style="padding: 8px 16px; background: linear-gradient(135deg, #2196F3, #1976D2); color: white; border: none; border-radius: 5px; cursor: pointer; font-weight: 600; font-size: 13px; transition: all 0.3s ease;" onclick="editSale({{ $sale->id }})">
+                            ✏️ Edit
+                        </button>
+                    </td>
                 </tr>
                 @empty
                 <tr>
@@ -734,23 +740,34 @@
                     </div>
 
                     <div style="display: flex; flex-direction: column;">
-                        <label style="font-weight: 600; color: #2c3e50; margin-bottom: 8px; font-size: 14px;">Status<span style="color: #ac0742;">*</span></label>
-                        <select name="status" required
-                                style="padding: 12px; border: 2px solid #e0e0e0; border-radius: 8px; font-size: 15px;">
-                            <option value="">Select Status</option>
-                            @foreach(($statuses ?? []) as $key => $label)
-                                <option value="{{ $key }}" {{ old('status') == $key ? 'selected' : (request('status') == $key ? 'selected' : '') }}>{{ $label }}</option>
-                            @endforeach
-                        </select>
-                    </div>
-
-                    <div style="display: flex; flex-direction: column;">
                         <label style="font-weight: 600; color: #2c3e50; margin-bottom: 8px; font-size: 14px;">Office<span style="color: #ac0742;">*</span></label>
                         <select name="office" required
                                 style="padding: 12px; border: 2px solid #e0e0e0; border-radius: 8px; font-size: 15px;">
                             <option value="">Select Office</option>
                             @foreach(($offices ?? []) as $office)
                                 <option value="{{ $office }}">{{ $office }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+
+                    <div style="display: flex; flex-direction: column;">
+                        <label style="font-weight: 600; color: #2c3e50; margin-bottom: 8px; font-size: 14px;">Sale Status</label>
+                        <select name="sale_status"
+                                style="padding: 12px; border: 2px solid #e0e0e0; border-radius: 8px; font-size: 15px;">
+                            <option value="">Select Sale Status (Optional)</option>
+                            @foreach(($saleStatuses ?? []) as $key => $label)
+                                <option value="{{ $key }}" {{ old('sale_status') == $key ? 'selected' : '' }}>{{ $label }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+
+                    <div style="display: flex; flex-direction: column;">
+                        <label style="font-weight: 600; color: #2c3e50; margin-bottom: 8px; font-size: 14px;">Cash Type</label>
+                        <select name="cash_type"
+                                style="padding: 12px; border: 2px solid #e0e0e0; border-radius: 8px; font-size: 15px;">
+                            <option value="">Select Cash Type (Optional)</option>
+                            @foreach(($cashTypeOptions ?? []) as $key => $label)
+                                <option value="{{ $key }}" {{ old('cash_type') == $key ? 'selected' : '' }}>{{ $label }}</option>
                             @endforeach
                         </select>
                     </div>
@@ -767,6 +784,156 @@
                         </button>
                         <button type="submit" style="padding: 12px 30px; border: none; border-radius: 25px; background: linear-gradient(135deg, #ac0742, #9d1955); color: white; font-weight: 600; cursor: pointer; box-shadow: 0 4px 15px rgba(172, 7, 66, 0.4); transition: all 0.3s ease;">
                             💾 Submit Sale
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit Sale Modal (Hidden by default) -->
+    <div id="edit-sale-modal" class="modal-overlay" style="display: none;">
+        <div class="modal-box">
+            <button type="button" class="modal-close-btn" id="close-edit-modal">✕</button>
+            <div class="modal-content">
+                <div style="margin-bottom: 25px;">
+                    <div style="display: flex; align-items: center; gap: 15px; padding-bottom: 15px; border-bottom: 3px solid #2196F3;">
+                        <div style="width: 50px; height: 50px; background: linear-gradient(135deg, #2196F3, #1976D2); border-radius: 12px; display: flex; align-items: center; justify-content: center; color: white; font-size: 24px;">
+                            ✏️
+                        </div>
+                        <h2 style="font-size: 24px; font-weight: 700; color: #2c3e50; margin: 0;">Edit Sale</h2>
+                    </div>
+                </div>
+
+                <div id="edit-message" style="display: none; background: #d4edda; color: #155724; padding: 15px; border-radius: 8px; margin-bottom: 20px; border-left: 4px solid #28a745;">
+                    ✓ Sale updated successfully!
+                </div>
+
+                <form id="edit-sale-form" style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px;">
+                    @csrf
+                    @method('PUT')
+                    <input type="hidden" id="edit-sale-id" name="id">
+
+                    <div style="display: flex; flex-direction: column;">
+                        <label style="font-weight: 600; color: #2c3e50; margin-bottom: 8px; font-size: 14px;">Date<span style="color: #ac0742;">*</span></label>
+                        <input type="date" id="edit-date" name="date" required
+                               style="padding: 12px; border: 2px solid #e0e0e0; border-radius: 8px; font-size: 15px;">
+                    </div>
+
+                    <div style="display: flex; flex-direction: column;">
+                        <label style="font-weight: 600; color: #2c3e50; margin-bottom: 8px; font-size: 14px;">ID</label>
+                        <input type="text" id="edit-profile-id" name="profile_id" placeholder="Enter ID (optional)"
+                               style="padding: 12px; border: 2px solid #e0e0e0; border-radius: 8px; font-size: 15px;">
+                    </div>
+
+                    <div style="display: flex; flex-direction: column;">
+                        <label style="font-weight: 600; color: #2c3e50; margin-bottom: 8px; font-size: 14px;">Phone Number</label>
+                        <input type="text" id="edit-phone" name="phone" placeholder="Enter phone number (optional)"
+                               style="padding: 12px; border: 2px solid #e0e0e0; border-radius: 8px; font-size: 15px;">
+                    </div>
+
+                    <div style="display: flex; flex-direction: column;">
+                        <label style="font-weight: 600; color: #2c3e50; margin-bottom: 8px; font-size: 14px;">Customer Name<span style="color: #ac0742;">*</span></label>
+                        <input type="text" id="edit-name" name="name" placeholder="Enter Customer Name" required
+                               style="padding: 12px; border: 2px solid #e0e0e0; border-radius: 8px; font-size: 15px;">
+                    </div>
+
+                    <div style="display: flex; flex-direction: column;">
+                        <label style="font-weight: 600; color: #2c3e50; margin-bottom: 8px; font-size: 14px;">Plan<span style="color: #ac0742;">*</span></label>
+                        <select id="edit-plan" name="plan" required
+                                style="padding: 12px; border: 2px solid #e0e0e0; border-radius: 8px; font-size: 15px;">
+                            <option value="">Select Plan</option>
+                            <option value="Elite">Elite</option>
+                            <option value="Assisted">Assisted</option>
+                            <option value="Premium">Premium</option>
+                            <option value="Basic">Basic</option>
+                            <option value="Standard">Standard</option>
+                            <option value="Service">Service</option>
+                        </select>
+                    </div>
+
+                    <div style="display: flex; flex-direction: column;">
+                        <label style="font-weight: 600; color: #2c3e50; margin-bottom: 8px; font-size: 14px;">Amount<span style="color: #ac0742;">*</span></label>
+                        <input type="number" id="edit-amount" name="amount" placeholder="0.00" step="0.01" required
+                               style="padding: 12px; border: 2px solid #e0e0e0; border-radius: 8px; font-size: 15px;">
+                    </div>
+
+                    <div style="display: flex; flex-direction: column;">
+                        <label style="font-weight: 600; color: #2c3e50; margin-bottom: 8px; font-size: 14px;">Paid Amount</label>
+                        <input type="number" id="edit-paid-amount" name="paid_amount" placeholder="0.00" step="0.01"
+                               style="padding: 12px; border: 2px solid #e0e0e0; border-radius: 8px; font-size: 15px;">
+                    </div>
+
+                    <div style="display: flex; flex-direction: column;">
+                        <label style="font-weight: 600; color: #2c3e50; margin-bottom: 8px; font-size: 14px;">Discount</label>
+                        <input type="number" id="edit-discount" name="discount" placeholder="0.00" step="0.01"
+                               style="padding: 12px; border: 2px solid #e0e0e0; border-radius: 8px; font-size: 15px;">
+                    </div>
+
+                    <div style="display: flex; flex-direction: column;">
+                        <label style="font-weight: 600; color: #2c3e50; margin-bottom: 8px; font-size: 14px;">Success Fee</label>
+                        <input type="number" id="edit-success-fee" name="success_fee" placeholder="0.00" step="0.01"
+                               style="padding: 12px; border: 2px solid #e0e0e0; border-radius: 8px; font-size: 15px;">
+                    </div>
+
+                    <div style="display: flex; flex-direction: column;">
+                        <label style="font-weight: 600; color: #2c3e50; margin-bottom: 8px; font-size: 14px;">Service Executive<span style="color: #ac0742;">*</span></label>
+                        <select id="edit-executive" name="executive" required
+                                style="padding: 12px; border: 2px solid #e0e0e0; border-radius: 8px; font-size: 15px;">
+                            <option value="">Select Service Executive</option>
+                            @forelse($serviceExecutives ?? [] as $executive)
+                                <option value="{{ $executive->first_name }}">{{ $executive->first_name }}</option>
+                            @empty
+                                <option value="">No executives available</option>
+                            @endforelse
+                        </select>
+                    </div>
+
+                    <div style="display: flex; flex-direction: column;">
+                        <label style="font-weight: 600; color: #2c3e50; margin-bottom: 8px; font-size: 14px;">Office<span style="color: #ac0742;">*</span></label>
+                        <select id="edit-office" name="office" required
+                                style="padding: 12px; border: 2px solid #e0e0e0; border-radius: 8px; font-size: 15px;">
+                            <option value="">Select Office</option>
+                            @foreach(($offices ?? []) as $office)
+                                <option value="{{ $office }}">{{ $office }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+
+                    <div style="display: flex; flex-direction: column;">
+                        <label style="font-weight: 600; color: #2c3e50; margin-bottom: 8px; font-size: 14px;">Sale Status</label>
+                        <select id="edit-sale-status" name="sale_status"
+                                style="padding: 12px; border: 2px solid #e0e0e0; border-radius: 8px; font-size: 15px;">
+                            <option value="">Select Sale Status (Optional)</option>
+                            @foreach(($saleStatuses ?? []) as $key => $label)
+                                <option value="{{ $key }}">{{ $label }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+
+                    <div style="display: flex; flex-direction: column;">
+                        <label style="font-weight: 600; color: #2c3e50; margin-bottom: 8px; font-size: 14px;">Cash Type</label>
+                        <select id="edit-cash-type" name="cash_type"
+                                style="padding: 12px; border: 2px solid #e0e0e0; border-radius: 8px; font-size: 15px;">
+                            <option value="">Select Cash Type (Optional)</option>
+                            @foreach(($cashTypeOptions ?? []) as $key => $label)
+                                <option value="{{ $key }}">{{ $label }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+
+                    <div style="display: flex; flex-direction: column; grid-column: 1 / -1;">
+                        <label style="font-weight: 600; color: #2c3e50; margin-bottom: 8px; font-size: 14px;">Note</label>
+                        <textarea id="edit-notes" name="notes" placeholder="Enter any additional notes..." rows="3"
+                                  style="padding: 12px; border: 2px solid #e0e0e0; border-radius: 8px; font-size: 15px; resize: vertical;"></textarea>
+                    </div>
+
+                    <div style="grid-column: 1 / -1; display: flex; gap: 15px; justify-content: flex-end; padding-top: 20px; border-top: 2px solid #e0e0e0;">
+                        <button type="button" id="cancel-edit-modal" style="padding: 12px 30px; border: none; border-radius: 25px; background: #e0e0e0; color: #333; font-weight: 600; cursor: pointer; transition: all 0.3s ease;">
+                            Cancel
+                        </button>
+                        <button type="submit" style="padding: 12px 30px; border: none; border-radius: 25px; background: linear-gradient(135deg, #2196F3, #1976D2); color: white; font-weight: 600; cursor: pointer; box-shadow: 0 4px 15px rgba(33, 150, 243, 0.4); transition: all 0.3s ease;">
+                            💾 Update Sale
                         </button>
                     </div>
                 </form>
@@ -887,6 +1054,126 @@
             }
         })();
     <?php endif; ?>
+
+    // Edit Sale Modal Functionality
+    const editModal = document.getElementById('edit-sale-modal');
+    const closeEditBtn = document.getElementById('close-edit-modal');
+    const cancelEditBtn = document.getElementById('cancel-edit-modal');
+    const editForm = document.getElementById('edit-sale-form');
+
+    function openEditModal() {
+        editModal.style.display = 'flex';
+        editModal.classList.add('active');
+        document.body.style.overflow = 'hidden';
+    }
+
+    function closeEditModal() {
+        editModal.style.display = 'none';
+        editModal.classList.remove('active');
+        document.body.style.overflow = '';
+        document.getElementById('edit-message').style.display = 'none';
+    }
+
+    if (closeEditBtn) {
+        closeEditBtn.addEventListener('click', closeEditModal);
+    }
+
+    if (cancelEditBtn) {
+        cancelEditBtn.addEventListener('click', closeEditModal);
+    }
+
+    // Click outside modal to close
+    editModal.addEventListener('click', function(e) {
+        if (e.target === editModal) {
+            closeEditModal();
+        }
+    });
+
+    // Edit Sale Function
+    async function editSale(saleId) {
+        try {
+            // Fetch sale data
+            const response = await fetch(`/add-sale/${saleId}`, {
+                headers: {
+                    'Accept': 'application/json'
+                }
+            });
+
+            if (!response.ok) {
+                alert('Error loading sale data');
+                return;
+            }
+
+            const sale = await response.json();
+
+            // Populate form fields
+            document.getElementById('edit-sale-id').value = sale.id;
+            document.getElementById('edit-date').value = sale.date;
+            document.getElementById('edit-profile-id').value = sale.profile_id || '';
+            document.getElementById('edit-phone').value = sale.phone || '';
+            document.getElementById('edit-name').value = sale.name;
+            document.getElementById('edit-plan').value = sale.plan;
+            document.getElementById('edit-amount').value = sale.amount;
+            document.getElementById('edit-paid-amount').value = sale.paid_amount || '';
+            document.getElementById('edit-discount').value = sale.discount || '';
+            document.getElementById('edit-success-fee').value = sale.success_fee || '';
+            document.getElementById('edit-executive').value = sale.executive;
+            document.getElementById('edit-office').value = sale.office;
+            document.getElementById('edit-sale-status').value = sale.sale_status || '';
+            document.getElementById('edit-cash-type').value = sale.cash_type || '';
+            document.getElementById('edit-notes').value = sale.notes || '';
+
+            // Open modal
+            openEditModal();
+        } catch (error) {
+            console.error('Error:', error);
+            alert('Error loading sale data');
+        }
+    }
+
+    // Handle form submission
+    if (editForm) {
+        editForm.addEventListener('submit', async function(e) {
+            e.preventDefault();
+
+            const saleId = document.getElementById('edit-sale-id').value;
+            const formData = new FormData(editForm);
+
+            try {
+                const response = await fetch(`/add-sale/${saleId}`, {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content || csrfToken,
+                        'Accept': 'application/json',
+                        'X-HTTP-Method-Override': 'PUT'
+                    },
+                    body: formData
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    // Show success message
+                    document.getElementById('edit-message').style.display = 'block';
+                    
+                    // Close modal after 2 seconds
+                    setTimeout(() => {
+                        closeEditModal();
+                        window.location.reload();
+                    }, 2000);
+                } else {
+                    alert('Error: ' + (data.message || 'Failed to update sale'));
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Error updating sale');
+            }
+        });
+    }
+
+    // CSRF Token for AJAX requests
+    const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content || '';
+
 </script>
 
 @endsection

@@ -1056,6 +1056,13 @@ Route::middleware('auth')->group(function () {
     
     // Store sale
     Route::post('/add-sale', [SaleController::class, 'store'])->name('sale.store');
+
+    // Get sale for editing (AJAX)
+    Route::get('/add-sale/{id}', [SaleController::class, 'show'])->name('sale.show');
+
+    // Update sale (AJAX)
+    Route::put('/add-sale/{id}', [SaleController::class, 'update'])->name('sale.update');
+    Route::post('/add-sale/{id}', [SaleController::class, 'update'])->name('sale.update.post');
     
     // Get profile info for auto-fetch
     Route::get('/get-profile-info/{profileId}', [SaleController::class, 'getProfileInfo']);

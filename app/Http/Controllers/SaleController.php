@@ -28,6 +28,28 @@ class SaleController extends Controller
             'cancelled' => 'Cancelled'
         ];
 
+        $saleStatuses = [
+            'PAID' => 'PAID',
+            'PENDING' => 'PENDING',
+            'NOT RECIEVED' => 'NOT RECIEVED',
+            'REFUND' => 'REFUND',
+            'PARTIALLY PAID' => 'PARTIALLY PAID',
+            'FULL PAID' => 'FULL PAID',
+            'RENEW' => 'RENEW',
+            'ADVANCE PAYMENT' => 'ADVANCE PAYMENT'
+        ];
+
+        $cashTypeOptions = [
+            'GPAY CANARA' => 'GPAY CANARA',
+            'ACCOUNT TRANSFER' => 'ACCOUNT TRANSFER',
+            'OFFICE PAYMENT' => 'OFFICE PAYMENT',
+            'GPAY B' => 'GPAY B',
+            'GPAY P' => 'GPAY P',
+            'GPAY R' => 'GPAY R',
+            'GPAY A' => 'GPAY A',
+            'GPAY AXIS' => 'GPAY AXIS'
+        ];
+
         $cashTypes = ['all', 'paid', 'partial', 'unpaid'];
 
         $plans = ['Elite','Assisted','Premium','Basic','Standard','Service'];
@@ -109,6 +131,8 @@ class SaleController extends Controller
             'normalSales',
             'totalSalesAmount',
             'statuses',
+            'saleStatuses',
+            'cashTypeOptions',
             'cashTypes',
             'plans',
             'offices'
@@ -165,10 +189,11 @@ class SaleController extends Controller
                 'paid_amount' => 'nullable|numeric|min:0',
                 'discount' => 'nullable|numeric|min:0',
                 'success_fee' => 'nullable|numeric|min:0',
-                'status' => 'required|string|in:new,active,completed,pending,cancelled',
+                'status' => 'nullable|string|in:new,active,completed,pending,cancelled',
+                'sale_status' => 'nullable|string|in:PAID,PENDING,NOT RECIEVED,REFUND,PARTIALLY PAID,FULL PAID,RENEW,ADVANCE PAYMENT',
                 'office' => 'required|string|max:255',
+                'cash_type' => 'nullable|string|in:GPAY CANARA,ACCOUNT TRANSFER,OFFICE PAYMENT,GPAY B,GPAY P,GPAY R,GPAY A,GPAY AXIS',
                 'notes' => 'nullable|string|max:1000',
-                'cash_type' => 'nullable|string',
             ]);
 
             // Find staff user by executive name
@@ -200,11 +225,12 @@ class SaleController extends Controller
                 'paid_amount' => $paid,
                 'discount' => $discount,
                 'success_fee' => $success_fee,
-                'status' => $validatedData['status'],
+                'status' => $validatedData['status'] ?? 'new',
+                'sale_status' => $validatedData['sale_status'] ?? null,
                 'office' => $validatedData['office'],
+                'cash_type' => $validatedData['cash_type'] ?? null,
                 'notes' => $validatedData['notes'] ?? null,
                 'staff_id' => $staffUser->id,
-                'cash_type' => $validatedData['cash_type'] ?? null,
                 'created_by' => Auth::id(),
             ]);
 
@@ -227,6 +253,107 @@ class SaleController extends Controller
             return back()
                 ->withErrors(['error' => 'Error saving sale: ' . $e->getMessage()])
                 ->withInput();
+        }
+    }
+
+    // Get sale data for editing (AJAX)
+    public function show($id)
+    {
+        try {
+            $sale = Sale::findOrFail($id);
+            
+            return response()->json([
+                'id' => $sale->id,
+                'date' => $sale->date->format('Y-m-d'),
+                'profile_id' => $sale->profile_id,
+                'phone' => $sale->phone,
+                'name' => $sale->name,
+                'plan' => $sale->plan,
+                'amount' => $sale->amount,
+                'paid_amount' => $sale->paid_amount,
+                'discount' => $sale->discount,
+                'success_fee' => $sale->success_fee,
+                'executive' => $sale->executive,
+                'status' => $sale->status,
+                'office' => $sale->office,
+                'sale_status' => $sale->sale_status,
+                'cash_type' => $sale->cash_type,
+                'notes' => $sale->notes
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Error fetching sale', ['id' => $id, 'error' => $e->getMessage()]);
+            return response()->json(['error' => 'Sale not found'], 404);
+        }
+    }
+
+    // Update sale (AJAX)
+    public function update(Request $request, $id)
+    {
+        try {
+            $sale = Sale::findOrFail($id);
+
+            $validatedData = $request->validate([
+                'date' => 'required|date',
+                'profile_id' => 'nullable|string|max:255',
+                'phone' => 'nullable|string|max:20',
+                'name' => 'required|string|max:255',
+                'executive' => 'required|string|max:255',
+                'plan' => 'required|string|in:Elite,Assisted,Premium,Basic,Standard,Service',
+                'amount' => 'required|numeric|min:0',
+                'paid_amount' => 'nullable|numeric|min:0',
+                'discount' => 'nullable|numeric|min:0',
+                'success_fee' => 'nullable|numeric|min:0',
+                'status' => 'nullable|string|in:new,active,completed,pending,cancelled',
+                'sale_status' => 'nullable|string|in:PAID,PENDING,NOT RECIEVED,REFUND,PARTIALLY PAID,FULL PAID,RENEW,ADVANCE PAYMENT',
+                'office' => 'required|string|max:255',
+                'cash_type' => 'nullable|string|in:GPAY CANARA,ACCOUNT TRANSFER,OFFICE PAYMENT,GPAY B,GPAY P,GPAY R,GPAY A,GPAY AXIS',
+                'notes' => 'nullable|string|max:1000',
+            ]);
+
+            // Find staff user by executive name
+            $staffUser = User::where('user_type', 'staff')
+                ->where('first_name', $validatedData['executive'])
+                ->first();
+            
+            if (!$staffUser) {
+                return response()->json(['error' => 'Selected executive not found'], 422);
+            }
+
+            // Compute success_fee server-side
+            $amount = floatval($validatedData['amount'] ?? 0);
+            $paid = floatval($validatedData['paid_amount'] ?? 0);
+            $discount = floatval($validatedData['discount'] ?? 0);
+            $success_fee = max(0, $amount - $paid - $discount);
+
+            $sale->update([
+                'date' => $validatedData['date'],
+                'profile_id' => $validatedData['profile_id'] ?? null,
+                'phone' => $validatedData['phone'] ?? null,
+                'name' => $validatedData['name'],
+                'executive' => $validatedData['executive'],
+                'plan' => $validatedData['plan'],
+                'amount' => $amount,
+                'paid_amount' => $paid,
+                'discount' => $discount,
+                'success_fee' => $success_fee,
+                'status' => $validatedData['status'] ?? 'new',
+                'sale_status' => $validatedData['sale_status'] ?? null,
+                'office' => $validatedData['office'],
+                'cash_type' => $validatedData['cash_type'] ?? null,
+                'notes' => $validatedData['notes'] ?? null,
+                'staff_id' => $staffUser->id,
+            ]);
+
+            Log::info('Sale updated successfully', ['sale_id' => $sale->id]);
+
+            return response()->json(['message' => 'Sale updated successfully', 'sale' => $sale]);
+
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            Log::error('Validation error on update', ['errors' => $e->errors()]);
+            return response()->json(['error' => 'Validation failed', 'errors' => $e->errors()], 422);
+        } catch (\Exception $e) {
+            Log::error('Error updating sale', ['id' => $id, 'error' => $e->getMessage()]);
+            return response()->json(['error' => 'Error updating sale: ' . $e->getMessage()], 500);
         }
     }
 }

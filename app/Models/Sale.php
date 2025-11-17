@@ -18,6 +18,7 @@ class Sale extends Model
         'discount',
         'plan',
         'status',
+        'sale_status',
         'staff_id',
         'office',
         'notes',
