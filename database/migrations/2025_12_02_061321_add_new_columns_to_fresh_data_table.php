@@ -9,8 +9,12 @@ return new class extends Migration
     public function up()
     {
         Schema::table('fresh_data', function (Blueprint $table) {
-            $table->string('secondary_phone', 20)->nullable()->after('imid');
-            $table->enum('is_new_lead', ['yes', 'no'])->nullable()->after('secondary_phone');
+            if (!Schema::hasColumn('fresh_data', 'secondary_phone')) {
+                $table->string('secondary_phone', 20)->nullable();
+            }
+            if (!Schema::hasColumn('fresh_data', 'is_new_lead')) {
+                $table->enum('is_new_lead', ['yes', 'no'])->nullable();
+            }
         });
     }
 

@@ -1218,52 +1218,10 @@ function showStatsModal(type) {
                 include = true;
             } else if (type === 'inProgress' && status?.toLowerCase().includes('progress')) {
                 include = true;
-            }
-
-window.closeEditModal = function() {
-    document.getElementById('editTargetModal').style.display = 'none';
-}
-
-window.closeViewModal = function() {
-    document.getElementById('viewTargetModal').style.display = 'none';
-}
-
-window.submitEditForm = function() {
-    const form = document.getElementById('editTargetForm');
-    const formData = new FormData(form);
-    const id = document.getElementById('edit_target_id').value;
-    
-    // Convert FormData to JSON
-    const data = {};
-    formData.forEach((value, key) => {
-        data[key] = value;
-    });
-    fetch(`/staff-target/${id}`, {
-        method: 'PUT',
-        headers: {
-            'Content-Type': 'application/json',
-            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
-        },
-        body: JSON.stringify(data)
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            alert(data.message);
-            closeEditModal();
-            location.reload();
-        } else {
-            alert(data.message || 'Failed to update target');
-        }
-    })
-    .catch(error => {
-        console.error('Error:', error);
-        alert('Failed to update target');
-    });
-                include = true;
             } else if (type === 'zeroSales' && achieved === 0 && percentage === 0) {
                 include = true;
             }
+            
             if (include) {
                 filteredData.push({
                     name: staffName,
@@ -1324,6 +1282,47 @@ window.submitEditForm = function() {
     
     modal.style.display = 'flex';
 }
+
+window.closeEditModal = function() {
+    document.getElementById('editTargetModal').style.display = 'none';
+}
+
+window.closeViewModal = function() {
+    document.getElementById('viewTargetModal').style.display = 'none';
+}
+
+window.submitEditForm = function() {
+    const form = document.getElementById('editTargetForm');
+    const formData = new FormData(form);
+    const id = document.getElementById('edit_target_id').value;
+    
+    // Convert FormData to JSON
+    const data = {};
+    formData.forEach((value, key) => {
+        data[key] = value;
+    });
+    fetch(`/staff-target/${id}`, {
+        method: 'PUT',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+        },
+        body: JSON.stringify(data)
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert(data.message);
+            closeEditModal();
+            location.reload();
+        } else {
+            alert(data.message || 'Failed to update target');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Failed to update target');
+    });
 }
 
 function closeStatsModal() {

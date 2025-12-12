@@ -11,9 +11,9 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('sales', function (Blueprint $table) {
-            if (!Schema::hasColumn('sales', 'cash_type')) {
-                $table->string('cash_type')->nullable()->after('amount');
+        Schema::table('fresh_data', function (Blueprint $table) {
+            if (!Schema::hasColumn('fresh_data', 'status')) {
+                $table->string('status')->nullable();
             }
         });
     }
@@ -23,8 +23,8 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('sales', function (Blueprint $table) {
-            $table->dropColumn('cash_type');
+        Schema::table('fresh_data', function (Blueprint $table) {
+            $table->dropColumn('status');
         });
     }
 };
