@@ -50,7 +50,15 @@ class StaffTargetController extends Controller
 
             $balance = $t->target_amount - $achieved;
             $percentage = $t->target_amount > 0 ? round(($achieved / $t->target_amount) * 100, 2) : 0;
-            $status = $achieved >= $t->target_amount ? 'achieved' : 'in-progress';
+            
+            // Categorize by percentage ranges
+            if ($percentage >= 75) {
+                $status = 'achieved';
+            } elseif ($percentage >= 25) {
+                $status = 'in-progress';
+            } else {
+                $status = 'minimal-sale';
+            }
 
             return (object)[
                 'id' => $t->id,
@@ -71,13 +79,15 @@ class StaffTargetController extends Controller
         // Sort by target_amount descending (highest first)
         $prepared = $prepared->sortByDesc('target_amount')->values();
 
-        $totalStaff = $staffUsers->count();
+        // Count total staff in the current prepared view (respects filters)
+        $totalStaff = $prepared->count();
         $targetsAchieved = $prepared->where('status', 'achieved')->count();
         $inProgress = $prepared->where('status', 'in-progress')->count();
+        $minimalSale = $prepared->where('status', 'minimal-sale')->count();
         $zeroSale = $prepared->where('achieved', 0)->count();
         $overallAchievement = $prepared->count() > 0 ? round($prepared->avg('percentage'), 2) : 0;
 
-        return view('stafftarget', compact('staffUsers', 'prepared', 'totalStaff', 'targetsAchieved', 'inProgress', 'overallAchievement', 'zeroSale'));
+        return view('stafftarget', compact('staffUsers', 'prepared', 'totalStaff', 'targetsAchieved', 'inProgress', 'minimalSale', 'overallAchievement', 'zeroSale'));
     }
 
     public function store(Request $request)

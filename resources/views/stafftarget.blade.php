@@ -273,6 +273,10 @@
         background: linear-gradient(135deg, #FF9800, #F57C00);
     }
 
+    .stat-icon.minimal-sale {
+        background: linear-gradient(135deg, #9C27B0, #7B1FA2);
+    }
+
     .stat-icon.percentage {
         background: linear-gradient(135deg, #ac0742, #9d1955);
     }
@@ -806,6 +810,14 @@
             </div>
         </div>
 
+        <div class="stat-card" onclick="showStatsModal('minimalSale')" style="cursor: pointer;">
+            <div class="stat-icon minimal-sale">📉</div>
+            <div class="stat-content">
+                <h3>{{ $minimalSale }}</h3>
+                <p>Minimal Sale</p>
+            </div>
+        </div>
+
         <div class="stat-card" onclick="showStatsModal('zeroSales')" style="cursor: pointer;">
             <div class="stat-icon zero-sales">❌</div>
             <div class="stat-content">
@@ -1214,9 +1226,11 @@ function showStatsModal(type) {
             let include = false;
             if (type === 'total') {
                 include = true;
-            } else if (type === 'achieved' && status?.toLowerCase().includes('achieved')) {
+            } else if (type === 'achieved' && percentage >= 75) {
                 include = true;
-            } else if (type === 'inProgress' && status?.toLowerCase().includes('progress')) {
+            } else if (type === 'inProgress' && percentage >= 25 && percentage < 75) {
+                include = true;
+            } else if (type === 'minimalSale' && percentage >= 1 && percentage < 25) {
                 include = true;
             } else if (type === 'zeroSales' && achieved === 0 && percentage === 0) {
                 include = true;
@@ -1240,8 +1254,9 @@ function showStatsModal(type) {
     // Set modal title
     const titles = {
         'total': '📊 Total Staff Members',
-        'achieved': '✅ Targets Achieved',
-        'inProgress': '⏳ In Progress',
+        'achieved': '✅ Targets Achieved (75%+)',
+        'inProgress': '⏳ In Progress (25% - 75%)',
+        'minimalSale': '📉 Minimal Sale (1% - 24%)',
         'zeroSales': '❌ Zero Sales Staff'
     };
     title.textContent = titles[type] || 'Staff Details';
