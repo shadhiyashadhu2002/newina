@@ -21,6 +21,7 @@ class Sale extends Model
         'sale_status',
         'staff_id',
         'office',
+        'cash_type',
         'notes',
         'created_by'
     ];

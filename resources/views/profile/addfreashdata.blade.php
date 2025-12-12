@@ -337,11 +337,6 @@
       }
     });
 
-    // Form submission
-    document.getElementById('freshDataForm').addEventListener('submit', function(e) {
-      // Remove JS-only submission. Let backend handle POST and validation.
-    });
-
     // Back button functionality
     function goBack() {
       if (confirm('Are you sure you want to go back? Any unsaved changes will be lost.')) {

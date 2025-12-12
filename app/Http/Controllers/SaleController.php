@@ -1,5 +1,6 @@
 <?php
 namespace App\Http\Controllers;
+use App\Imports\SalesImport;
 
 use Illuminate\Http\Request;
 use App\Models\Sale;
@@ -7,6 +8,7 @@ use App\Models\User;
 use App\Models\Service;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
+use Maatwebsite\Excel\Facades\Excel as ExcelFacade;
 
 class SaleController extends Controller
 {
@@ -47,10 +49,11 @@ class SaleController extends Controller
             'GPAY P' => 'GPAY P',
             'GPAY R' => 'GPAY R',
             'GPAY A' => 'GPAY A',
-            'GPAY AXIS' => 'GPAY AXIS'
+            'GPAY AXIS' => 'GPAY AXIS',
+            'GPAY S' => 'GPAY S'
         ];
 
-        $cashTypes = ['all', 'paid', 'partial', 'unpaid'];
+        $cashTypes = array_keys($cashTypeOptions);
 
         $plans = ['Elite','Assisted','Premium','Basic','Standard','Service'];
         $offices = ['Tirur','Vadakara'];
@@ -70,36 +73,28 @@ class SaleController extends Controller
                       ->whereMonth('date', substr($request->month, 5, 2));
         }
 
-        if ($request->filled('cash_type') && $request->cash_type !== 'all') {
-            // For cash_type filter, we'll map the filter values to database logic
-            switch ($request->cash_type) {
-                case 'paid':
-                    $salesQuery->whereColumn('paid_amount', '>=', 'amount');
-                    break;
-                case 'partial':
-                    $salesQuery->where('paid_amount', '>', 0)
-                              ->whereColumn('paid_amount', '<', 'amount');
-                    break;
-                case 'unpaid':
-                    $salesQuery->where('paid_amount', '<=', 0);
-                    break;
-            }
+        if ($request->filled('cash_type')) {
+            $salesQuery->where('cash_type', $request->cash_type);
         }
 
         if ($request->filled('plan')) {
             $salesQuery->where('plan', $request->plan);
         }
 
-        if ($request->filled('status')) {
-            $salesQuery->where('status', $request->status);
+        if ($request->filled('status_filter')) {
+            $salesQuery->where('sale_status', $request->status_filter);
         }
 
         if ($request->filled('staff')) {
-            $salesQuery->where('staff_id', $request->staff);
+            $salesQuery->where('executive', $request->staff);
         }
 
         if ($request->filled('office')) {
             $salesQuery->where('office', $request->office);
+        }
+
+        if ($request->filled('cash_type_filter')) {
+            $salesQuery->where('cash_type', $request->cash_type_filter);
         }
 
         // Get filtered sales with pagination
@@ -192,7 +187,7 @@ class SaleController extends Controller
                 'status' => 'nullable|string|in:new,active,completed,pending,cancelled',
                 'sale_status' => 'nullable|string|in:PAID,PENDING,NOT RECIEVED,REFUND,PARTIALLY PAID,FULL PAID,RENEW,ADVANCE PAYMENT',
                 'office' => 'required|string|max:255',
-                'cash_type' => 'nullable|string|in:GPAY CANARA,ACCOUNT TRANSFER,OFFICE PAYMENT,GPAY B,GPAY P,GPAY R,GPAY A,GPAY AXIS',
+                'cash_type' => 'nullable|string|in:GPAY CANARA,ACCOUNT TRANSFER,OFFICE PAYMENT,GPAY B,GPAY P,GPAY R,GPAY A,GPAY AXIS,GPAY S',
                 'notes' => 'nullable|string|max:1000',
             ]);
 
@@ -306,7 +301,7 @@ class SaleController extends Controller
                 'status' => 'nullable|string|in:new,active,completed,pending,cancelled',
                 'sale_status' => 'nullable|string|in:PAID,PENDING,NOT RECIEVED,REFUND,PARTIALLY PAID,FULL PAID,RENEW,ADVANCE PAYMENT',
                 'office' => 'required|string|max:255',
-                'cash_type' => 'nullable|string|in:GPAY CANARA,ACCOUNT TRANSFER,OFFICE PAYMENT,GPAY B,GPAY P,GPAY R,GPAY A,GPAY AXIS',
+                'cash_type' => 'nullable|string|in:GPAY CANARA,ACCOUNT TRANSFER,OFFICE PAYMENT,GPAY B,GPAY P,GPAY R,GPAY A,GPAY AXIS,GPAY S',
                 'notes' => 'nullable|string|max:1000',
             ]);
 
@@ -355,5 +350,95 @@ class SaleController extends Controller
             Log::error('Error updating sale', ['id' => $id, 'error' => $e->getMessage()]);
             return response()->json(['error' => 'Error updating sale: ' . $e->getMessage()], 500);
         }
+    }
+
+    /**
+     * Import sales from Excel file
+     */
+    public function import(Request $request)
+    {
+        try {
+            // Validate the file
+            $request->validate([
+                'excel_file' => 'required|file|mimes:xlsx,xls|max:10240', // Max 10MB
+            ]);
+
+            // Import the Excel file
+            $import = new \App\Imports\SalesImport();
+            ExcelFacade::import($import, $request->file('excel_file'));
+
+            // Count imported records (approximate - we'd need to track this properly)
+            $importedCount = \App\Models\Sale::where('created_by', Auth::id())
+                ->where('created_at', '>=', now()->subMinutes(1))
+                ->count();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Sales imported successfully',
+                'imported' => $importedCount
+            ]);
+
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Validation error',
+                'errors' => $e->errors()
+            ], 422);
+
+        } catch (\Exception $e) {
+            Log::error('Excel import error', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Error importing sales: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+    public function importSales(Request $request)
+    {
+        try {
+            $request->validate([
+                'excel_file' => 'required|mimes:xlsx,xls'
+            ]);
+            
+            $file = $request->file('excel_file');
+            $import = new \App\Imports\SalesImport();
+            
+            // Actually import the file
+            ExcelFacade::import($import, $file);
+            return response()->json([
+                'success' => true,
+                'message' => 'Sales imported successfully'
+            ]);
+        } catch (\Exception $e) {
+            \Log::error('Import error: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Import failed: ' . $e->getMessage()
+            ], 422);
+        }
+    }
+
+    public function downloadTemplate()
+    {
+        $headers = [
+            ['Date', 'ID', 'Customer Name', 'Phone', 'Paid Amount', 'Cash Type', 'Plan', 'Sale Status', 'Service Executive', 'Office'],
+            ['1-Dec-2025', 'IM205122545', 'HASHIR', '9876543210', '6000', 'OFFICE PAYMENT', 'SERVICE', 'PAID', 'RAMEESHA', 'TIRUR'],
+            ['2-Dec-2025', 'IM205122546', 'JOHN DOE', '9876543211', '8000', 'GPAY CANARA', 'Basic', 'PENDING', 'STAFF NAME', 'VATAKARA']
+        ];
+
+        $filename = 'sales_import_template_' . date('Y-m-d') . '.xlsx';
+
+        return ExcelFacade::download(
+            new class($headers) implements \Maatwebsite\Excel\Concerns\FromArray {
+                private $data;
+                public function __construct($data) { $this->data = $data; }
+                public function array(): array { return $this->data; }
+            },
+            $filename
+        );
     }
 }

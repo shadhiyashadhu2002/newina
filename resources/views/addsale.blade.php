@@ -37,9 +37,16 @@
 
     .header-nav {
         display: flex;
-        list-style: none;
-        gap: 25px;
         align-items: center;
+        list-style: none;
+        margin: 0;
+        padding: 0;
+        gap: 25px;
+    }
+
+    .header-nav > li {
+        position: relative;
+        list-style: none;
     }
 
     .header-nav a {
@@ -62,6 +69,53 @@
     }
 
     .header-nav a.active {
+        color: white;
+        background: rgba(255, 255, 255, 0.2);
+        font-weight: 600;
+    }
+
+    /* Dropdown Styles */
+    .nav-dropdown {
+        position: relative;
+    }
+
+    .dropdown-menu {
+        display: none;
+        position: absolute;
+        top: 100%;
+        left: 0;
+        background: white;
+        min-width: 200px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        border-radius: 8px;
+        margin-top: 8px;
+        padding: 8px 0;
+        z-index: 1001;
+        list-style: none;
+    }
+
+    .nav-dropdown:hover .dropdown-menu {
+        display: block !important;
+    }
+    .dropdown-item {
+        color: #333 !important;
+        text-decoration: none;
+        padding: 12px 20px;
+        display: block;
+        transition: all 0.2s ease;
+    }
+    .dropdown-item:hover {
+        background: #f0f0f0;
+    }
+    .dropdown-item.active {
+        background: #ac0742;
+        color: white;
+    }
+    .dropdown-arrow {
+        font-size: 10px;
+        margin-left: 4px;
+    }
+
         color: white;
         background: rgba(255, 255, 255, 0.2);
         font-weight: 600;
@@ -428,6 +482,71 @@
             padding: 20px;
         }
     }
+
+    /* Pagination Styles */
+    nav[aria-label="Pagination Navigation"] a[href*="page"] {
+        transition: all 0.3s ease;
+    }
+    nav[aria-label="Pagination Navigation"] a[href*="page"]:hover {
+        background: #ac0742 !important;
+        color: white !important;
+        border-color: #ac0742 !important;
+        transform: scale(1.1);
+    }
+    nav[aria-label="Pagination Navigation"] a[rel="prev"]:hover,
+    nav[aria-label="Pagination Navigation"] a[rel="next"]:hover {
+        opacity: 0.8;
+    }
+    .pagination {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: 8px;
+        padding: 20px 0;
+        flex-wrap: wrap;
+    }
+    .pagination .page-item {
+        list-style: none;
+    }
+    .pagination .page-link {
+        display: inline-block;
+        padding: 8px 12px;
+        min-width: 40px;
+        text-align: center;
+        background: white;
+        color: #ac0742;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        text-decoration: none;
+        font-size: 14px;
+        font-weight: 500;
+        transition: all 0.3s ease;
+    }
+    .pagination .page-link:hover {
+        background: #ac0742;
+        color: white;
+        border-color: #ac0742;
+        transform: translateY(-2px);
+        box-shadow: 0 2px 5px rgba(172, 7, 66, 0.2);
+    }
+    .pagination .page-item.active .page-link {
+        background: #ac0742;
+        color: white;
+        border-color: #ac0742;
+        font-weight: bold;
+    }
+    .pagination .page-item.disabled .page-link {
+        background: #f5f5f5;
+        color: #999;
+        border-color: #ddd;
+        cursor: not-allowed;
+        pointer-events: none;
+    }
+    .pagination svg {
+        width: 16px;
+        height: 16px;
+        vertical-align: middle;
+    }
 </style>
 
 <!-- Main Dashboard Header -->
@@ -439,11 +558,25 @@
             <li><a href="{{ route('dashboard') }}" class="nav-link">Home</a></li>
             <li><a href="{{ route('profile.hellow') }}" class="nav-link">Profiles</a></li>
             <li><a href="#" class="nav-link">Sales <span class="dropdown-arrow">▼</span></a></li>
-            <li><a href="#" class="nav-link">HelpLine</a></li>
+            <li><a href="{{ route('helpline.index') }}" class="nav-link">HelpLine</a></li>
+            @if(Auth::user()->is_admin)
             <li><a href="{{ route('fresh.data') }}" class="nav-link">Fresh Data <span class="dropdown-arrow">▼</span></a></li>
+            @endif
             <li><a href="#" class="nav-link">abc</a></li>
-            <li><a href="{{ route('services.page') }}" class="nav-link">Services <span class="dropdown-arrow">▼</span></a></li>
-            <li><a href="{{ route('addsale.page') }}" class="nav-link active">Accounts <span class="dropdown-arrow">▼</span></a></li>
+            <li class="nav-dropdown">
+                <a href="#" class="nav-link">Business <span class="dropdown-arrow">▼</span></a>
+                <ul class="dropdown-menu">
+                    <li><a href="{{ route('addsale.page') }}" class="dropdown-item active">Add Sale</a></li>
+                    <li><a href="{{ route('stafftarget.page') }}" class="dropdown-item">Staff Target Assign</a></li>
+                    <li><a href="{{ route('staffproductivity.page') }}" class="dropdown-item">Staff Productivity</a></li>
+                </ul>
+            </li>
+            <li class="nav-dropdown">
+                <a href="#" class="nav-link">Accounts <span class="dropdown-arrow">▼</span></a>
+                <ul class="dropdown-menu">
+                    <li><a href="{{ route('expense.page') }}" class="dropdown-item">Expense Page</a></li>
+                </ul>
+            </li>
         </ul>
     </nav>
     
@@ -495,10 +628,11 @@
                 <h2 class="section-title">Recent Sales</h2>
             </div>
             <a href="#" id="open-add-sale" class="btn-add">+ Add New Sale</a>
+            
         </div>
 
         <!-- Filters -->
-        <form method="GET" action="" style="margin-bottom:16px; display:flex; gap:12px; flex-wrap:wrap; align-items:center;">
+        <form method="GET" action="{{ route('addsale.page') }}" style="margin-bottom:16px; display:flex; gap:12px; flex-wrap:wrap; align-items:center;">
             <div>
                 <label style="font-size:12px; color:#666; display:block;">Month</label>
                 <input type="month" name="month" value="{{ request('month') }}" style="padding:8px; border-radius:6px; border:1px solid #ddd;">
@@ -507,8 +641,9 @@
             <div>
                 <label style="font-size:12px; color:#666; display:block;">Cash Type</label>
                 <select name="cash_type" style="padding:8px; border-radius:6px; border:1px solid #ddd;">
-                    @foreach(($cashTypes ?? ['all','paid','partial','unpaid']) as $ct)
-                        <option value="{{ $ct }}" {{ request('cash_type') == $ct ? 'selected' : '' }}>{{ ucfirst($ct) }}</option>
+                    <option value="">All</option>
+                    @foreach(($cashTypes ?? []) as $ct)
+                        <option value="{{ $ct }}" {{ request('cash_type') == $ct ? 'selected' : '' }}>{{ $ct }}</option>
                     @endforeach
                 </select>
             </div>
@@ -527,7 +662,7 @@
                 <label style="font-size:12px; color:#666; display:block;">Status</label>
                 <select name="status" style="padding:8px; border-radius:6px; border:1px solid #ddd;">
                     <option value="">All</option>
-                    @foreach(($statuses ?? []) as $key => $label)
+                    @foreach(($saleStatuses ?? []) as $key => $label)
                         <option value="{{ $key }}" {{ request('status') == $key ? 'selected' : '' }}>{{ $label }}</option>
                     @endforeach
                 </select>
@@ -538,7 +673,7 @@
                 <select name="staff" style="padding:8px; border-radius:6px; border:1px solid #ddd;">
                     <option value="">All</option>
                     @foreach($serviceExecutives ?? [] as $exec)
-                        <option value="{{ $exec->id }}" {{ request('staff') == $exec->id ? 'selected' : '' }}>{{ $exec->first_name }}</option>
+                        <option value="{{ $exec->first_name }}" {{ request('staff') == $exec->first_name ? 'selected' : '' }}>{{ $exec->first_name }}</option>
                     @endforeach
                 </select>
             </div>
@@ -563,17 +698,17 @@
             <thead>
                 <tr>
                     <th>Date</th>
-                    <th>ID</th>
-                    <th>Phone</th>
+                    <th>ID/Phone</th>
                     <th>Customer Name</th>
                     <th>Plan</th>
+                    <th>Cash Type</th>
                     <th>Amount</th>
                     <th>Paid Amount</th>
                     <th>Success Fee</th>
                     <th>Discount</th>
                     <th>Service Executive</th>
-                    <th>Status</th>
                     <th>Office</th>
+                    <th>Status</th>
                     <th>Note</th>
                     <th>Actions</th>
                 </tr>
@@ -582,31 +717,17 @@
                 @forelse($sales ?? [] as $sale)
                 <tr>
                     <td>{{ \Carbon\Carbon::parse($sale->date)->format('d-M-Y') }}</td>
-                    <td><a href="#" class="profile-link">{{ $sale->profile_id }}</a></td>
-                    <td>{{ $sale->phone ?? '-' }}</td>
+                    <td><a href="#" class="profile-link">{{ $sale->profile_id }}</a><br><small style="color: #666;">{{ $sale->phone ?? "-" }}</small></td>
                     <td>{{ $sale->name }}</td>
                     <td><strong>{{ $sale->plan }}</strong></td>
+                    <td><span style="background: #e3f2fd; padding: 4px 8px; border-radius: 4px; font-size: 11px;">{{ $sale->cash_type ?? '-' }}</span></td>
                     <td>₹{{ number_format($sale->amount, 2) }}</td>
                     <td>₹{{ number_format($sale->paid_amount ?? 0, 2) }}</td>
                     <td>₹{{ number_format($sale->success_fee ?? 0, 2) }}</td>
                     <td>₹{{ number_format($sale->discount ?? 0, 2) }}</td>
                     <td><span style="color: #ac0742; font-weight: 600;">{{ $sale->executive }}</span></td>
-                    <td>
-                        <?php
-                            // Normalize sale status to a key that matches controller-provided $statuses keys
-                            $statusKey = null;
-                            if (!empty($sale->status)) {
-                                // Common normalization: lowercase, replace spaces with underscore
-                                $statusKey = strtolower(str_replace(' ', '_', $sale->status));
-                            }
-                        ?>
-                        @if(isset($statuses) && is_array($statuses) && isset($statuses[$statusKey]))
-                            <span class="status-badge {{ $statusKey }}">{{ $statuses[$statusKey] }}</span>
-                        @else
-                            <span class="status-badge {{ $statusKey ?? strtolower($sale->status) }}">{{ $sale->status ? ucfirst($sale->status) : '-' }}</span>
-                        @endif
-                    </td>
                     <td>{{ $sale->office }}</td>
+                    <td><span style="background: #c8e6c9; padding: 4px 8px; border-radius: 4px; font-size: 11px; font-weight: 600;">{{ $sale->sale_status ?? '-' }}</span></td>
                     <td>{{ Str::limit($sale->notes ?? '-', 30) }}</td>
                     <td>
                         <button type="button" style="padding: 8px 16px; background: linear-gradient(135deg, #2196F3, #1976D2); color: white; border: none; border-radius: 5px; cursor: pointer; font-weight: 600; font-size: 13px; transition: all 0.3s ease;" onclick="editSale({{ $sale->id }})">
@@ -625,8 +746,8 @@
         </table>
 
         <!-- Pagination -->
-        <div style="margin-top:12px; display:flex; justify-content:flex-end;">
-            {{ $sales->links() ?? '' }}
+        <div style="margin-top: 20px; padding: 15px; background: white; border-radius: 8px; display: flex; justify-content: center; align-items: center; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+            {{ $sales->links('pagination::custom-clean') }}
         </div>
     </div>
 
@@ -940,6 +1061,9 @@
             </div>
         </div>
     </div>
+
+    
+
 </main>
 
 <script>
@@ -1089,6 +1213,61 @@
         }
     });
 
+
+    // ==================== IMPORT EXCEL MODAL ====================
+
+    // Open Import Modal
+    if (openImportBtn) {
+        openImportBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            document.body.style.overflow = 'hidden';
+        });
+    }
+
+    // Close Import Modal
+
+
+
+    // Click outside modal to close
+
+    // Handle Import Form Submission
+    importForm.addEventListener('submit', async function(e) {
+        e.preventDefault();
+        
+        const fileInput = document.getElementById('excel_file');
+        if (!fileInput.files || !fileInput.files[0]) {
+            alert('Please select an Excel file to import.');
+            return;
+        }
+
+        submitBtn.disabled = true;
+        submitBtn.textContent = 'Importing...';
+
+        try {
+            const response = await fetch('/import-sales', {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                }
+            });
+
+            const result = await response.json();
+
+            if (response.ok) {
+                alert("Success! " + result.message);
+                window.location.reload(); // Reload to show new sales
+            } else {
+                alert('Error: ' + (result.message || 'Failed to import sales'));
+            }
+        } catch (error) {
+            console.error('Import error:', error);
+            alert('An error occurred while importing. Please try again.');
+        } finally {
+            submitBtn.disabled = false;
+            submitBtn.textContent = '📊 Import Sales';
+        }
+    });
     // Edit Sale Function
     async function editSale(saleId) {
         try {
@@ -1174,6 +1353,33 @@
     // CSRF Token for AJAX requests
     const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content || '';
 
+
+    // Dropdown click handling
+    document.querySelectorAll('.nav-dropdown > .nav-link').forEach(function(link) {
+        link.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            
+            // Close all other dropdowns
+            document.querySelectorAll('.nav-dropdown').forEach(function(dropdown) {
+                if (dropdown !== link.parentElement) {
+                    dropdown.classList.remove('active');
+                }
+            });
+            
+            // Toggle current dropdown
+            link.parentElement.classList.toggle('active');
+        });
+    });
+    
+    // Close dropdown when clicking outside
+    document.addEventListener('click', function(e) {
+        if (!e.target.closest('.nav-dropdown')) {
+            document.querySelectorAll('.nav-dropdown').forEach(function(dropdown) {
+                dropdown.classList.remove('active');
+            });
+        }
+    });
 </script>
 
 @endsection

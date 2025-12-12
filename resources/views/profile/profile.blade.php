@@ -367,8 +367,11 @@
     }
   </style>
 </head>
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <body>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/css/bootstrap.min.css">
 
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/js/bootstrap.bundle.min.js"></script>
   <!-- Main Dashboard Header -->
   <header class="main-header">
     <a href="#" class="header-brand">INA</a>
@@ -377,7 +380,7 @@
       <ul class="header-nav">
   <li><a href="{{ route('dashboard') }}">Home</a></li>
   <li><a href="{{ route('profile.hellow') }}" class="active">Profiles</a></li>
-    <li><a href="#" data-page="sales">Sales <span class="dropdown-arrow">▼</span></a></li>
+    <li><a href="{{ route('sales.management') }}">Sales <span class="dropdown-arrow">▼</span></a></li>
     <li><a href="#" data-page="helpline">HelpLine</a></li>
     <li><a href="{{ route('fresh.data') }}">Fresh Data <span class="dropdown-arrow">▼</span></a></li>
     <li><a href="#" data-page="abc">abc</a></li>
@@ -397,14 +400,14 @@
 
     <div class="top-bar">
       <div class="filters">
-        <button>12 More Days Data</button>
-        <button>No Welcome Calls</button>
-        <button>Post Pone Payment</button>
-        <button>Not Assigned</button>
-        <button>ZERO Follow-Ups</button>
-        <button>Followup Today</button>
-        <button>Followup Due</button>
-        <button class="active">All</button>
+        <button onclick="window.location.href='{{ route('profile.hellow', ['filter' => '12_more_days']) }}'" class="{{ request('filter') == '12_more_days' ? 'active' : '' }}">12 More Days Data</button>
+        <button onclick="window.location.href='{{ route('profile.hellow', ['filter' => 'no_welcome_calls']) }}'" class="{{ request('filter') == 'no_welcome_calls' ? 'active' : '' }}">No Welcome Calls</button>
+        <button onclick="window.location.href='{{ route('profile.hellow', ['filter' => 'postpone_payment']) }}'" class="{{ request('filter') == 'postpone_payment' ? 'active' : '' }}">Post Pone Payment</button>
+        <button onclick="window.location.href='{{ route('profile.hellow', ['filter' => 'not_assigned']) }}'" class="{{ request('filter') == 'not_assigned' ? 'active' : '' }}">Not Assigned</button>
+        <button onclick="window.location.href='{{ route('profile.hellow', ['filter' => 'zero_followups']) }}'" class="{{ request('filter') == 'zero_followups' ? 'active' : '' }}">ZERO Follow-Ups</button>
+        <button onclick="window.location.href='{{ route('profile.hellow', ['filter' => 'followup_today']) }}'" class="{{ request('filter') == 'followup_today' ? 'active' : '' }}">Followup Today</button>
+        <button onclick="window.location.href='{{ route('profile.hellow', ['filter' => 'followup_due']) }}'" class="{{ request('filter') == 'followup_due' ? 'active' : '' }}">Followup Due</button>
+        <button onclick="window.location.href='{{ route('profile.hellow') }}'" class="{{ !request('filter') || request('filter') == 'all' ? 'active' : '' }}">All</button>
       </div>
       <a href="{{ route('profile.addnew') }}" class="btn-add" style="text-decoration:none;">
         <span>⊕</span>
@@ -444,26 +447,28 @@
           </tr>
         </thead>
         <tbody>
-        @foreach($users as $user)
-          @if($user->code)
+        @foreach($profiles as $user)
           <tr>
             <td><input type="checkbox"></td>
-            <td><a href="#" class="profile-link">{{ $user->code }}</a></td>
-            <td class="name-cell">{{ $user->first_name }}</td>
-            <td>{{ $user->created_at ? $user->created_at->format('d-M-Y') : '-' }}</td>
-            <td>{{ $user->created_at ? $user->created_at->format('d-M-Y') : '-' }}</td>
-            <td>{{ $user->created_at ? $user->created_at->format('d-M-Y') : '-' }}</td>
+            <td><a href="#" class="profile-link">{{ $user->imid ?? $user->id }}</a></td>
+            <td class="name-cell">{{ $user->customer_name ?? $user->name ?? '-' }}</td>
+            <td>{{ $user->created_at ? \Carbon\Carbon::parse($user->created_at)->format('d-M-Y') : '-' }}</td>
+            <td>{{ $user->created_at ? \Carbon\Carbon::parse($user->created_at)->format('d-M-Y') : '-' }}</td>
+            <td>{{ $user->follow_up_date ? \Carbon\Carbon::parse($user->follow_up_date)->format('d-M-Y') : '-' }}</td>
             <td class="email-cell">{{ $user->assigned_to ?? '-' }}</td>
             <td>{{ $user->status ?? '-' }}</td>
             <td class="actions">
-              <a href="{{ route('profile.edit_hi', $user->id) }}" class="edit" style="display:inline-block;text-decoration:none;">✏️</a>
-              <button class="delete">🗑️</button>
+              <button class="btn btn-sm btn-info" onclick="viewHistory({{ $user->id }})" title="History" style="margin-right: 5px;">📜</button>
+              <button class="edit" onclick="editProfile({{ $user->id }})">✏️</button>
+              <button class="delete" onclick="deleteProfile({{ $user->id }})">🗑️</button>
             </td>
           </tr>
-          @endif
         @endforeach
         </tbody>
       </table>
+      <div style="margin-top: 20px; display: flex; justify-content: center;">
+        {{ $profiles->links() }}
+      </div>
     </div>
   </main>
 
@@ -480,49 +485,6 @@
         });
       }
     });
-    // Main header navigation
-    document.querySelectorAll('.header-nav a').forEach(link => {
-      link.addEventListener('click', function(e) {
-        // Only prevent default if href is '#' (no real navigation)
-        if (!this.getAttribute('href') || this.getAttribute('href') === '#') {
-          e.preventDefault();
-          // Remove active class from all nav links
-          document.querySelectorAll('.header-nav a').forEach(l => l.classList.remove('active'));
-          // Add active class to clicked link
-          this.classList.add('active');
-          // Get the page name
-          const page = this.getAttribute('data-page');
-          console.log('Navigating to:', page);
-          // Update page title
-          const pageTitle = document.querySelector('.page-title');
-          pageTitle.textContent = this.textContent.replace('▼', '').trim();
-          // You can add logic here to load different content based on the page
-          if (page === 'home' || page === 'dashboard') {
-            // Load home dashboard with cards
-            loadHomePage();
-          } else if (page === 'profiles') {
-            // Keep current profiles table
-            loadProfilesPage();
-          } else if (page === 'sales') {
-            // Load sales page
-            loadSalesPage();
-          } else if (page === 'helpline') {
-            // Load helpline page
-            loadHelplinePage();
-          } else if (page === 'fresh-data') {
-            // Load fresh data page
-            loadFreshDataPage();
-          } else if (page === 'abc') {
-            // Load abc page
-            loadAbcPage();
-          } else if (page === 'services') {
-            // Load services page
-            loadServicesPage();
-          }
-        }
-      });
-    });
-
     // Logout functionality
     document.querySelector('.logout-btn').addEventListener('click', function() {
       if(confirm('Are you sure you want to logout?')) {
@@ -530,90 +492,8 @@
         // Add logout logic here
       }
     });
-
-    // Placeholder functions for different pages
-    function loadHomePage() {
-      document.querySelector('.main-content').innerHTML = `
-        <h1 class="page-title">Dashboard Home</h1>
-        <div style="color: white; text-align: center; margin-top: 50px;">
-          <h2>Welcome to INA Dashboard</h2>
-          <p>This would show the dashboard cards like Follow-up Today, Follow-up Due, New Profiles, etc.</p>
-        </div>
-      `;
-    }
-
-    function loadProfilesPage() {
-      location.reload(); // Reload to show profiles page
-    }
-
-    function loadSalesPage() {
-      document.querySelector('.main-content').innerHTML = `
-        <h1 class="page-title">Sales</h1>
-        <div style="color: white; text-align: center; margin-top: 50px;">
-          <h2>Sales Management</h2>
-          <p>Sales data and management tools would appear here</p>
-        </div>
-      `;
-    }
-
-    function loadHelplinePage() {
-      document.querySelector('.main-content').innerHTML = `
-        <h1 class="page-title">HelpLine</h1>
-        <div style="color: white; text-align: center; margin-top: 50px;">
-          <h2>HelpLine Support</h2>
-          <p>Customer support and helpline tools would appear here</p>
-        </div>
-      `;
-    }
-
-    function loadFreshDataPage() {
-      document.querySelector('.main-content').innerHTML = `
-        <h1 class="page-title">Fresh Data</h1>
-        <div style="color: white; text-align: center; margin-top: 50px;">
-          <h2>Fresh Data Management</h2>
-          <p>New data imports and management would appear here</p>
-        </div>
-      `;
-    }
-
-    function loadAbcPage() {
-      document.querySelector('.main-content').innerHTML = `
-        <h1 class="page-title">ABC</h1>
-        <div style="color: white; text-align: center; margin-top: 50px;">
-          <h2>ABC Module</h2>
-          <p>ABC functionality would appear here</p>
-        </div>
-      `;
-    }
-
-    function loadServicesPage() {
-      document.querySelector('.main-content').innerHTML = `
-        <h1 class="page-title">Services</h1>
-        <div style="color: white; text-align: center; margin-top: 50px;">
-          <h2>Services Management</h2>
-          <p>Service management tools would appear here</p>
-        </div>
-      `;
-    }
-
-    // Filter buttons functionality
-    document.querySelectorAll('.filters button').forEach(button => {
-      button.addEventListener('click', function() {
-        document.querySelectorAll('.filters button').forEach(btn => btn.classList.remove('active'));
-        this.classList.add('active');
-      });
-    });
-
-    // Table functionality
-    document.querySelectorAll('input[type="checkbox"]').forEach(checkbox => {
-      checkbox.addEventListener('change', function() {
-        console.log('Checkbox changed:', this.checked);
-      });
-    });
-
-  // Remove edit button JS handler, now handled by anchor link
-
     document.querySelectorAll('.delete').forEach(button => {
+
       button.addEventListener('click', function() {
         const row = this.closest('tr');
         const profileId = row.querySelector('.profile-link').textContent;
@@ -637,12 +517,232 @@
         }
       });
     });
-
     // Entries per page functionality
     document.querySelector('select').addEventListener('change', function() {
       console.log('Entries per page changed to:', this.value);
     });
   </script>
 
+<!-- Edit Profile Modal -->
+
+<!-- Edit Profile Modal -->
+<div class="modal fade" id="editProfileModal" tabindex="-1" role="dialog">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title">Edit Profile Follow-up</h5>
+                <button type="button" class="close text-white" data-dismiss="modal">
+                    <span>&times;</span>
+                </button>
+            </div>
+            <form id="editProfileForm">
+                <div class="modal-body">
+                    <input type="hidden" id="edit_profile_id">
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label>Customer Name</label>
+                                <input type="text" class="form-control" id="edit_customer_name" readonly>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label>Profile ID</label>
+                                <input type="text" class="form-control" id="edit_profile_im_id" readonly>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label>Current Date</label>
+                                <input type="date" class="form-control" id="edit_current_date" readonly>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label>Status <span class="text-danger">*</span></label>
+                                <select class="form-control" id="edit_status" required>
+                                    <option value="">Select Status</option>
+                                    <option value="RNR">RNR</option>
+                                    <option value="Other State">Other State</option>
+                                    <option value="Pending">Pending</option>
+                                    <option value="Another Call">Another Call</option>
+                                    <option value="Busy">Busy</option>
+                                    <option value="Call Back">Call Back</option>
+                                    <option value="CNC">CNC</option>
+                                    <option value="Created">Created</option>
+                                    <option value="Marriage Fixed">Marriage Fixed</option>
+                                    <option value="NI">NI</option>
+                                    <option value="Switch Off">Switch Off</option>
+                                    <option value="Wrong Number">Wrong Number</option>
+                                    <option value="Duplicate">Duplicate</option>
+                                    <option value="Other">Other</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Next Follow-up Date</label>
+                        <input type="date" class="form-control" id="edit_next_follow_up_date">
+                    </div>
+
+                    <div class="form-group">
+                        <label>Remarks</label>
+                        <textarea class="form-control" id="edit_remarks" rows="4"></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                    <button type="submit" class="btn btn-primary">Save Changes</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+function editProfile(profileId) {
+    console.log('Edit clicked for profile:', profileId);
+    
+    $('#editProfileModal').modal('show');
+    
+    $.ajax({
+        url: '/profiles/' + profileId + '/edit-data',
+        type: 'GET',
+        success: function(response) {
+            console.log('Profile data loaded:', response);
+            
+            $('#edit_profile_id').val(response.id);
+            $('#edit_customer_name').val(response.customer_name || response.name || 'N/A');
+            $('#edit_profile_im_id').val(response.imid || response.profile_id || response.id);
+            $('#edit_current_date').val(new Date().toISOString().split('T')[0]);
+            $('#edit_status').val(response.status || '');
+            $('#edit_next_follow_up_date').val(response.follow_up_date || '');
+            $('#edit_remarks').val('');
+        },
+        error: function(xhr) {
+            console.error('Error loading profile:', xhr);
+            alert('Error loading profile data');
+            $('#editProfileModal').modal('hide');
+        }
+    });
+}
+
+$(document).ready(function() {
+    $('#editProfileForm').on('submit', function(e) {
+        e.preventDefault();
+        
+        const profileId = $('#edit_profile_id').val();
+        const submitBtn = $(this).find('button[type="submit"]');
+        
+        submitBtn.prop('disabled', true).text('Saving...');
+        
+        $.ajax({
+            url: '/profiles/' + profileId + '/update-followup',
+            type: 'PUT',
+            data: {
+                status: $('#edit_status').val(),
+                follow_up_date: $('#edit_next_follow_up_date').val(),
+                remarks: $('#edit_remarks').val(),
+                _token: '{{ csrf_token() }}'
+            },
+            success: function(response) {
+                console.log('Update successful:', response);
+                alert('Profile updated successfully!');
+                location.reload();
+            },
+            error: function(xhr) {
+                console.error('Update error:', xhr);
+                alert('Error updating profile: ' + (xhr.responseJSON?.error || 'Unknown error'));
+                submitBtn.prop('disabled', false).text('Save Changes');
+            }
+        });
+    });
+});
+</script>
+
+<!-- History Modal -->
+<div class="modal fade" id="historyModal" tabindex="-1" role="dialog">
+    <div class="modal-dialog modal-xl" role="document">
+        <div class="modal-content">
+            <div class="modal-header bg-info text-white">
+                <h5 class="modal-title">Profile History</h5>
+                <button type="button" class="close text-white" data-dismiss="modal">
+                    <span>&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div id="history_profile_info" class="mb-3">
+                    <h6>Profile: <span id="history_customer_name"></span> (ID: <span id="history_profile_id"></span>)</h6>
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-bordered table-striped">
+                        <thead class="thead-light">
+                            <tr>
+                                <th>Date & Time</th>
+                                <th>Updated By</th>
+                                <th>Status</th>
+                                <th>Follow-up Date</th>
+                                <th>Remarks</th>
+                            </tr>
+                        </thead>
+                        <tbody id="history_table_body">
+                            <tr>
+                                <td colspan="5" class="text-center">Loading...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function viewHistory(profileId) {
+    console.log('View history for profile:', profileId);
+    
+    $('#historyModal').modal('show');
+    $('#history_table_body').html('<tr><td colspan="5" class="text-center">Loading...</td></tr>');
+    
+    $.ajax({
+        url: '/profiles/' + profileId + '/history',
+        type: 'GET',
+        success: function(response) {
+            console.log('History loaded:', response);
+            
+            $('#history_customer_name').text(response.profile.customer_name || response.profile.name || 'N/A');
+            $('#history_profile_id').text(response.profile.imid || response.profile.id);
+            
+            if (response.history && response.history.length > 0) {
+                let html = '';
+                response.history.forEach(function(record) {
+                    html += '<tr>';
+                    html += '<td>' + (record.created_at || 'N/A') + '</td>';
+                    html += '<td>' + (record.executive_name || record.updated_by || 'N/A') + '</td>';
+                    html += '<td><span class="badge badge-primary">' + (record.status || 'N/A') + '</span></td>';
+                    html += '<td>' + (record.follow_up_date || '-') + '</td>';
+                    html += '<td>' + (record.remarks || '-') + '</td>';
+                    html += '</tr>';
+                });
+                $('#history_table_body').html(html);
+            } else {
+                $('#history_table_body').html('<tr><td colspan="5" class="text-center text-muted">No history records found</td></tr>');
+            }
+        },
+        error: function(xhr) {
+            console.error('Error loading history:', xhr);
+            $('#history_table_body').html('<tr><td colspan="5" class="text-center text-danger">Error loading history</td></tr>');
+        }
+    });
+}
+</script>
 </body>
 </html>

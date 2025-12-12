@@ -318,6 +318,18 @@ Route::middleware('auth')->group(function () {
 Route::get('/profile/add', function () {
         return view('profile.addnewprofile');
     })->name('profile.addnew');
+    // Add New Profile from Modal (POST)
+    Route::post('/profile/add', [UserController::class, 'storeFromModal'])->name('profile.addnew.store');
+    // New Profiles listing page
+    Route::get('/profiles/new', [UserController::class, 'newProfiles'])->name('profiles.new');
+    // Follow-up Today listing page
+    Route::get('/profiles/followup-today', [UserController::class, 'followupToday'])->name('profiles.followup.today');
+    Route::put('/profiles/{id}', [UserController::class, 'update'])->name('profiles.update');
+    Route::get('/profiles/{id}/history', [UserController::class, 'getHistory'])->name('profiles.history');
+    // Update profile status from modal
+    Route::put('/profile/{id}/update-status', [UserController::class, 'updateStatus'])->name('profile.update.status');
+    Route::get('/profiles/{id}/edit-data', [UserController::class, 'getEditData'])->name('profiles.edit.data');
+    Route::put('/profiles/{id}/update-followup', [UserController::class, 'updateFollowup'])->name('profiles.update.followup');
     // Profile update route (user)
 Route::put('/profile/{id}', [UserController::class, 'updateProfile'])->name('profile.update');
     
@@ -331,10 +343,13 @@ Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard
     Route::get('/user/dashboard', [UserController::class, 'dashboard'])->name('user.dashboard');
     Route::post('/profile', [UserController::class, 'store'])->name('profile.store');
     // Profile page route (user)
-    Route::get('/profile', function () {
+    Route::get('/profile', [UserController::class, 'index'])->name('profile.hellow');
+
+/*
+Route::get('/profile-old', function () {
     $users = \App\Models\User::whereNotNull('code')->orderBy('created_at', 'desc')->take(10)->get();
         return view('profile.profile', compact('users'));
-    })->name('profile.hellow');
+    });*/
     
     // Profile page route (admin)
     Route::get('/admin/profile', function () {
@@ -462,6 +477,7 @@ Route::get('/session-test', function () {
 
 Route::post('/edit-fresh-data/{id}', [FreshDataController::class, 'update'])->name('update.fresh.data');
 Route::get('/fresh-data', [FreshDataController::class, 'index'])->name('fresh.data');
+Route::get('/fresh-data/index', [FreshDataController::class, 'index'])->name('fresh.data.index');
 Route::get('/add-fresh-data', function () {
     return view('profile.addfreashdata');
 })->name('add.fresh.data');
@@ -958,84 +974,14 @@ Route::get('/debug/partner-expectations/{profileId}', function ($profileId) {
     }
 });
 
-Route::get('/staff-target-assign', function (\Illuminate\Http\Request $request) {
-    $staffUsers = User::where('user_type', 'staff')
-        ->orderBy('first_name')
-        ->get(['id', 'first_name', 'name']);
-
-    // Load assigned targets and compute achieved sums for the month filter (if provided)
-    $month = $request->get('month'); // optional, format YYYY-MM
-
-    $targetsQuery = \App\Models\StaffTarget::with('staff')->orderBy('month', 'desc');
-    if ($month) {
-        $targetsQuery->where('month', $month);
-    }
-
-    $staffTargets = $targetsQuery->get();
-
-    // For each target compute achieved amount from sales
-    $prepared = $staffTargets->map(function ($t) {
-        $year = substr($t->month, 0, 4);
-        $mon = substr($t->month, 5, 2);
-        $achieved = \App\Models\Sale::where('staff_id', $t->staff_id)
-            ->whereYear('date', $year)
-            ->whereMonth('date', $mon)
-            ->sum('paid_amount');
-
-        $percentage = $t->target_amount > 0 ? round(($achieved / $t->target_amount) * 100) : 0;
-
-        return (object) [
-            'id' => $t->id,
-            'staff_id' => $t->staff_id,
-            'staff_first_name' => $t->staff ? $t->staff->first_name : null,
-            'month' => $t->month,
-            'target_amount' => $t->target_amount,
-            'achieved' => $achieved,
-            'percentage' => $percentage,
-            'status' => $percentage >= 100 ? 'achieved' : 'in-progress'
-        ];
-    });
-
-    return view('stafftarget', compact('staffUsers', 'prepared'));
-})->name('stafftarget.page');
-
-// Accept form submission from the Assign New Target modal
-Route::middleware('auth')->post('/staff-target-assign', function (\Illuminate\Http\Request $request) {
-    $validated = $request->validate([
-        'service_executive' => ['required', 'exists:users,id'],
-        'month' => ['required', 'date_format:Y-m'],
-        'branch' => ['required', 'in:Tirur,Vadakara'],
-        'target_amount' => ['required', 'numeric', 'min:0']
-    ]);
-
-    // Persist the target: create or update existing target for the staff + month
-    $staffId = $validated['service_executive'];
-    $month = $validated['month'];
-    $branch = $validated['branch'];
-    $amount = $validated['target_amount'];
-
-    $existing = \App\Models\StaffTarget::where('staff_id', $staffId)
-        ->where('month', $month)
-        ->first();
-
-    if ($existing) {
-        $existing->update([
-            'target_amount' => $amount,
-            'branch' => $branch,
-            'created_by' => auth()->id(),
-        ]);
-    } else {
-        \App\Models\StaffTarget::create([
-            'staff_id' => $staffId,
-            'month' => $month,
-            'branch' => $branch,
-            'target_amount' => $amount,
-            'created_by' => auth()->id(),
-        ]);
-    }
-
-    return redirect()->route('stafftarget.page')->with('success', 'Target assigned successfully.');
-})->name('stafftarget.assign');
+// Staff Target Routes
+Route::middleware('auth')->group(function () {
+    Route::get('/staff-target-assign', [App\Http\Controllers\StaffTargetController::class, 'index'])->name('stafftarget.page');
+    Route::post('/staff-target-assign', [App\Http\Controllers\StaffTargetController::class, 'store'])->name('stafftarget.assign');
+    Route::get('/staff-target/{id}/edit', [App\Http\Controllers\StaffTargetController::class, 'edit'])->name('stafftarget.edit');
+    Route::put('/staff-target/{id}', [App\Http\Controllers\StaffTargetController::class, 'update'])->name('stafftarget.update');
+    Route::get('/staff-target/{id}/view', [App\Http\Controllers\StaffTargetController::class, 'view'])->name('stafftarget.view');
+});
 
 Route::get('/staff-productivity', function () {
     return view('staffproductivity');
@@ -1056,6 +1002,8 @@ Route::middleware('auth')->group(function () {
     
     // Store sale
     Route::post('/add-sale', [SaleController::class, 'store'])->name('sale.store');
+Route::post("/sales/import", [SaleController::class, "importSales"])->name("sales.import");
+    Route::post('/sale/import', [SaleController::class, 'import'])->name('sale.import');
 
     // Get sale for editing (AJAX)
     Route::get('/add-sale/{id}', [SaleController::class, 'show'])->name('sale.show');
@@ -1334,4 +1282,43 @@ Route::post('/get-member-data', function (Request $request) {
             'message' => 'Error: ' . $e->getMessage()
         ]);
     }
+});
+// Fresh Data Excel Import Routes
+Route::middleware('auth')->group(function () {
+    Route::post('/fresh-data/import', [FreshDataController::class, 'import'])->name('fresh.data.import');
+    Route::get('/fresh-data/template', [FreshDataController::class, 'downloadTemplate'])->name('fresh.data.template');
+    Route::post('/fresh-data/assign/{id}', [FreshDataController::class, 'assign'])->name('fresh.data.assign');
+    Route::post('/fresh-data/bulk-assign', [FreshDataController::class, 'bulkAssign'])->name('fresh.data.bulk.assign');
+});
+
+// Route for service/sales executives to view their assigned profiles
+Route::get('/my-assigned-profiles', [FreshDataController::class, 'myAssignedProfiles'])->name('assigned.profiles.view');
+
+// Update fresh data status
+Route::post('/fresh-data/update-status', [FreshDataController::class, 'updateStatus'])->name('fresh.data.update.status');
+
+// Sales Management Page
+Route::middleware('auth')->get('/sales-management', [App\Http\Controllers\SalesDashboardController::class, 'index'])->name('sales.management');
+
+// Follow-up Due Profiles Route
+Route::middleware('auth')->get('/profiles/followup-due', [App\Http\Controllers\DashboardController::class, 'followupDue'])->name('profiles.followup.due');
+
+// Test route to check admin status
+Route::middleware('auth')->get('/test-admin', function () {
+    return response()->json([
+        'is_authenticated' => Auth::check(),
+        'is_admin' => Auth::check() && Auth::user()->is_admin,
+        'user_email' => Auth::check() ? Auth::user()->email : null
+    ]);
+});
+
+// Sales template download
+Route::get('/sales/template', [App\Http\Controllers\SaleController::class, 'downloadTemplate'])->name('sales.template');
+
+// Helpline Tracker Routes
+Route::middleware('auth')->group(function () {
+    Route::get('/helpline', [App\Http\Controllers\HelplineController::class, 'index'])->name('helpline.index');
+    Route::post('/helpline', [App\Http\Controllers\HelplineController::class, 'store'])->name('helpline.store');
+    Route::put('/helpline/{id}', [App\Http\Controllers\HelplineController::class, 'update'])->name('helpline.update');
+    Route::delete('/helpline/{id}', [App\Http\Controllers\HelplineController::class, 'destroy'])->name('helpline.destroy');
 });

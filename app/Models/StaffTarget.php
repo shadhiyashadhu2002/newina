@@ -6,18 +6,13 @@ use Illuminate\Database\Eloquent\Model;
 
 class StaffTarget extends Model
 {
-    protected $table = 'staff_targets';
-
     protected $fillable = [
         'staff_id',
         'month',
-        'target_amount',
         'branch',
+        'department',
+        'target_amount',
         'created_by'
-    ];
-
-    protected $casts = [
-        'target_amount' => 'decimal:2'
     ];
 
     public function staff()

@@ -1,0 +1,553 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
+    <title>INA Dashboard - Fresh Data</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #ac0742 0%, #9d1955 100%);
+            color: #333;
+            min-height: 100vh;
+        }
+        .main-header {
+            background: linear-gradient(135deg, #ac0742, #9d1955);
+            padding: 15px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 20px rgba(0, 0, 0, 0.2);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+        .header-brand { color: white; font-size: 24px; font-weight: 700; text-decoration: none; }
+        .header-nav { display: flex; list-style: none; gap: 25px; align-items: center; }
+        .header-nav a {
+            color: rgba(255, 255, 255, 0.9);
+            text-decoration: none;
+            font-weight: 500;
+            font-size: 15px;
+            padding: 10px 16px;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+        }
+        .header-nav a:hover { color: white; background: rgba(255, 255, 255, 0.1); }
+        .header-nav a.active { color: white; background: rgba(255, 255, 255, 0.2); font-weight: 600; }
+        .logout-btn {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            color: white;
+            padding: 8px 16px;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 500;
+        }
+        .main-content { padding: 30px; }
+        .page-title { color: #fff; font-size: 28px; font-weight: 600; margin-bottom: 25px; }
+        .alert { padding: 12px 20px; margin: 20px 30px; border-radius: 8px; font-weight: 500; }
+        .alert-success { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+        .profiles-section { padding: 30px; }
+        .profiles-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; }
+        .header-buttons { display: flex; gap: 10px; }
+        .add-profile-btn {
+            background: linear-gradient(135deg, #4CAF50, #45a049);
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.3s;
+            box-shadow: 0 4px 15px rgba(76, 175, 80, 0.3);
+            font-size: 14px;
+            text-decoration: none;
+        }
+        .import-btn {
+            background: linear-gradient(135deg, #f44336, #d32f2f);
+            box-shadow: 0 4px 15px rgba(244, 67, 54, 0.3);
+        }
+        .add-icon { font-size: 16px; font-weight: bold; }
+
+        /* Modal Styles */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 2000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(5px);
+        }
+        .modal.active { display: flex; align-items: center; justify-content: center; }
+        .modal-content {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            width: 90%;
+            max-width: 500px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+            animation: slideDown 0.3s ease;
+        }
+        @keyframes slideDown { from { transform: translateY(-50px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #f0f0f0;
+        }
+        .modal-title { font-size: 22px; font-weight: 600; color: #333; }
+        .close-btn {
+            background: none;
+            border: none;
+            font-size: 28px;
+            cursor: pointer;
+            color: #999;
+            transition: color 0.2s;
+        }
+        .close-btn:hover { color: #333; }
+        .modal-body { padding: 20px 0; }
+        
+        /* Source Dropdown */
+        .form-group {
+            margin-bottom: 20px;
+        }
+        .form-label {
+            display: block;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+        .form-select {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 14px;
+            color: #333;
+            background: white;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .form-select:focus {
+            outline: none;
+            border-color: #ac0742;
+            box-shadow: 0 0 0 3px rgba(172, 7, 66, 0.1);
+        }
+        
+        .upload-area {
+            border: 2px dashed #ddd;
+            border-radius: 12px;
+            padding: 40px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            background: #fafafa;
+        }
+        .upload-area:hover { border-color: #ac0742; background: #fff; }
+        .upload-icon { font-size: 48px; margin-bottom: 15px; }
+        .upload-text { font-size: 16px; font-weight: 600; color: #333; margin-bottom: 5px; }
+        .upload-hint { font-size: 13px; color: #999; }
+        .file-input { display: none; }
+        .selected-file {
+            display: none;
+            background: #f5f5f5;
+            padding: 15px;
+            border-radius: 10px;
+            margin: 15px 0;
+            align-items: center;
+            gap: 12px;
+        }
+        .selected-file.active { display: flex; }
+        .file-icon { font-size: 32px; }
+        .file-info { flex: 1; }
+        .file-name { font-weight: 600; color: #333; margin-bottom: 3px; }
+        .file-size { font-size: 13px; color: #999; }
+        .remove-file-btn {
+            background: #f44336;
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 13px;
+            transition: all 0.2s;
+        }
+        .remove-file-btn:hover { background: #d32f2f; }
+        .template-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            color: #ac0742;
+            text-decoration: none;
+            font-weight: 500;
+            margin-top: 15px;
+            padding: 10px 15px;
+            border-radius: 8px;
+            transition: all 0.2s;
+        }
+        .template-link:hover { background: #f5f5f5; }
+        .progress-container {
+            display: none;
+            margin-top: 20px;
+        }
+        .progress-container.active { display: block; }
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: #e0e0e0;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #4CAF50, #45a049);
+            transition: width 0.3s;
+            width: 0;
+        }
+        .progress-text {
+            text-align: center;
+            margin-top: 10px;
+            font-size: 14px;
+            color: #666;
+        }
+        .modal-footer {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            margin-top: 25px;
+            padding-top: 20px;
+            border-top: 2px solid #f0f0f0;
+        }
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 10px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 14px;
+        }
+        .btn-cancel {
+            background: #f5f5f5;
+            color: #666;
+        }
+        .btn-cancel:hover { background: #e0e0e0; }
+        .btn-import {
+            background: linear-gradient(135deg, #4CAF50, #45a049);
+            color: white;
+            box-shadow: 0 4px 15px rgba(76, 175, 80, 0.3);
+        }
+        .btn-import:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(76, 175, 80, 0.4); }
+        .btn-import:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        /* Table Styles */
+        .data-table-section {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+        }
+        .profiles-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        .profiles-table thead th {
+            background: linear-gradient(135deg, #ac0742, #9d1955);
+            color: white;
+            padding: 15px;
+            text-align: left;
+            font-weight: 600;
+            font-size: 14px;
+        }
+        .profiles-table thead th:first-child { border-radius: 10px 0 0 0; }
+        .profiles-table thead th:last-child { border-radius: 0 10px 0 0; }
+        .profiles-table tbody tr {
+            border-bottom: 1px solid #f0f0f0;
+            transition: all 0.2s;
+        }
+        .profiles-table tbody tr:hover { background: #fafafa; }
+        .profiles-table tbody td {
+            padding: 15px;
+            font-size: 14px;
+            color: #333;
+        }
+        .actions {
+            display: flex;
+            gap: 8px;
+        }
+        .action-btn {
+            padding: 6px 10px;
+            border-radius: 6px;
+            text-decoration: none;
+            transition: all 0.2s;
+            font-size: 16px;
+        }
+        .edit-btn { background: #fff3cd; }
+        .edit-btn:hover { background: #ffc107; }
+        .view-btn { background: #d1ecf1; }
+        .view-btn:hover { background: #17a2b8; }
+    </style>
+</head>
+<body>
+    <header class="main-header">
+        <a href="{{ route('dashboard') }}" class="header-brand">INA</a>
+        <nav>
+            <ul class="header-nav">
+                <li><a href="{{ route('dashboard') }}">Home</a></li>
+                <li><a href="{{ route('profile.hellow') }}">Profiles</a></li>
+                <li><a href="{{ route('fresh.data') }}" class="active">Fresh Data</a></li>
+                <li><a href="{{ route('services.page') }}">Services</a></li>
+            </ul>
+        </nav>
+        <form id="logout-form" action="{{ route('logout') }}" method="POST" style="display:none;">@csrf</form>
+        <button class="logout-btn" onclick="event.preventDefault(); document.getElementById('logout-form').submit();">Logout</button>
+    </header>
+
+    <main class="main-content">
+        @if(session('success'))
+            <div class="alert alert-success">{{ session('success') }}</div>
+        @endif
+
+        <div class="profiles-section">
+            <div class="profiles-header">
+                <h1 class="page-title">Fresh Data</h1>
+                <div class="header-buttons">
+                    <a href="{{ route('add.fresh.data') }}" class="add-profile-btn">
+                        <span class="add-icon">+</span> Add Fresh Data
+                    </a>
+                    <button class="add-profile-btn import-btn" onclick="openImportModal()">
+                        <span class="add-icon">📊</span> Import from Excel
+                    </button>
+                </div>
+            </div>
+
+            <div class="data-table-section">
+                <table class="profiles-table">
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Mobile Number</th>
+                            <th>Gender</th>
+                            <th>Source</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @forelse($freshData as $data)
+                        <tr>
+                            <td>{{ $data->name }}</td>
+                            <td>{{ $data->mobile }}</td>
+                            <td>{{ $data->gender ?? '-' }}</td>
+                            <td>{{ $data->source }}</td>
+                            <td class="actions">
+                                <a href="{{ route('edit.fresh.data', $data->id) }}" class="action-btn edit-btn">✏️</a>
+                                <a href="{{ route('fresh.data.view', $data->id) }}" class="action-btn view-btn">👁️</a>
+                            </td>
+                        </tr>
+                        @empty
+                        <tr>
+                            <td colspan="5" style="text-align:center; padding: 40px;">No fresh data found.</td>
+                        </tr>
+                        @endforelse
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </main>
+
+    <!-- Import Modal -->
+    <div id="importModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title">Import from Excel</h2>
+                <button class="close-btn" onclick="closeImportModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="importForm">
+                    <!-- Source Dropdown -->
+                    <div class="form-group">
+                        <label class="form-label">Select Source <span style="color: red;">*</span></label>
+                        <select id="sourceSelect" class="form-select" required>
+                            <option value="">--Select Call Source--</option>
+                            <option value="Website">Website</option>
+                            <option value="Facebook">Facebook</option>
+                            <option value="Google Ads">Google Ads</option>
+                            <option value="Instagram">Instagram</option>
+                            <option value="YouTube">YouTube</option>
+                            <option value="Referral">Referral</option>
+                            <option value="Direct Call">Direct Call</option>
+                            <option value="WhatsApp">WhatsApp</option>
+                            <option value="Email">Email</option>
+                            <option value="Newspaper">Newspaper</option>
+                            <option value="Other">Other</option>
+                        </select>
+                    </div>
+
+                    <!-- File Upload Area -->
+                    <div class="upload-area" onclick="document.getElementById('fileInput').click()">
+                        <div class="upload-icon">📁</div>
+                        <div class="upload-text">Click to upload</div>
+                        <div class="upload-hint">Excel files (.xlsx, .xls, .csv) - Max 10MB</div>
+                    </div>
+                    <input type="file" id="fileInput" class="file-input" accept=".xlsx,.xls,.csv" onchange="handleFileSelect(event)">
+
+                    <div id="selectedFile" class="selected-file">
+                        <div class="file-icon">📄</div>
+                        <div class="file-info">
+                            <div class="file-name" id="fileName"></div>
+                            <div class="file-size" id="fileSize"></div>
+                        </div>
+                        <button type="button" class="remove-file-btn" onclick="removeFile()">Remove</button>
+                    </div>
+
+                    <a href="{{ route('fresh.data.template') }}" class="template-link">📥 Download Sample Template</a>
+
+                    <div id="progressContainer" class="progress-container">
+                        <div class="progress-bar">
+                            <div class="progress-fill" id="progressFill"></div>
+                        </div>
+                        <div class="progress-text" id="progressText">Uploading...</div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-cancel" onclick="closeImportModal()">Cancel</button>
+                <button class="btn btn-import" id="importBtn" onclick="submitImport()" disabled>Import</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const csrfToken = document.querySelector('meta[name="csrf-token"]').content;
+
+        function openImportModal() {
+            document.getElementById('importModal').classList.add('active');
+        }
+
+        function closeImportModal() {
+            document.getElementById('importModal').classList.remove('active');
+            document.getElementById('importForm').reset();
+            document.getElementById('selectedFile').classList.remove('active');
+            document.getElementById('progressContainer').classList.remove('active');
+            document.getElementById('importBtn').disabled = true;
+        }
+
+        function handleFileSelect(event) {
+            const file = event.target.files[0];
+            if (file) {
+                document.getElementById('fileName').textContent = file.name;
+                document.getElementById('fileSize').textContent = formatFileSize(file.size);
+                document.getElementById('selectedFile').classList.add('active');
+                checkFormValidity();
+            }
+        }
+
+        function removeFile() {
+            document.getElementById('fileInput').value = '';
+            document.getElementById('selectedFile').classList.remove('active');
+            checkFormValidity();
+        }
+
+        function checkFormValidity() {
+            const file = document.getElementById('fileInput').files[0];
+            const source = document.getElementById('sourceSelect').value;
+            document.getElementById('importBtn').disabled = !(file && source);
+        }
+
+        // Add event listener to source dropdown
+        document.addEventListener('DOMContentLoaded', function() {
+            document.getElementById('sourceSelect').addEventListener('change', checkFormValidity);
+        });
+
+        function formatFileSize(bytes) {
+            if (bytes === 0) return '0 Bytes';
+            const k = 1024;
+            const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return Math.round(bytes / Math.pow(k, i) * 100) / 100 + ' ' + sizes[i];
+        }
+
+        async function submitImport() {
+            const file = document.getElementById('fileInput').files[0];
+            const source = document.getElementById('sourceSelect').value;
+            
+            if (!file) { 
+                alert('Please select a file'); 
+                return; 
+            }
+            
+            if (!source) { 
+                alert('Please select a source'); 
+                return; 
+            }
+
+            const importBtn = document.getElementById('importBtn');
+            const progressContainer = document.getElementById('progressContainer');
+            const progressFill = document.getElementById('progressFill');
+            const progressText = document.getElementById('progressText');
+
+            importBtn.disabled = true;
+            progressContainer.classList.add('active');
+            progressFill.style.width = '30%';
+            progressText.textContent = 'Uploading...';
+
+            const formData = new FormData();
+            formData.append('excel_file', file);
+            formData.append('source', source);
+
+            try {
+                const response = await fetch('{{ route("fresh.data.import") }}', {
+                    method: 'POST',
+                    headers: { 'X-CSRF-TOKEN': csrfToken, 'Accept': 'application/json' },
+                    body: formData
+                });
+
+                progressFill.style.width = '70%';
+                progressText.textContent = 'Processing...';
+
+                const result = await response.json();
+
+                progressFill.style.width = '100%';
+                progressText.textContent = 'Complete!';
+
+                if (result.success) {
+                    setTimeout(() => {
+                        alert(result.message);
+                        window.location.reload();
+                    }, 500);
+                } else {
+                    alert('Error: ' + result.message);
+                    closeImportModal();
+                }
+            } catch (error) {
+                alert('Import failed: ' + error.message);
+                closeImportModal();
+            }
+        }
+
+        window.onclick = function(event) {
+            if (event.target === document.getElementById('importModal')) {
+                closeImportModal();
+            }
+        }
+    </script>
+</body>
+</html>

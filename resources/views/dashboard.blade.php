@@ -9,23 +9,29 @@
                 <a href="{{ route('dashboard') }}" class="nav-link active">Home</a>
                 <a href="{{ route('profile.hellow') }}" class="nav-link">Profiles</a>
                 <div class="nav-dropdown">
-                    <a href="#" class="nav-link">Sales ▼</a>
+                    <a href="{{ route('sales.management') }}" class="nav-link">Sales ▼</a>
                 </div>
-                <a href="#" class="nav-link">HelpLine</a>
+                <a href="{{ route('helpline.index') }}" class="nav-link">HelpLine</a>
                 <div class="nav-dropdown">
+                    @if($currentUser->is_admin)
                     <a href="{{ route('fresh.data') }}" class="nav-link">Fresh Data</a>
+                    @endif
                 </div>
                 <a href="#" class="nav-link">abc</a>
                 <div class="nav-dropdown">
                     <a href="{{ route('services.page') }}" class="nav-link">Services ▼</a>
                 </div>
-                <div class="nav-dropdown accounts-dropdown">
-                    <!-- Make the anchor focusable and prevent default so :focus-within keeps dropdown open when interacting -->
-                    <a href="#" class="nav-link" tabindex="0" onclick="event.preventDefault();">Accounts ▼</a>
+                <div class="nav-dropdown business-dropdown">
+                    <a href="#" class="nav-link" tabindex="0" onclick="event.preventDefault();">Business ▼</a>
                     <div class="dropdown-content" style="overflow: visible !important;" aria-hidden="false">
                         <a href="{{ route('addsale.page') }}" class="dropdown-item">Add Sale</a>
                         <a href="{{ route('stafftarget.page') }}" class="dropdown-item">Staff Target Assign</a>
                         <a href="{{ route('staffproductivity.page') }}" class="dropdown-item">Staff Productivity</a>
+                    </div>
+                </div>
+                <div class="nav-dropdown accounts-dropdown">
+                    <a href="#" class="nav-link" tabindex="0" onclick="event.preventDefault();">Accounts ▼</a>
+                    <div class="dropdown-content" style="overflow: visible !important;" aria-hidden="false">
                         <a href="{{ route('expense.page') }}" class="dropdown-item">Expense Page</a>
                     </div>
                 </div>
@@ -43,20 +49,25 @@
         </div>
     </div>
     <div class="stats-grid">
-        <div class="stat-card green">
-            <h3>Follow-up Today</h3>
-            <div class="stat-number">0</div>
-        </div>
+        <a href="{{ route('profiles.followup.today') }}" class="stat-card-link">
+            <div class="stat-card green">
+                <h3>Follow-up Today</h3>
+                <div class="stat-number">{{ $stats['followup_today'] ?? 0 }}</div>
+            </div>
+        </a>
+        <a href="{{ route('profiles.followup.due') }}" class="stat-card-link">
+            <div class="stat-card orange">
+                <h3>Follow-up Due</h3>
+                <div class="stat-number">{{ $stats['followup_due'] ?? 0 }}</div>
+            </div>
+        </a>
 
-        <div class="stat-card orange">
-            <h3>Follow-up Due</h3>
-            <div class="stat-number">2</div>
-        </div>
-
-        <div class="stat-card blue">
-            <h3>New Profiles</h3>
-            <div class="stat-number">1</div>
-        </div>
+        <a href="{{ route('assigned.profiles.view') }}" class="stat-card-link">
+            <div class="stat-card blue">
+                <h3>New Profiles</h3>
+                <div class="stat-number">{{ $stats['new_profiles'] ?? 0 }}</div>
+            </div>
+        </a>
 
         <div class="stat-card teal">
             <h3>Reassigned Profiles</h3>
@@ -73,15 +84,19 @@
             <div class="stat-number">0</div>
         </div>
 
-        <div class="stat-card sales-card">
+        <a href="{{ url('/add-sale') }}" style="text-decoration: none; color: inherit;">
+        <div class="stat-card sales-card" style="cursor: pointer; transition: transform 0.2s, box-shadow 0.2s;" 
+             onmouseover="this.style.transform='translateY(-5px)'; this.style.boxShadow='0 8px 16px rgba(0,0,0,0.2)';" 
+             onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='';">
             <h3>Total Sales</h3>
-            <div class="sales-amount">₹ 4,300</div>
-            <div class="sales-target">Target: ₹50,000</div>
-            <div class="achievement-badge">8.6% Achieved</div>
+            <div class="sales-amount">₹ {{ number_format($stats['total_sales'] ?? 0, 0) }}</div>
+            <div class="sales-target">Target: ₹{{ number_format($stats['target_amount'] ?? 50000, 0) }}</div>
+            <div class="achievement-badge">{{ $stats['achievement_percentage'] ?? 0 }}% Achieved</div>
             <div class="progress-bar">
-                <div class="progress-fill" style="width: 8.6%"></div>
+                <div class="progress-fill" style="width: {{ $stats['achievement_percentage'] ?? 0 }}%"></div>
             </div>
         </div>
+        </a>
     </div>
     <div class="filter-section">
         <div class="filter-header">
@@ -309,6 +324,18 @@
     /* Keep dropdown visible on hover OR when its anchor or content receives focus (keyboard/tab or click) */
     .accounts-dropdown:hover .dropdown-content,
     .accounts-dropdown:focus-within .dropdown-content {
+        display: block !important;
+    }
+    .business-dropdown {
+        position: relative;
+        display: inline-block;
+    }
+    .business-dropdown .dropdown-content {
+        display: none !important;
+    }
+    /* Keep dropdown visible on hover OR when its anchor or content receives focus (keyboard/tab or click) */
+    .business-dropdown:hover .dropdown-content,
+    .business-dropdown:focus-within .dropdown-content {
         display: block !important;
     }
 
@@ -705,6 +732,22 @@
         .data-table-section {
             overflow-x: auto;
         }
+    }
+
+    .stat-card-link {
+        text-decoration: none;
+        color: inherit;
+        display: block;
+    }
+    
+    .stat-card-link:hover .stat-card {
+        transform: translateY(-5px);
+        box-shadow: 0 8px 16px rgba(0,0,0,0.2);
+    }
+    
+    .stat-card {
+        cursor: pointer;
+        transition: all 0.3s ease;
     }
 </style>
 @endsection

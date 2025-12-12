@@ -507,7 +507,7 @@
             <li><a href="{{ route('dashboard') }}" class="nav-link">Home</a></li>
             <li><a href="{{ route('profile.hellow') }}" class="nav-link">Profiles</a></li>
             <li><a href="#" class="nav-link">Sales <span class="dropdown-arrow">▼</span></a></li>
-            <li><a href="#" class="nav-link">HelpLine</a></li>
+            <li><a href="{{ route('helpline.index') }}" class="nav-link">HelpLine</a></li>
             <li><a href="{{ route('fresh.data') }}" class="nav-link">Fresh Data <span class="dropdown-arrow">▼</span></a></li>
             <li><a href="#" class="nav-link">abc</a></li>
             <li><a href="{{ route('services.page') }}" class="nav-link">Services <span class="dropdown-arrow">▼</span></a></li>
@@ -577,6 +577,7 @@
         @endif
 
         <!-- Filters -->
+        @if(!isset($isLimitedAdmin) || !$isLimitedAdmin)
         <form method="GET" action="{{ route('expense.page') }}" class="filters-container">
             <div class="filter-group">
                 <label>Date From</label>
@@ -636,6 +637,7 @@
                 <a href="{{ route('expense.page') }}" class="btn-filter secondary">Reset</a>
             </div>
         </form>
+        @endif
 
         <form id="expenses-form">
             <table>
@@ -716,7 +718,9 @@
                                    onchange="updateTotal()"disabled>
                         </td>
                         <td>
+                            @if(!$isLimitedAdmin)
                             <button type="button" class="btn-save" onclick="openEditModal({{ $expense->id }})">Edit</button>
+                            @endif
                         </td>
                     </tr>
                     @empty
@@ -737,7 +741,7 @@
                                 <option value="">select</option>
                                 <option value="BENAZIR">BENAZIR</option>
                                 <option value="AFNAS">AFNAS</option>
-                                <option value="P">PRABHAKARAN</option>
+                                <option value="PRABHAKARAN">PRABHAKARAN</option>
                                 <option value="RAFEEQUE">RAFEEQUE</option>
                                 <option value="OTHERS">OTHERS</option>
                             </select>

@@ -1,33 +1,18 @@
-<!DOCTYPE html        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background: linear-gradient(135deg, #ac0742 0%, #9d1955 100%);
-            color: #333;
-            min-height: 100vh;
-        }
-
-        /* Main Dashboard Header */
-        .main-header {
-            background: linear-gradient(135deg, #ac0742, #9d1955);ng="en">
-
+<!DOCTYPE html>
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>INA Dashboard - Fresh Data</title>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
+        * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
             background: linear-gradient(135deg, #ac0742 0%, #9d1955 100%);
             color: #333;
             min-height: 100vh;
         }
-
-        /* Header Styles */
         .main-header {
             background: linear-gradient(135deg, #ac0742, #9d1955);
             padding: 15px 30px;
@@ -39,25 +24,8 @@
             top: 0;
             z-index: 1000;
         }
-
-        .header-brand {
-            color: white;
-            font-size: 24px;
-            font-weight: 700;
-            text-decoration: none;
-        }
-
-        .header-nav {
-            display: flex;
-            list-style: none;
-            gap: 25px;
-            align-items: center;
-        }
-
-        .header-nav li {
-            position: relative;
-        }
-
+        .header-brand { color: white; font-size: 24px; font-weight: 700; text-decoration: none; }
+        .header-nav { display: flex; list-style: none; gap: 25px; align-items: center; }
         .header-nav a {
             color: rgba(255, 255, 255, 0.9);
             text-decoration: none;
@@ -66,28 +34,9 @@
             padding: 10px 16px;
             border-radius: 8px;
             transition: all 0.3s ease;
-            display: flex;
-            align-items: center;
-            gap: 5px;
         }
-
-        .header-nav a:hover {
-            color: white;
-            background: rgba(255, 255, 255, 0.1);
-            transform: translateY(-1px);
-        }
-
-        .header-nav a.active {
-            color: white;
-            background: rgba(255, 255, 255, 0.2);
-            font-weight: 600;
-        }
-
-        .header-nav .dropdown-arrow {
-            font-size: 10px;
-            margin-left: 3px;
-        }
-
+        .header-nav a:hover { color: white; background: rgba(255, 255, 255, 0.1); }
+        .header-nav a.active { color: white; background: rgba(255, 255, 255, 0.2); font-weight: 600; }
         .logout-btn {
             background: rgba(255, 255, 255, 0.1);
             border: 1px solid rgba(255, 255, 255, 0.3);
@@ -98,61 +47,13 @@
             transition: all 0.3s ease;
             font-weight: 500;
         }
-
-        .logout-btn:hover {
-            background: rgba(255, 255, 255, 0.2);
-            transform: translateY(-1px);
-        }
-
-        .main-content {
-            padding: 30px;
-        }
-
-        .page-title {
-            color: #fff;
-            font-size: 28px;
-            font-weight: 600;
-            margin-bottom: 25px;
-            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
-        }
-
-        /* Alert Styles */
-        .alert {
-            padding: 12px 20px;
-            margin: 20px 30px;
-            border-radius: 8px;
-            font-weight: 500;
-        }
-
-        .alert-success {
-            background: #d4edda;
-            color: #155724;
-            border: 1px solid #c3e6cb;
-        }
-
-        .alert-error {
-            background: #f8d7da;
-            color: #721c24;
-            border: 1px solid #f5c6cb;
-        }
-
-        /* Profiles Section */
-        .profiles-section {
-            padding: 30px;
-        }
-
-        .profiles-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 30px;
-        }
-
-        .header-buttons {
-            display: flex;
-            gap: 10px;
-        }
-
+        .main-content { padding: 30px; }
+        .page-title { color: #fff; font-size: 28px; font-weight: 600; margin-bottom: 25px; }
+        .alert { padding: 12px 20px; margin: 20px 30px; border-radius: 8px; font-weight: 500; }
+        .alert-success { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+        .profiles-section { padding: 30px; }
+        .profiles-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; }
+        .header-buttons { display: flex; gap: 10px; }
         .add-profile-btn {
             background: linear-gradient(135deg, #4CAF50, #45a049);
             color: white;
@@ -169,128 +70,123 @@
             font-size: 14px;
             text-decoration: none;
         }
-
-        .add-profile-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(76, 175, 80, 0.4);
-        }
-
-        .assign-btn {
-            background: linear-gradient(135deg, #ac0742, #9d1955);
-            box-shadow: 0 4px 15px rgba(172, 7, 66, 0.3);
-        }
-
-        .assign-btn:hover {
-            box-shadow: 0 6px 20px rgba(172, 7, 66, 0.4);
-        }
-
         .import-btn {
             background: linear-gradient(135deg, #f44336, #d32f2f);
             box-shadow: 0 4px 15px rgba(244, 67, 54, 0.3);
         }
-
-        .import-btn:hover {
-            box-shadow: 0 6px 20px rgba(244, 67, 54, 0.4);
+        .add-icon { font-size: 16px; font-weight: bold; }
+        
+        /* Modal Styles */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 2000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(5px);
         }
-
-        .add-icon {
-            font-size: 16px;
-            font-weight: bold;
+        .modal.active { display: flex; align-items: center; justify-content: center; }
+        .modal-content {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            width: 90%;
+            max-width: 500px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+            animation: slideDown 0.3s ease;
         }
-
-        /* Filter Tabs */
-        .filter-tabs {
-            display: flex;
-            gap: 10px;
-            margin-bottom: 25px;
-            flex-wrap: wrap;
+        @keyframes slideDown {
+            from { opacity: 0; transform: translateY(-50px); }
+            to { opacity: 1; transform: translateY(0); }
         }
-
-        .filter-tabs-right {
-            justify-content: flex-end;
-        }
-
-        .tab-btn {
-            background: rgba(255, 255, 255, 0.1);
-            color: white;
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            padding: 8px 16px;
-            border-radius: 6px;
-            cursor: pointer;
-            font-size: 14px;
-            transition: all 0.3s;
-            backdrop-filter: blur(10px);
-        }
-
-        .tab-btn:hover {
-            background: rgba(255, 255, 255, 0.2);
-        }
-
-        .tab-btn.active {
-            background: #4CAF50;
-            border-color: #4CAF50;
-        }
-
-        /* Table Controls */
-        .table-controls {
+        .modal-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
             margin-bottom: 20px;
-            background: rgba(255, 255, 255, 0.9);
-            padding: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #f0f0f0;
+        }
+        .modal-title { font-size: 22px; font-weight: 600; color: #333; }
+        .close-btn {
+            background: none;
+            border: none;
+            font-size: 28px;
+            cursor: pointer;
+            color: #999;
+            line-height: 1;
+        }
+        .modal-body { margin-bottom: 20px; }
+        .upload-area {
+            border: 2px dashed #ddd;
             border-radius: 10px;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            padding: 40px 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            background: #f9f9f9;
         }
-
-        .show-entries {
-            display: flex;
+        .upload-area:hover { border-color: #f44336; background: #fff5f5; }
+        .upload-icon { font-size: 48px; margin-bottom: 10px; }
+        .upload-text { font-size: 16px; color: #666; margin-bottom: 5px; }
+        .upload-hint { font-size: 13px; color: #999; }
+        .file-input { display: none; }
+        .selected-file {
+            display: none;
+            margin-top: 15px;
+            padding: 12px;
+            background: #e8f5e9;
+            border-radius: 8px;
             align-items: center;
-            gap: 8px;
-            color: #333;
+            gap: 10px;
         }
-
-        .show-entries select {
-            padding: 6px 10px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-            font-size: 14px;
+        .selected-file.active { display: flex; }
+        .file-icon { font-size: 24px; }
+        .file-info { flex: 1; }
+        .file-name { font-weight: 600; color: #333; margin-bottom: 3px; }
+        .file-size { font-size: 12px; color: #666; }
+        .remove-file-btn {
+            background: #f44336;
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 12px;
         }
-
-        .search-box {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            color: #333;
+        .template-link {
+            display: block;
+            text-align: center;
+            margin-top: 15px;
+            color: #f44336;
+            text-decoration: none;
+            font-weight: 500;
         }
-
-        .search-box input {
-            padding: 8px 12px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-            font-size: 14px;
-            width: 200px;
+        .modal-footer { display: flex; gap: 10px; justify-content: flex-end; }
+        .btn { padding: 10px 20px; border: none; border-radius: 8px; cursor: pointer; font-weight: 500; }
+        .btn-cancel { background: #f0f0f0; color: #666; }
+        .btn-import {
+            background: linear-gradient(135deg, #f44336, #d32f2f);
+            color: white;
+            box-shadow: 0 4px 15px rgba(244, 67, 54, 0.3);
         }
-
-        .search-box input:focus {
-            outline: none;
-            border-color: #4CAF50;
+        .btn-import:disabled { background: #ccc; cursor: not-allowed; box-shadow: none; }
+        .progress-container { display: none; margin-top: 15px; }
+        .progress-container.active { display: block; }
+        .progress-bar { height: 6px; background: #f0f0f0; border-radius: 10px; overflow: hidden; }
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #4CAF50, #45a049);
+            width: 0%;
+            transition: width 0.3s;
         }
-
-        /* Data Table */
-        .data-table-section {
-            background: white;
-            border-radius: 10px;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-            overflow: hidden;
-        }
-
-        .profiles-table {
-            width: 100%;
-            border-collapse: collapse;
-            background: white;
-        }
-
+        .progress-text { text-align: center; margin-top: 8px; font-size: 13px; color: #666; }
+        
+        .data-table-section { background: white; border-radius: 10px; box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1); overflow: hidden; }
+        .profiles-table { width: 100%; border-collapse: collapse; background: white; }
         .profiles-table th {
             background: #f8f9fa;
             padding: 15px 12px;
@@ -298,57 +194,16 @@
             font-weight: 600;
             color: #333;
             border-bottom: 2px solid #dee2e6;
-            position: relative;
-            user-select: none;
         }
-
-        .profiles-table td {
-            padding: 12px;
-            border-bottom: 1px solid #dee2e6;
-            color: #555;
-        }
-
-        .profiles-table tbody tr:nth-child(even) {
-            background: #f8f9fa;
-        }
-
-        .profiles-table tbody tr:hover {
-            background: #e0f2fe;
-        }
-
-        .sortable {
-            cursor: pointer;
-        }
-
-        .sortable:hover {
-            background: #e9ecef;
-        }
-
-        .sort-arrow {
-            position: absolute;
-            right: 8px;
-            top: 50%;
-            transform: translateY(-50%);
-            font-size: 12px;
-            color: #666;
-        }
-
-        /* Action Buttons */
-        .actions {
-            display: flex;
-            gap: 5px;
-            justify-content: center;
-            align-items: center;
-        }
-
+        .profiles-table td { padding: 12px; border-bottom: 1px solid #dee2e6; color: #555; }
+        .profiles-table tbody tr:nth-child(even) { background: #f8f9fa; }
+        .profiles-table tbody tr:hover { background: #e0f2fe; }
+        .actions { display: flex; gap: 5px; justify-content: center; }
         .action-btn {
             padding: 8px 10px;
             border: none;
             border-radius: 4px;
             cursor: pointer;
-            font-size: 11px;
-            font-weight: 600;
-            transition: all 0.3s ease;
             min-width: 36px;
             height: 36px;
             display: flex;
@@ -356,442 +211,477 @@
             justify-content: center;
             text-decoration: none;
         }
+        .edit-btn { background: #FFC107; color: #fff; }
+        .view-btn { background: #17A2B8; color: white; }
+        .delete-btn { background: #DC3545; color: white; }
 
-        .edit-btn {
-            background: #FFC107;
-            color: #fff;
-            box-shadow: 0 2px 5px rgba(255, 193, 7, 0.3);
-        }
-
-        .edit-btn:hover {
-            background: #FFB300;
-            transform: translateY(-1px);
-            box-shadow: 0 3px 8px rgba(255, 193, 7, 0.4);
-        }
-
-        .view-btn {
-            background: #17A2B8;
-            color: white;
-            box-shadow: 0 2px 5px rgba(23, 162, 184, 0.3);
-        }
-
-        .view-btn:hover {
-            background: #138496;
-            transform: translateY(-1px);
-            box-shadow: 0 3px 8px rgba(23, 162, 184, 0.4);
-        }
-
-        .delete-btn {
-            background: #DC3545;
-            color: white;
-            box-shadow: 0 2px 5px rgba(220, 53, 69, 0.3);
-        }
-
-        .delete-btn:hover {
-            background: #C82333;
-            transform: translateY(-1px);
-            box-shadow: 0 3px 8px rgba(220, 53, 69, 0.4);
-        }
-
-        /* Checkbox Styling */
-        input[type="checkbox"] {
-            width: 18px;
-            height: 18px;
-            cursor: pointer;
-            accent-color: #4CAF50;
-        }
-
-        /* Table Footer */
-        .table-footer {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 20px;
-            background: #f8f9fa;
-            border-top: 1px solid #dee2e6;
-        }
-
-        .table-info {
-            color: #666;
-            font-size: 14px;
-        }
-
-        .pagination {
-            display: flex;
-            gap: 5px;
-        }
-
-        .pagination-btn {
-            background: #f8f9fa;
-            border: 1px solid #dee2e6;
-            color: #6c757d;
-            padding: 8px 12px;
-            border-radius: 4px;
-            cursor: not-allowed;
-            font-size: 14px;
-        }
-
-        .pagination-btn:not(:disabled) {
-            cursor: pointer;
-            color: #495057;
-        }
-
-        .pagination-btn:not(:disabled):hover {
-            background: #e9ecef;
-        }
-
-        /* Responsive Design */
-        @media (max-width: 1200px) {
-            .filter-tabs {
-                justify-content: center;
-            }
-
-            .header-buttons {
-                flex-wrap: wrap;
-            }
-        }
-
-        @media (max-width: 768px) {
-            .profiles-header {
-                flex-direction: column;
-                gap: 20px;
-                text-align: center;
-            }
-
-            .table-controls {
-                flex-direction: column;
-                gap: 15px;
-            }
-
-            .filter-tabs {
-                justify-content: center;
-            }
-
-            .search-box input {
-                width: 150px;
-            }
-
-            .data-table-section {
-                overflow-x: auto;
-            }
-
-            .profiles-table {
-                min-width: 1200px;
-            }
-
-            .table-footer {
-                flex-direction: column;
-                gap: 15px;
-                text-align: center;
-            }
-
-            .header-buttons {
-                justify-content: center;
-            }
-        }
-
-        @media (max-width: 480px) {
-            .profiles-section {
-                padding: 20px;
-            }
-
-            .filter-tabs {
-                flex-direction: column;
-            }
-
-            .tab-btn {
-                text-align: center;
-            }
-
-            .header-buttons {
-                flex-direction: column;
-                width: 100%;
-            }
-
-            .add-profile-btn {
-                justify-content: center;
-            }
-        }
+    /* Assign Modal */
+    .assign-modal {
+        display: none;
+        position: fixed;
+        z-index: 2000;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.6);
+        backdrop-filter: blur(5px);
+    }
+    .assign-modal.active {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    .assign-modal-content {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border-radius: 15px;
+        width: 90%;
+        max-width: 500px;
+        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+    }
+    .assign-modal-header {
+        padding: 25px;
+        color: white;
+    }
+    .assign-modal-header h2 {
+        margin: 0;
+        font-size: 24px;
+    }
+    .assign-modal-body {
+        padding: 30px;
+        background: white;
+    }
+    .assign-form-group label {
+        display: block;
+        margin-bottom: 8px;
+        font-weight: 500;
+    }
+    .assign-form-group select {
+        width: 100%;
+        padding: 12px;
+        border: 2px solid #e0e0e0;
+        border-radius: 8px;
+        font-size: 14px;
+    }
+    .assign-modal-footer {
+        padding: 20px 30px;
+        background: white;
+        display: flex;
+        justify-content: flex-end;
+        gap: 10px;
+        border-radius: 0 0 15px 15px;
+    }
+    .assign-cancel-btn, .assign-submit-btn {
+        padding: 10px 24px;
+        border: none;
+        border-radius: 8px;
+        cursor: pointer;
+    }
+    .assign-cancel-btn {
+        background: #f0f0f0;
+        color: #666;
+    }
+    .assign-submit-btn {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+    }
     </style>
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/css/bootstrap.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/js/bootstrap.bundle.min.js"></script>
 </head>
-
 <body>
     <header class="main-header">
         <a href="#" class="header-brand">INA</a>
         <nav>
             <ul class="header-nav">
-                <li><a href="{{ route('dashboard') }}" data-page="home">Home</a></li>
-                <li><a href="{{ route('profile.hellow') }}" data-page="profiles">Profiles</a></li>
-                <li><a href="#" data-page="sales">Sales <span class="dropdown-arrow">▼</span></a></li>
-                <li><a href="#" data-page="helpline">HelpLine</a></li>
-                <li><a href="{{ route('fresh.data') }}" class="active" data-page="fresh-data">Fresh Data</a></li>
-                <li><a href="#" data-page="abc">abc</a></li>
-                <li><a href="{{ route('services.page') }}" data-page="services">Services <span class="dropdown-arrow">▼</span></a></li>
+                <li><a href="{{ route('dashboard') }}">Home</a></li>
+                <li><a href="{{ route('profile.hellow') }}">Profiles</a></li>
+                <li><a href="{{ route('fresh.data') }}" class="active">Fresh Data</a></li>
+                <li><a href="{{ route('services.page') }}">Services</a></li>
             </ul>
         </nav>
-            <form id="logout-form" action="{{ route('logout') }}" method="POST" style="display:none;">
-                @csrf
-            </form>
-            <button class="logout-btn" id="logout-btn">Logout</button>
+        <form id="logout-form" action="{{ route('logout') }}" method="POST" style="display:none;">@csrf</form>
+        <button class="logout-btn" onclick="event.preventDefault(); document.getElementById('logout-form').submit();">Logout</button>
     </header>
-    
+
     <main class="main-content">
         <h1 class="page-title">Fresh Data</h1>
+        
+        @if(session('success'))
+        <div class="alert alert-success">{{ session('success') }}</div>
+        @endif
 
         <div class="profiles-section">
             <div class="profiles-header">
                 <div class="header-buttons">
                     <a href="{{ route('add.fresh.data') }}" class="add-profile-btn">
-                        <span class="add-icon">+</span>
-                        Add New Data
+                        <span class="add-icon">+</span> Add New Data
                     </a>
-                    <button class="add-profile-btn assign-btn">
-                        <span class="add-icon">👥</span>
-                        Assign Selected
+                    <button class="add-profile-btn import-btn" onclick="openImportModal()">
+                        <span class="add-icon">📊</span> Import from Excel
                     </button>
-                    <button class="add-profile-btn import-btn">
-                        <span class="add-icon">📊</span>
-                        Import from Excel
+                    <button class="add-profile-btn assign-btn" onclick="openBulkAssignModal()" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+                        <span class="add-icon">👤</span> Assign To
                     </button>
-                </div>
-            </div>
-
-            <div class="filter-tabs filter-tabs-right">
-                <button class="tab-btn" data-filter="not-assigned">Not Assigned</button>
-                <button class="tab-btn" data-filter="zero-followup">ZERO Follow-Ups</button>
-                <button class="tab-btn" data-filter="followup-today">Followup Today</button>
-                <button class="tab-btn" data-filter="followup-due">Followup Due</button>
-                <button class="tab-btn active" data-filter="all">All</button>
-            </div>
-
-            <div class="table-controls">
-                <div class="show-entries">
-                    <label>Show</label>
-                    <select name="per_page" onchange="handlePerPageChange(this.value)">
-                        <option value="10" selected>10</option>
-                        <option value="25">25</option>
-                        <option value="50">50</option>
-                        <option value="100">100</option>
-                    </select>
-                    <span>entries</span>
-                </div>
-                <div class="search-box">
-                    <label>Search:</label>
-                    <input type="text" id="searchInput" placeholder="Search..." onkeyup="handleSearch()">
                 </div>
             </div>
 
             <div class="data-table-section">
-                <table class="data-table profiles-table">
+                <table class="profiles-table">
                     <thead>
                         <tr>
-                            <th><input type="checkbox" id="selectAll"></th>
-                            <th class="sortable" data-sort="name">
-                                Name
-                                <span class="sort-arrow">▲</span>
-                            </th>
-                            <th class="sortable" data-sort="mobile">
-                                Mobile Number
-                                <span class="sort-arrow">▲</span>
-                            </th>
-                            <th class="sortable" data-sort="gender">
-                                Gender
-                                <span class="sort-arrow">▲</span>
-                            </th>
-                            <th class="sortable" data-sort="profile_id">
-                                Profile ID
-                                <span class="sort-arrow">▲</span>
-                            </th>
-                            <th class="sortable" data-sort="followup_date">
-                                Followup Date
-                                <span class="sort-arrow">▲</span>
-                            </th>
-                            <th>Assigned To</th>
-                            <th>Status</th>
-                            <th>Comments</th>
-                            <th class="sortable" data-sort="source">
-                                Source
-                                <span class="sort-arrow">▲</span>
-                            </th>
+                            <th style="width: 40px;"><input type="checkbox" id="selectAll" onclick="toggleSelectAll()"></th>
+                            <th>Name</th>
+                            <th>Mobile Number</th>
+                            <th>Gender</th>
+                            <th>Source</th>
                             <th>Actions</th>
                         </tr>
                     </thead>
                     <tbody>
                         @forelse($freshData as $data)
                         <tr>
-                            <td><input type="checkbox" class="row-checkbox"></td>
+                            <td><input type="checkbox" class="record-checkbox" value="{{ $data->id }}"></td>
                             <td>{{ $data->name }}</td>
                             <td>{{ $data->mobile }}</td>
                             <td>{{ $data->gender ?? '-' }}</td>
-                            <td>{{ $data->profile_id ?? '-' }}</td>
-                            <td>{{ $data->created_at ? $data->created_at->format('d-M-Y') : '-' }}</td>
-                            <td>{{ $data->user && $data->user->name ? $data->user->name : '-' }}</td>
-                            <td>{{ $data->status ?? '-' }}</td>
-                            <td>{{ $data->remarks ?? '-' }}</td>
                             <td>{{ $data->source }}</td>
                             <td class="actions">
-                                <a href="{{ route('edit.fresh.data', $data->id) }}" class="action-btn edit-btn" title="Edit">✏️</a>
-                                <a href="{{ route('fresh.data.view', $data->id) }}" class="action-btn view-btn" title="View">👁️</a>
-                                <button class="action-btn delete-btn" title="Delete" onclick="deleteRecord(this)">🗑️</button>
+                                <button class="action-btn history" onclick="viewHistory({{ $data->id }})" title="History">📜</button>
+                                <a href="{{ route('edit.fresh.data', $data->id) }}" class="action-btn edit-btn">✏️</a>
+                                <a href="{{ route('fresh.data.view', $data->id) }}" class="action-btn view-btn">👁️</a>
                             </td>
                         </tr>
                         @empty
                         <tr>
-                            <td colspan="11" style="text-align:center; padding: 40px; color: #999; font-style: italic;">
-                                No fresh data found. Click "Add New Data" to get started.
-                            </td>
+                            <td colspan="5" style="text-align:center; padding: 40px;">No fresh data found.</td>
                         </tr>
                         @endforelse
                     </tbody>
                 </table>
-
-                <div class="table-footer">
-                    <div class="table-info">
-                        Showing 1 to 4 of 4 entries
-                    </div>
-                    <div class="pagination">
-                        <button class="pagination-btn" disabled>Previous</button>
-                        <button class="pagination-btn" disabled>1</button>
-                        <button class="pagination-btn" disabled>Next</button>
-                    </div>
-                </div>
             </div>
         </div>
     </main>
 
+    <!-- Import Modal -->
+    <div id="importModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title">Import from Excel</h2>
+                <button class="close-btn" onclick="closeImportModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="importForm">
+                    <div class="upload-area" onclick="document.getElementById('fileInput').click()">
+                        <div class="upload-icon">📁</div>
+                        <div class="upload-text">Click to upload</div>
+                        <div class="upload-hint">Excel files (.xlsx, .xls, .csv) - Max 10MB</div>
+                    </div>
+                    <input type="file" id="fileInput" class="file-input" accept=".xlsx,.xls,.csv" onchange="handleFileSelect(event)">
+                    
+                    <div id="selectedFile" class="selected-file">
+                        <div class="file-icon">📄</div>
+                        <div class="file-info">
+                            <div class="file-name" id="fileName"></div>
+                            <div class="file-size" id="fileSize"></div>
+                        </div>
+                        <button type="button" class="remove-file-btn" onclick="removeFile()">Remove</button>
+                    </div>
+
+                    <a href="{{ route('fresh.data.template') }}" class="template-link">📥 Download Sample Template</a>
+
+                    <div id="progressContainer" class="progress-container">
+                        <div class="progress-bar">
+                            <div class="progress-fill" id="progressFill"></div>
+                        </div>
+                        <div class="progress-text" id="progressText">Uploading...</div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-cancel" onclick="closeImportModal()">Cancel</button>
+                <button class="btn btn-import" id="importBtn" onclick="submitImport()" disabled>Import</button>
+            </div>
+        </div>
+    </div>
+
     <script>
-                // Logout functionality
-                document.addEventListener('DOMContentLoaded', function() {
-                    var logoutBtn = document.getElementById('logout-btn');
-                    if (logoutBtn) {
-                        logoutBtn.addEventListener('click', function(e) {
-                            e.preventDefault();
-                            if(confirm('Are you sure you want to logout?')) {
-                                document.getElementById('logout-form').submit();
-                            }
-                        });
-                    }
-                });
-        document.addEventListener('DOMContentLoaded', function() {
-            // Select All Checkbox functionality
-            const selectAllCheckbox = document.getElementById('selectAll');
-            const rowCheckboxes = document.querySelectorAll('.row-checkbox');
-
-            if (selectAllCheckbox) {
-                selectAllCheckbox.addEventListener('change', function() {
-                    rowCheckboxes.forEach(checkbox => {
-                        checkbox.checked = this.checked;
-                    });
-                });
+        const csrfToken = document.querySelector('meta[name="csrf-token"]').content;
+        
+        function openImportModal() {
+            document.getElementById('importModal').classList.add('active');
+        }
+        
+        function closeImportModal() {
+            document.getElementById('importModal').classList.remove('active');
+            document.getElementById('importForm').reset();
+            document.getElementById('selectedFile').classList.remove('active');
+            document.getElementById('progressContainer').classList.remove('active');
+            document.getElementById('importBtn').disabled = true;
+        }
+        
+        function handleFileSelect(event) {
+            const file = event.target.files[0];
+            if (file) {
+                document.getElementById('fileName').textContent = file.name;
+                document.getElementById('fileSize').textContent = formatFileSize(file.size);
+                document.getElementById('selectedFile').classList.add('active');
+                document.getElementById('importBtn').disabled = false;
             }
-
-            // Tab filtering
-            const tabBtns = document.querySelectorAll('.tab-btn');
-            tabBtns.forEach(btn => {
-                btn.addEventListener('click', function() {
-                    tabBtns.forEach(tab => tab.classList.remove('active'));
-                    this.classList.add('active');
-                    const filter = this.dataset.filter;
-                    console.log('Filtering by:', filter);
-                });
-            });
-
-            // Sorting functionality
-            const sortableHeaders = document.querySelectorAll('.sortable');
-            let currentSort = {
-                column: null,
-                direction: 'asc'
-            };
-
-            sortableHeaders.forEach(header => {
-                header.addEventListener('click', function() {
-                    const column = this.dataset.sort;
-                    const arrow = this.querySelector('.sort-arrow');
-
-                    // Reset all arrows
-                    sortableHeaders.forEach(h => {
-                        const a = h.querySelector('.sort-arrow');
-                        if (a && h !== this) a.textContent = '▲';
-                    });
-
-                    // Toggle sort direction
-                    if (currentSort.column === column) {
-                        currentSort.direction = currentSort.direction === 'asc' ? 'desc' : 'asc';
-                    } else {
-                        currentSort.direction = 'asc';
-                    }
-
-                    currentSort.column = column;
-                    if (arrow) {
-                        arrow.textContent = currentSort.direction === 'asc' ? '▲' : '▼';
-                    }
-
-                    console.log('Sorting by:', column, currentSort.direction);
-                });
-            });
-
-            // Auto-hide alerts
-            const alerts = document.querySelectorAll('.alert');
-            alerts.forEach(alert => {
-                setTimeout(() => {
-                    alert.style.opacity = '0';
-                    setTimeout(() => alert.remove(), 300);
-                }, 5000);
-            });
-        });
-
-        // Search functionality
-        function handleSearch() {
-            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
-            const tableRows = document.querySelectorAll('.profiles-table tbody tr');
-
-            tableRows.forEach(row => {
-                const text = row.textContent.toLowerCase();
-                if (text.includes(searchTerm)) {
-                    row.style.display = '';
-                } else {
-                    row.style.display = 'none';
-                }
-            });
         }
-
-        // Per page change handler
-        function handlePerPageChange(value) {
-            console.log('Entries per page changed to:', value);
+        
+        function removeFile() {
+            document.getElementById('fileInput').value = '';
+            document.getElementById('selectedFile').classList.remove('active');
+            document.getElementById('importBtn').disabled = true;
         }
-
-        // Delete record function
-        function deleteRecord(button) {
-            const row = button.closest('tr');
-            const name = row.cells[1].textContent; // Name column
+        
+        function formatFileSize(bytes) {
+            if (bytes === 0) return '0 Bytes';
+            const k = 1024;
+            const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return Math.round(bytes / Math.pow(k, i) * 100) / 100 + ' ' + sizes[i];
+        }
+        
+        async function submitImport() {
+            const file = document.getElementById('fileInput').files[0];
+            if (!file) { alert('Please select a file'); return; }
             
-            if (confirm(`Are you sure you want to delete ${name}?`)) {
-                row.remove();
-                console.log('Deleted:', name);
-                // Add your delete logic here
+            const importBtn = document.getElementById('importBtn');
+            const progressContainer = document.getElementById('progressContainer');
+            const progressFill = document.getElementById('progressFill');
+            const progressText = document.getElementById('progressText');
+            
+            importBtn.disabled = true;
+            progressContainer.classList.add('active');
+            progressFill.style.width = '30%';
+            progressText.textContent = 'Uploading...';
+            
+            const formData = new FormData();
+            formData.append('excel_file', file);
+            
+            try {
+                const response = await fetch('{{ route("fresh.data.import") }}', {
+                    method: 'POST',
+                    headers: { 'X-CSRF-TOKEN': csrfToken, 'Accept': 'application/json' },
+                    body: formData
+                });
+                
+                progressFill.style.width = '70%';
+                progressText.textContent = 'Processing...';
+                
+                const result = await response.json();
+                
+                progressFill.style.width = '100%';
+                progressText.textContent = 'Complete!';
+                
+                if (result.success) {
+                    setTimeout(() => {
+                        alert(result.message);
+                        window.location.reload();
+                    }, 500);
+                } else {
+                    alert('Error: ' + result.message);
+                    closeImportModal();
+                }
+            } catch (error) {
+                alert('Import failed: ' + error.message);
+                closeImportModal();
+            }
+        }
+        
+        window.onclick = function(event) {
+            if (event.target === document.getElementById('importModal')) {
+                closeImportModal();
             }
         }
 
-        // Navigation functionality
-        document.querySelectorAll('.header-nav a').forEach(link => {
-            link.addEventListener('click', function(e) {
-                // Only prevent default if href is '#' (no real navigation)
-                if (!this.getAttribute('href') || this.getAttribute('href') === '#') {
-                    e.preventDefault();
-                    document.querySelectorAll('.header-nav a').forEach(l => l.classList.remove('active'));
-                    this.classList.add('active');
-                    const page = this.getAttribute('data-page');
-                    console.log('Navigating to:', page);
-                }
-            });
-        });
+        // Select All functionality
+        function toggleSelectAll() {
+            const selectAll = document.getElementById('selectAll');
+            const checkboxes = document.querySelectorAll('.record-checkbox');
+            checkboxes.forEach(cb => cb.checked = selectAll.checked);
+        }
 
-        // Logout functionality
-        document.querySelector('.logout-btn').addEventListener('click', function() {
-            if(confirm('Are you sure you want to logout?')) {
-                alert('Logging out...');
+        // Open assign modal
+        function openBulkAssignModal() {
+            const selected = document.querySelectorAll('.record-checkbox:checked');
+            if (selected.length === 0) {
+                alert('Please select at least one record');
+                return;
             }
+            document.getElementById('assignCount').textContent = selected.length + ' record(s) selected';
+            document.getElementById('assignModal').classList.add('active');
+        }
+
+        // Close assign modal
+        function closeAssignModal() {
+            document.getElementById('assignModal').classList.remove('active');
+            document.getElementById('assignForm').reset();
+        }
+
+        // Submit assignment
+        async function submitAssignment() {
+            const assignedTo = document.getElementById('assignedTo').value;
+            if (!assignedTo) {
+                alert('Please select an executive');
+                return;
+            }
+
+            const selected = Array.from(document.querySelectorAll('.record-checkbox:checked'))
+                .map(cb => cb.value);
+
+            try {
+                const response = await fetch('/fresh-data/bulk-assign', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': csrfToken,
+                        'Accept': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        record_ids: selected,
+                        assigned_to: assignedTo
+                    })
+                });
+
+                const result = await response.json();
+                if (result.success) {
+                    alert(result.message);
+                    closeAssignModal();
+                    window.location.reload();
+                } else {
+                    alert('Error: ' + result.message);
+                }
+            } catch (error) {
+                alert('Failed: ' + error.message);
+            }
+        }
+
+        // Close modal on outside click
+        window.addEventListener('click', (e) => {
+            if (e.target.id === 'assignModal') closeAssignModal();
         });
     </script>
+
+    <!-- Assign Modal -->
+    <div id="assignModal" class="assign-modal">
+        <div class="assign-modal-content">
+            <div class="assign-modal-header">
+                <h2>Assign Fresh Data</h2>
+                <p id="assignCount" style="margin: 10px 0 0 0; opacity: 0.9;"></p>
+            </div>
+            <div class="assign-modal-body">
+                <form id="assignForm">
+                    <div class="assign-form-group">
+                        <label>Assign To *</label>
+                        <select id="assignedTo" required>
+                            <option value="">-- Select Executive --</option>
+                            <optgroup label="Service Team">
+                                @foreach($serviceExecutives as $executive)
+                                    <option value="{{ $executive->id }}">{{ $executive->name }}</option>
+                                @endforeach
+                            </optgroup>
+                            <optgroup label="Sales Team">
+                                @if(isset($salesExecutives) && $salesExecutives->count() > 0)
+                                    @foreach($salesExecutives as $executive)
+                                        <option value="{{ $executive->id }}">{{ $executive->name }}</option>
+                                    @endforeach
+                                @else
+                                    <option value="">No sales executives found</option>
+                                @endif
+                            </optgroup>
+                        </select>
+                    </div>
+                </form>
+            </div>
+            <div class="assign-modal-footer">
+                <button type="button" class="assign-cancel-btn" onclick="closeAssignModal()">Cancel</button>
+                <button type="button" class="assign-submit-btn" onclick="submitAssignment()">Assign</button>
+            </div>
+        </div>
+    </div>
+
+<!-- History Modal -->
+<div class="modal fade" id="historyModal" tabindex="-1" role="dialog">
+    <div class="modal-dialog modal-xl" role="document">
+        <div class="modal-content">
+            <div class="modal-header bg-info text-white">
+                <h5 class="modal-title">Profile History</h5>
+                <button type="button" class="close text-white" data-dismiss="modal">
+                    <span>&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div id="history_profile_info" class="mb-3">
+                    <h6>Profile: <span id="history_customer_name"></span> (ID: <span id="history_profile_id"></span>)</h6>
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-bordered table-striped">
+                        <thead class="thead-dark">
+                            <tr>
+                                <th>Date & Time</th>
+                                <th>Updated By</th>
+                                <th>Status</th>
+                                <th>Follow-up Date</th>
+                                <th>Remarks</th>
+                            </tr>
+                        </thead>
+                        <tbody id="history_table_body">
+                            <tr>
+                                <td colspan="5" class="text-center">Loading...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function viewHistory(profileId) {
+    console.log('View history for profile:', profileId);
+    
+    $('#historyModal').modal('show');
+    $('#history_table_body').html('<tr><td colspan="5" class="text-center">Loading...</td></tr>');
+    
+    $.ajax({
+        url: '/profiles/' + profileId + '/history',
+        type: 'GET',
+        success: function(response) {
+            console.log('History loaded:', response);
+            
+            $('#history_customer_name').text(response.profile.customer_name || response.profile.name || 'N/A');
+            $('#history_profile_id').text(response.profile.imid || response.profile.id);
+            
+            if (response.history && response.history.length > 0) {
+                let html = '';
+                response.history.forEach(function(record) {
+                    html += '<tr>';
+                    html += '<td>' + (record.created_at || 'N/A') + '</td>';
+                    html += '<td>' + (record.executive_name || record.updated_by || 'N/A') + '</td>';
+                    html += '<td><span class="badge badge-primary">' + (record.status || 'N/A') + '</span></td>';
+                    html += '<td>' + (record.follow_up_date || '-') + '</td>';
+                    html += '<td>' + (record.remarks || '-') + '</td>';
+                    html += '</tr>';
+                });
+                $('#history_table_body').html(html);
+            } else {
+                $('#history_table_body').html('<tr><td colspan="5" class="text-center text-muted">No history records found</td></tr>');
+            }
+        },
+        error: function(xhr) {
+            console.error('Error loading history:', xhr);
+            $('#history_table_body').html('<tr><td colspan="5" class="text-center text-danger">Error loading history</td></tr>');
+        }
+    });
+}
+</script>
 </body>
 </html>

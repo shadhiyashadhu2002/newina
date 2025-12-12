@@ -279,6 +279,17 @@
                        placeholder="Enter WhatsApp number">
             </div>
 
+
+            <!-- Status Field - BLANK BY DEFAULT -->
+            <div class="add-profiles-form-group">
+                <label for="status">Status</label>
+                <input type="text"
+                       id="status"
+                       name="status"
+                       value="{{ old('status') }}"
+                       class="add-profiles-form-control"
+                       placeholder="Leave blank or enter status">
+            </div>
             <!-- Welcome Call Completed -->
             <div class="add-profiles-checkbox-group">
           <label for="welcome_call">Welcome Call is Completed? (Please Tick)</label>

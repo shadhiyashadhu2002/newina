@@ -7,26 +7,40 @@ use Illuminate\Database\Eloquent\Model;
 
 class FreshData extends Model
 {
-	use HasFactory;
+    use HasFactory;
 
-	protected $fillable = [
-		'mobile',
-		'name',
-		'source',
-		'remarks',
-		'assigned_to',
-		'gender',
-		'registration_date',
-		'profile_id',
-		'mobile_number_2',
-		'whatsapp_number',
-		'profile_created',
-		'photo_uploaded',
-		'welcome_call',
-	];
+    protected $table = 'fresh_data';
 
-	public function user()
-	{
-		return $this->belongsTo(User::class, 'assigned_to');
-	}
+    protected $fillable = [
+        'name',
+        'customer_name',
+        'mobile',
+        'source',
+        'welcome_call',
+        'status',
+        'remarks',
+        'follow_up_date',
+        'imid',
+        'assigned_to',
+        'secondary_phone',
+        'is_new_lead',
+        'last_touched_at'
+    ];
+
+    protected $casts = [
+        'follow_up_date' => 'date',
+        'last_touched_at' => 'datetime',
+    ];
+
+    public function user()
+    {
+        return $this->belongsTo(User::class, 'assigned_to');
+    }
+
+    // Method to update last touched timestamp
+    public function updateLastTouched()
+    {
+        $this->last_touched_at = now();
+        $this->save();
+    }
 }
