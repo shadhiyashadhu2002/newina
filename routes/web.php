@@ -15,6 +15,7 @@ use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Http\Request;
 use App\Http\Controllers\FreshDataController;
+use App\Http\Controllers\EmployeeSheetController;
 
 // Admin routes (no auth middleware needed for login form)
 Route::get('/admin/login', [AdminController::class, 'showLoginForm'])->name('admin.login');
@@ -435,6 +436,11 @@ Route::get('/profile-old', function () {
     // Shortlist endpoints
     Route::post('/add-to-shortlist', [ServiceController::class, 'addToShortlist'])->name('shortlist.add');
     Route::get('/shortlists/{profileId}', [ServiceController::class, 'getShortlistsForProfile'])->name('shortlist.list');
+    // Employee sheet CRUD
+    Route::get('/employee-sheet', [EmployeeSheetController::class, 'index'])->name('employee.sheet');
+    Route::post('/employee-sheet', [EmployeeSheetController::class, 'store']);
+    Route::put('/employee-sheet/{id}', [EmployeeSheetController::class, 'update']);
+    Route::delete('/employee-sheet/{id}', [EmployeeSheetController::class, 'destroy']);
     // Generate a new profile id for Assign-from-Other flow
     Route::get('/generate-profile-id', [ServiceController::class, 'generateProfileId'])->name('generate.profile.id');
     // Upload photo endpoint (uploads file and returns upload id + url)
@@ -993,6 +999,12 @@ Route::middleware('auth')->group(function () {
     Route::post('/expense', [ExpenseController::class, 'store'])->name('expense.store');
     Route::put('/expense/{expense}', [ExpenseController::class, 'update'])->name('expense.update');
     Route::delete('/expense/{expense}', [ExpenseController::class, 'destroy'])->name('expense.delete');
+
+    // Employee Sheet routes
+    Route::get('/employee-sheet', [App\Http\Controllers\EmployeeSheetController::class, 'index'])->name('employee.sheet');
+    Route::post('/employee-sheet', [App\Http\Controllers\EmployeeSheetController::class, 'store'])->name('employee.store');
+    Route::put('/employee-sheet/{id}', [App\Http\Controllers\EmployeeSheetController::class, 'update'])->name('employee.update');
+    Route::delete('/employee-sheet/{id}', [App\Http\Controllers\EmployeeSheetController::class, 'destroy'])->name('employee.delete');
     Route::get('/expense/{expense}', [ExpenseController::class, 'show'])->name('expense.show');
 });
 

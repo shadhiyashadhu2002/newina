@@ -35,6 +35,13 @@
                         <a href="{{ route('expense.page') }}" class="dropdown-item">Expense Page</a>
                     </div>
                 </div>
+                <div class="nav-dropdown staff-management-dropdown">
+                    <a href="#" class="nav-link" tabindex="0" onclick="event.preventDefault();">Staff Management ▼</a>
+                    <div class="dropdown-content" style="overflow: visible !important;" aria-hidden="false">
+                        <a href="{{ route('employee.sheet') }}" class="dropdown-item">Employee Sheet</a>
+                    </div>
+                </div>
+                <a href="#" class="nav-link">Asset</a>
             </nav>
 
         </div>
@@ -326,6 +333,22 @@
     .accounts-dropdown:focus-within .dropdown-content {
         display: block !important;
     }
+
+    .staff-management-dropdown {
+        position: relative;
+        display: inline-block;
+    }
+
+    .staff-management-dropdown .dropdown-content {
+        display: none !important;
+    }
+
+    /* Keep dropdown visible on hover OR when its anchor or content receives focus (keyboard/tab or click) */
+    .staff-management-dropdown:hover .dropdown-content,
+    .staff-management-dropdown:focus-within .dropdown-content {
+        display: block !important;
+    }
+
     .business-dropdown {
         position: relative;
         display: inline-block;
