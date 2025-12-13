@@ -2,6 +2,10 @@
 
 @section('content')
 <style>
+    body {
+        background: linear-gradient(135deg, #ac0742 0%, #9d1955 100%);
+        min-height: 100vh;
+    }
     .employee-sheet-container {
         max-width: 1400px;
         margin: 0 auto;
@@ -21,8 +25,9 @@
 
     .page-header h1 {
         margin: 0;
-        color: #2c3e50;
+        color: #fff;
         font-size: 28px;
+        text-shadow: 0 2px 6px rgba(0,0,0,0.4);
     }
 
     .btn-add-employee {

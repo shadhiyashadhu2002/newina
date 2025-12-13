@@ -10,8 +10,8 @@ class EmployeeSheetController extends Controller
 {
     public function index()
     {
-        // Show only latest 5 employees on initial page load
-        $employees = Employee::orderBy('created_at', 'desc')->take(5)->get();
+        // Show only latest 6 employees on initial page load
+        $employees = Employee::orderBy('created_at', 'desc')->take(6)->get();
         return view('employee-sheet', compact('employees'));
     }
 
