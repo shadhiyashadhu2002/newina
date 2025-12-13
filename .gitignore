@@ -22,3 +22,37 @@
 Homestead.json
 Homestead.yaml
 Thumbs.db
+
+# Backup files
+*.backup
+*.backup_*
+*.bak
+*.broken
+*.clean
+*.debug
+*.pre-fix
+
+# Temporary PHP scripts
+fix_*.php
+test_*.php
+add_*.php
+restore_*.php
+force_*.php
+import_*.php
+update_*.php
+diagnose_*.sh
+*.sh
+
+# Backup directories
+backup_*/
+backups/
+backups_*/
+
+# Temporary files
+temp_*
+*.sql
+myproject*.sql
+
+# Upload files (if you don't want to track them)
+public/uploads/*
+

@@ -1230,7 +1230,7 @@ function showStatsModal(type) {
                 include = true;
             } else if (type === 'inProgress' && percentage >= 25 && percentage < 75) {
                 include = true;
-            } else if (type === 'minimalSale' && percentage >= 1 && percentage < 25) {
+            } else if (type === 'minimalSale' && percentage > 0 && percentage < 25 && achieved > 0) {
                 include = true;
             } else if (type === 'zeroSales' && achieved === 0 && percentage === 0) {
                 include = true;
