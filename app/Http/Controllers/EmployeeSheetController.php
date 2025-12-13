@@ -10,8 +10,54 @@ class EmployeeSheetController extends Controller
 {
     public function index()
     {
-        $employees = Employee::orderBy('created_at', 'desc')->get();
+        // Show only latest 5 employees on initial page load
+        $employees = Employee::orderBy('created_at', 'desc')->take(5)->get();
         return view('employee-sheet', compact('employees'));
+    }
+
+    /**
+     * Server-side search endpoint for employee filters.
+     * Accepts query params: code, name, contact, aadhar, department
+     */
+    public function search(Request $request)
+    {
+        $query = Employee::query();
+
+        if ($request->filled('code')) {
+            $query->where('emp_code', 'LIKE', '%' . $request->input('code') . '%');
+        }
+        if ($request->filled('name')) {
+            $query->where('name', 'LIKE', '%' . $request->input('name') . '%');
+        }
+        if ($request->filled('contact')) {
+            $query->where('contact_person', 'LIKE', '%' . $request->input('contact') . '%');
+        }
+        if ($request->filled('aadhar')) {
+            $query->where('aadhar_card_no', 'LIKE', '%' . $request->input('aadhar') . '%');
+        }
+        if ($request->filled('department')) {
+            $query->where('department', 'LIKE', '%' . $request->input('department') . '%');
+        }
+
+        $employees = $query->orderBy('created_at', 'desc')->get()->map(function ($e) {
+            return [
+                'id' => $e->id,
+                'emp_code' => $e->emp_code,
+                'name' => $e->name,
+                'emergency_mobile' => $e->emergency_mobile,
+                'email' => $e->email,
+                'contact_person' => $e->contact_person,
+                'aadhar_card_no' => $e->aadhar_card_no,
+                'address' => $e->address,
+                'date_of_joining' => $e->date_of_joining ? $e->date_of_joining->format('d-m-Y') : null,
+                'designation' => $e->designation,
+                'department' => $e->department,
+                'company' => $e->company,
+                'salary' => $e->salary,
+            ];
+        });
+
+        return response()->json(['success' => true, 'employees' => $employees]);
     }
 
     public function store(Request $request)

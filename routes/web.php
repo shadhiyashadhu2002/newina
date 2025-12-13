@@ -438,6 +438,7 @@ Route::get('/profile-old', function () {
     Route::get('/shortlists/{profileId}', [ServiceController::class, 'getShortlistsForProfile'])->name('shortlist.list');
     // Employee sheet CRUD
     Route::get('/employee-sheet', [EmployeeSheetController::class, 'index'])->name('employee.sheet');
+    Route::get('/employee-sheet/search', [EmployeeSheetController::class, 'search'])->name('employee.sheet.search');
     Route::post('/employee-sheet', [EmployeeSheetController::class, 'store']);
     Route::put('/employee-sheet/{id}', [EmployeeSheetController::class, 'update']);
     Route::delete('/employee-sheet/{id}', [EmployeeSheetController::class, 'destroy']);

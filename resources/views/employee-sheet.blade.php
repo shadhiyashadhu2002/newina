@@ -528,7 +528,7 @@
             <button class="btn-filter-clear" onclick="clearFilters()">Clear Filters</button>
         </div>
         <div class="filter-results">
-            <span id="filterResults">Showing all employees</span>
+            <span id="filterResults">Showing {{ $employees->count() }} employees</span>
         </div>
     </div>
 
@@ -618,6 +618,7 @@
             <h2 id="modalTitle">Add Employee</h2>
             <button class="close-modal" onclick="closeModal()">&times;</button>
         </div>
+        <div id="modalErrors" style="display:none; margin-bottom:10px;"></div>
         <form id="employeeForm">
             <div class="form-row">
                 <div class="form-group">
@@ -679,7 +680,7 @@
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn-cancel" onclick="closeModal()">Cancel</button>
-                <button type="submit" class="btn-save">Save Employee</button>
+                <button type="submit" class="btn-save" id="employeeSaveButton">Save Employee</button>
             </div>
         </form>
     </div>
@@ -687,12 +688,43 @@
 
 <script>
 let currentEmployeeId = null;
+// initial employees preloaded from server (latest 5)
+const initialEmployees = {!! json_encode($employees->map(function($e){
+    return [
+        'id' => $e->id,
+        'emp_code' => $e->emp_code,
+        'name' => $e->name,
+        'emergency_mobile' => $e->emergency_mobile,
+        'email' => $e->email,
+        'contact_person' => $e->contact_person,
+        'aadhar_card_no' => $e->aadhar_card_no,
+        'address' => $e->address,
+        'date_of_joining' => $e->date_of_joining ? $e->date_of_joining->format('d-m-Y') : null,
+        'designation' => $e->designation,
+        'department' => $e->department,
+        'company' => $e->company,
+        'salary' => $e->salary
+    ];
+})); !!};
+
+// Debounce helper to limit server calls
+function debounce(func, wait) {
+    let timeout;
+    return function(...args) {
+        clearTimeout(timeout);
+        timeout = setTimeout(() => func.apply(this, args), wait);
+    };
+}
 
 function openAddModal() {
     currentEmployeeId = null;
     document.getElementById('modalTitle').textContent = 'Add Employee';
     document.getElementById('employeeForm').reset();
     document.getElementById('emp_code').disabled = false;
+    // clear any previous errors
+    const modalErrors = document.getElementById('modalErrors');
+    if (modalErrors) { modalErrors.style.display = 'none'; modalErrors.innerHTML = ''; }
+    document.querySelectorAll('.form-group .field-error').forEach(el => el.remove());
     document.getElementById('employeeModal').classList.add('show');
 }
 
@@ -704,20 +736,21 @@ function openEditModal(id) {
     document.getElementById('modalTitle').textContent = 'Edit Employee';
     document.getElementById('emp_code').disabled = true;
 
-    const fields = {
-        emp_code: card.querySelector('.card-code').textContent.trim(),
-        name: card.querySelector('.card-title').textContent.trim(),
-        emergency_mobile: card.querySelector('.card-field:nth-child(3) .card-value').textContent.trim(),
-        email: card.querySelector('.card-field:nth-child(4) .card-value').textContent.trim(),
-        contact_person: card.querySelector('.card-field:nth-child(5) .card-value').textContent.trim(),
-        aadhar_card_no: card.querySelector('.card-field:nth-child(6) .card-value').textContent.trim(),
-        address: card.querySelector('.card-field:nth-child(7) .card-value').textContent.trim(),
-        date_of_joining: card.querySelector('.card-field:nth-child(8) .card-value').textContent.trim(),
-        designation: card.querySelector('.card-field:nth-child(9) .card-value').textContent.trim(),
-        department: card.querySelector('.card-field:nth-child(10) .card-value').textContent.trim(),
-        company: card.querySelector('.card-field:nth-child(11) .card-value').textContent.trim(),
-        salary: card.querySelector('.card-field:nth-child(12) .card-value').textContent.trim()
-    };
+    const fields = {};
+    fields.emp_code = card.querySelector('.card-code').textContent.trim();
+    fields.name = card.querySelector('.card-title').textContent.trim();
+    // More robust: collect card-field .card-value nodes sequentially
+    const fieldVals = card.querySelectorAll('.card-field .card-value');
+    fields.emergency_mobile = fieldVals[0] ? fieldVals[0].textContent.trim() : '';
+    fields.email = fieldVals[1] ? fieldVals[1].textContent.trim() : '';
+    fields.contact_person = fieldVals[2] ? fieldVals[2].textContent.trim() : '';
+    fields.aadhar_card_no = fieldVals[3] ? fieldVals[3].textContent.trim() : '';
+    fields.address = fieldVals[4] ? fieldVals[4].textContent.trim() : '';
+    fields.date_of_joining = fieldVals[5] ? fieldVals[5].textContent.trim() : '';
+    fields.designation = fieldVals[6] ? fieldVals[6].textContent.trim() : '';
+    fields.department = fieldVals[7] ? fieldVals[7].textContent.trim() : '';
+    fields.company = fieldVals[8] ? fieldVals[8].textContent.trim() : '';
+    fields.salary = fieldVals[9] ? fieldVals[9].textContent.trim() : '';
 
     // Clean up values (remove dashes and rupee signs)
     Object.keys(fields).forEach(key => {
@@ -733,6 +766,9 @@ function openEditModal(id) {
     });
 
     document.getElementById('employeeModal').classList.add('show');
+    const modalErrors = document.getElementById('modalErrors');
+    if (modalErrors) { modalErrors.style.display = 'none'; modalErrors.innerHTML = ''; }
+    document.querySelectorAll('.form-group .field-error').forEach(el => el.remove());
 }
 
 function closeModal() {
@@ -747,6 +783,15 @@ document.getElementById('employeeForm').addEventListener('submit', function(e) {
 });
 
 function submitEmployeeForm() {
+    const saveBtn = document.getElementById('employeeSaveButton');
+    saveBtn.disabled = true;
+    saveBtn.textContent = 'Saving...';
+    // Clear inline errors
+    const modalErrors = document.getElementById('modalErrors');
+    modalErrors.style.display = 'none';
+    modalErrors.innerHTML = '';
+    document.querySelectorAll('.form-group .field-error').forEach(el => el.remove());
+
     const formData = new FormData(document.getElementById('employeeForm'));
     const url = currentEmployeeId ? `/employee-sheet/${currentEmployeeId}` : '/employee-sheet';
     const method = currentEmployeeId ? 'PUT' : 'POST';
@@ -758,9 +803,33 @@ function submitEmployeeForm() {
         },
         body: formData
     })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
+    .then(response => {
+        const status = response.status;
+        return response.json().then(data => ({ status, data }));
+    })
+    .then(({ status, data }) => {
+        if (status === 422) {
+            // validation errors
+            const errors = data.errors || {};
+            const errorList = Object.keys(errors).map(k => '<div>' + errors[k].join(', ') + '</div>').join('');
+            modalErrors.innerHTML = `<div class="alert alert-error">Validation error:<div>${errorList}</div></div>`;
+            modalErrors.style.display = '';
+            // Also show under respective fields
+            Object.keys(errors).forEach(field => {
+                const input = document.querySelector(`[name="${field}"]`);
+                if (input) {
+                    const e = document.createElement('div');
+                    e.className = 'field-error';
+                    e.style.color = 'red';
+                    e.style.fontSize = '13px';
+                    e.textContent = errors[field].join(', ');
+                    input.parentNode.appendChild(e);
+                }
+            });
+        } else if (status >= 400) {
+            showAlert(data.message || 'Failed to save employee', 'error');
+            console.error('Save failed:', data);
+        } else if (data && data.success) {
             showAlert(currentEmployeeId ? 'Employee updated successfully!' : 'Employee added successfully!', 'success');
             closeModal();
             setTimeout(() => location.reload(), 1500);
@@ -772,6 +841,10 @@ function submitEmployeeForm() {
     .catch(error => {
         console.error('Error:', error);
         showAlert('An error occurred while saving', 'error');
+    })
+    .finally(() => {
+        saveBtn.disabled = false;
+        saveBtn.textContent = 'Save Employee';
     });
 }
 
@@ -806,11 +879,14 @@ function deleteEmployee(id) {
 }
 
 function showAlert(message, type) {
+    // Remove existing identical alert messages to avoid duplicates
+    document.querySelectorAll(`.employee-sheet-container .alert.alert-${type}`).forEach(el => {
+        if (el.textContent === message) el.remove();
+    });
     const alertDiv = document.createElement('div');
     alertDiv.className = `alert alert-${type}`;
     alertDiv.textContent = message;
     document.querySelector('.employee-sheet-container').insertBefore(alertDiv, document.querySelector('.page-header').nextSibling);
-    
     setTimeout(() => alertDiv.remove(), 5000);
 }
 
@@ -822,47 +898,49 @@ window.addEventListener('click', function(event) {
     }
 });
 
-// Filter functionality
-function applyFilters() {
-    const filterCode = document.getElementById('filterCode').value.toLowerCase();
-    const filterName = document.getElementById('filterName').value.toLowerCase();
-    const filterContact = document.getElementById('filterContactPerson').value.toLowerCase();
-    const filterAadhar = document.getElementById('filterAadhar').value.toLowerCase();
-    const filterDepartment = document.getElementById('filterDepartment').value.toLowerCase();
+// Filter functionality: use server-side search and render results
+const applyFilters = debounce(function() {
+    const filterCode = document.getElementById('filterCode').value.trim();
+    const filterName = document.getElementById('filterName').value.trim();
+    const filterContact = document.getElementById('filterContactPerson').value.trim();
+    const filterAadhar = document.getElementById('filterAadhar').value.trim();
+    const filterDepartment = document.getElementById('filterDepartment').value.trim();
 
-    const cards = document.querySelectorAll('.employee-card');
-    let visibleCount = 0;
+    // If all filters are empty, restore initial employees
+    if (!filterCode && !filterName && !filterContact && !filterAadhar && !filterDepartment) {
+        renderEmployees(initialEmployees);
+        document.getElementById('filterResults').textContent = `Showing ${initialEmployees.length} employees`;
+        return;
+    }
 
-    cards.forEach(card => {
-        const code = card.getAttribute('data-code');
-        const name = card.getAttribute('data-name');
-        const contact = card.getAttribute('data-contact');
-        const aadhar = card.getAttribute('data-aadhar');
-        const department = card.getAttribute('data-department');
-
-        const matches = 
-            code.includes(filterCode) &&
-            name.includes(filterName) &&
-            contact.includes(filterContact) &&
-            aadhar.includes(filterAadhar) &&
-            department.includes(filterDepartment);
-
-        if (matches) {
-            card.style.display = '';
-            visibleCount++;
-        } else {
-            card.style.display = 'none';
-        }
+    const params = new URLSearchParams({
+        code: filterCode,
+        name: filterName,
+        contact: filterContact,
+        aadhar: filterAadhar,
+        department: filterDepartment
     });
 
-    // Update results text
-    const resultsText = document.getElementById('filterResults');
-    if (visibleCount === 0) {
-        resultsText.textContent = '⚠️ No employees match the filters';
-    } else {
-        resultsText.textContent = `Showing ${visibleCount} of ${cards.length} employee${cards.length > 1 ? 's' : ''}`;
-    }
-}
+    fetch(`/employee-sheet/search?${params.toString()}`, { headers: { 'Accept': 'application/json' } })
+    .then(res => res.json())
+    .then(data => {
+        if (data && data.success) {
+            renderEmployees(data.employees);
+            const count = (data.employees || []).length;
+            if (count === 0) {
+                document.getElementById('filterResults').textContent = '⚠️ No employees match the filters';
+            } else {
+                document.getElementById('filterResults').textContent = `Showing ${count} employee${count > 1 ? 's' : ''}`;
+            }
+        } else {
+            showAlert('Could not fetch filtered employees', 'error');
+        }
+    })
+    .catch(err => {
+        console.error('Error fetching filtered employees', err);
+        showAlert('Error while searching', 'error');
+    });
+}, 300);
 
 function clearFilters() {
     document.getElementById('filterCode').value = '';
@@ -870,16 +948,73 @@ function clearFilters() {
     document.getElementById('filterContactPerson').value = '';
     document.getElementById('filterAadhar').value = '';
     document.getElementById('filterDepartment').value = '';
-    
-    // Show all cards
-    const cards = document.querySelectorAll('.employee-card');
-    cards.forEach(card => {
-        card.style.display = '';
-    });
 
-    // Update results text
-    document.getElementById('filterResults').textContent = `Showing all employees`;
+    // Restore initial employees (latest 5)
+    renderEmployees(initialEmployees);
+    document.getElementById('filterResults').textContent = `Showing ${initialEmployees.length} employees`;
 }
+
+// Render employees array into cards container. Each item should match server-returned structure.
+function renderEmployees(employees) {
+    const container = document.getElementById('employees-cards-container');
+    if (!container) return;
+    if (!employees || employees.length === 0) {
+        container.innerHTML = `
+            <div class="cards-container">
+                <div class="no-employees-message">📋 No employees found.</div>
+            </div>`;
+        return;
+    }
+
+    const html = employees.map(emp => {
+        const dateOfJoining = emp.date_of_joining ? emp.date_of_joining : '-';
+        const emergency = emp.emergency_mobile || '-';
+        const email = emp.email || '-';
+        const contactPerson = emp.contact_person || '-';
+        const aadhar = emp.aadhar_card_no || '-';
+        const address = emp.address || '-';
+        const designation = emp.designation || '-';
+        const department = emp.department || '-';
+        const company = emp.company || '-';
+        const salary = emp.salary ? `₹ ${Number(emp.salary).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}` : '-';
+
+        return `
+            <div class="employee-card" data-id="${emp.id}" 
+                 data-code="${(emp.emp_code||'').toLowerCase()}"
+                 data-name="${(emp.name||'').toLowerCase()}"
+                 data-contact="${(emp.contact_person||'').toLowerCase()}"
+                 data-aadhar="${(emp.aadhar_card_no||'').toLowerCase()}"
+                 data-department="${(emp.department||'').toLowerCase()}">
+                <div class="card-header">
+                    <h3 class="card-title">${emp.name}</h3>
+                    <span class="card-code">${emp.emp_code}</span>
+                </div>
+
+                <div class="card-field"><span class="card-label">Emergency Mobile:</span><span class="card-value">${emergency}</span></div>
+                <div class="card-field"><span class="card-label">Email:</span><span class="card-value">${email}</span></div>
+                <div class="card-field"><span class="card-label">Contact Person:</span><span class="card-value">${contactPerson}</span></div>
+                <div class="card-field"><span class="card-label">Aadhar Card:</span><span class="card-value">${aadhar}</span></div>
+                <div class="card-field"><span class="card-label">Address:</span><span class="card-value">${address}</span></div>
+                <div class="card-field"><span class="card-label">Date Of Joining:</span><span class="card-value">${dateOfJoining}</span></div>
+                <div class="card-field"><span class="card-label">Designation:</span><span class="card-value">${designation}</span></div>
+                <div class="card-field"><span class="card-label">Department:</span><span class="card-value">${department}</span></div>
+                <div class="card-field"><span class="card-label">Company:</span><span class="card-value">${company}</span></div>
+                <div class="card-field"><span class="card-label">Salary:</span><span class="card-value">${salary}</span></div>
+                <div class="card-footer">
+                    <button class="card-btn card-btn-edit" onclick="openEditModal(${emp.id})">Edit</button>
+                    <button class="card-btn card-btn-delete" onclick="deleteEmployee(${emp.id})">Delete</button>
+                </div>
+            </div>`;
+    }).join('');
+
+    container.innerHTML = html;
+}
+
+// Ensure initial render matches our dynamic templates
+document.addEventListener('DOMContentLoaded', function() {
+    renderEmployees(initialEmployees);
+});
+
 </script>
 
 @endsection
