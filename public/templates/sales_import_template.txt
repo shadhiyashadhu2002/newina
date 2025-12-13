@@ -1,0 +1,25 @@
+SALES IMPORT TEMPLATE - Column Headers (Row 1):
+
+Column A: date (Format: YYYY-MM-DD, Example: 2025-12-06)
+Column B: profile_id (Example: INA12345)
+Column C: customer_name (Example: John Doe)
+Column D: phone_number (Example: 9876543210)
+Column E: plan (Options: Elite, Assisted, Premium, Basic, Standard, Service)
+Column F: amount (Example: 18000)
+Column G: paid_amount (Example: 9000)
+Column H: discount (Example: 0)
+Column I: success_fee (Example: 9000)
+Column J: service_executive (Example: Divya)
+Column K: office (Example: Vadakara)
+Column L: sale_status (Options: PAID, PENDING, CANCELLED)
+Column M: cash_type (Example: Cash, Card, Online)
+Column N: notes (Example: Payment received)
+
+IMPORTANT: 
+- Row 1 must contain these exact headers (lowercase, with underscores)
+- Data starts from Row 2
+- Date format must be YYYY-MM-DD
+- All amount fields should be numbers without currency symbols
+
+Sample Data (Row 2):
+2025-12-06 | INA12345 | John Doe | 9876543210 | Elite | 18000 | 9000 | 0 | 9000 | Divya | Vadakara | PAID | Online | First payment received

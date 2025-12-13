@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <style>
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 10000;
+            justify-content: center;
+            align-items: center;
+        }
+        .modal-content {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+        }
+    </style>
+</head>
+<body>
+    <button onclick="testModal()">Test Modal</button>
+    <div id="editTargetModal" class="modal">
+        <div class="modal-content">
+            <h2>Test Modal</h2>
+            <p>If you can see this, the modal works!</p>
+        </div>
+    </div>
+    <script>
+        function testModal() {
+            console.log('Button clicked');
+            const modal = document.getElementById('editTargetModal');
+            console.log('Modal element:', modal);
+            modal.style.display = 'flex';
+            console.log('Display set to flex');
+        }
+    </script>
+</body>
+</html>
