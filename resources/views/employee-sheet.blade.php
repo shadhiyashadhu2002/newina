@@ -299,7 +299,7 @@
     }
 
     .employee-card {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        background: linear-gradient(135deg, #ac0742 0%, #9d1955 100%);
         color: white;
         border-radius: 8px;
         padding: 20px;
@@ -309,7 +309,7 @@
 
     .employee-card:hover {
         transform: translateY(-5px);
-        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+        box-shadow: 0 8px 25px rgba(172, 7, 66, 0.15);
     }
 
     .card-header {
