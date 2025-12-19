@@ -12,11 +12,15 @@
                     <a href="{{ route('sales.management') }}" class="nav-link">Sales ▼</a>
                 </div>
                 <a href="{{ route('helpline.index') }}" class="nav-link">HelpLine</a>
-                <div class="nav-dropdown">
-                    @if($currentUser->is_admin)
-                    <a href="{{ route('fresh.data') }}" class="nav-link">Fresh Data</a>
-                    @endif
+                @if($currentUser->is_admin)
+                <div class="nav-dropdown fresh-data-dropdown">
+                    <a href="#" class="nav-link" tabindex="0" onclick="event.preventDefault();">Fresh Data ▼</a>
+                    <div class="dropdown-content" style="overflow: visible !important;" aria-hidden="false">
+                        <a href="{{ route('fresh.data.index') }}" class="dropdown-item">Fresh Data</a>
+                        <a href="{{ route('fresh.data.index', ['source' => 'database']) }}" class="dropdown-item">Database</a>
+                    </div>
                 </div>
+                @endif
                 <a href="#" class="nav-link">abc</a>
                 <div class="nav-dropdown">
                     <a href="{{ route('services.page') }}" class="nav-link">Services ▼</a>
@@ -359,6 +363,18 @@
     /* Keep dropdown visible on hover OR when its anchor or content receives focus (keyboard/tab or click) */
     .business-dropdown:hover .dropdown-content,
     .business-dropdown:focus-within .dropdown-content {
+        display: block !important;
+    }
+
+    .fresh-data-dropdown {
+        position: relative;
+        display: inline-block;
+    }
+    .fresh-data-dropdown .dropdown-content {
+        display: none !important;
+    }
+    .fresh-data-dropdown:hover .dropdown-content,
+    .fresh-data-dropdown:focus-within .dropdown-content {
         display: block !important;
     }
 

@@ -12,8 +12,12 @@
                     <a href="#" class="nav-link">Sales ▼</a>
                 </div>
                 <a href="#" class="nav-link">HelpLine</a>
-                <div class="nav-dropdown">
-                    <a href="{{ route('fresh.data') }}" class="nav-link">Fresh Data</a>
+                <div class="nav-dropdown fresh-data-dropdown">
+                    <a href="#" class="nav-link" tabindex="0" onclick="event.preventDefault();">Fresh Data ▼</a>
+                    <div class="dropdown-content" style="overflow: visible !important;" aria-hidden="false">
+                        <a href="{{ route('fresh.data.index') }}" class="dropdown-item">Fresh Data</a>
+                        <a href="{{ route('fresh.data.index', ['source' => 'database']) }}" class="dropdown-item">Database</a>
+                    </div>
                 </div>
                 <div class="nav-dropdown">
                     <a href="{{ route('services.page') }}" class="nav-link">Services ▼</a>
@@ -60,7 +64,8 @@
                     <h4>Quick Actions</h4>
                     <ul>
                         <li><a href="{{ route('profile.hellow') }}">View Profiles</a></li>
-                        <li><a href="{{ route('fresh.data') }}">Fresh Data</a></li>
+                        <li><a href="{{ route('fresh.data.index') }}">Fresh Data</a></li>
+                        <li><a href="{{ route('fresh.data.index', ['source' => 'database']) }}">Database</a></li>
                         <li><a href="{{ route('services.page') }}">Services</a></li>
                         <li><a href="{{ route('active.service') }}">Active Services</a></li>
                     </ul>

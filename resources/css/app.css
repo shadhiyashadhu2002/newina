@@ -11,3 +11,37 @@
 .text-primary { color: var(--color-primary); }
 .border-primary { border-color: var(--color-primary); }
 .hover\:bg-primary-hover:hover { background-color: var(--color-primary-hover); }
+
+/* Global dropdown nav styles (for Fresh Data / Accounts / Business) */
+.nav-dropdown {
+    position: relative;
+    display: inline-block;
+}
+
+.nav-dropdown .dropdown-content {
+    display: none;
+    position: absolute;
+    background: #fff;
+    min-width: 200px;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.15);
+    z-index: 9999;
+    top: 100%;
+    left: 0;
+    border-radius: 8px;
+    margin-top: 8px;
+    border: 1px solid rgba(0,0,0,0.08);
+    padding: 0;
+}
+
+.nav-dropdown:hover .dropdown-content,
+.nav-dropdown:focus-within .dropdown-content {
+    display: block;
+}
+
+.dropdown-item {
+    color: #333;
+    padding: 12px 16px;
+    display: block;
+    text-decoration: none;
+}
+.dropdown-item:hover { background: #f5f5f5; }

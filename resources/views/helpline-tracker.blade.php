@@ -347,7 +347,13 @@
                 <li><a href="{{ route('profile.hellow') }}" class="nav-link">Profiles</a></li>
                 <li><a href="{{ route('addsale.page') }}" class="nav-link">Sales</a></li>
                 <li><a href="{{ route('helpline.index') }}" class="nav-link active">HelpLine</a></li>
-                <li><a href="{{ route('fresh.data.index') }}" class="nav-link">Fresh Data</a></li>
+                <li class="nav-dropdown fresh-data-dropdown">
+                    <a href="#" class="nav-link" onclick="event.preventDefault();">Fresh Data ▼</a>
+                    <div class="dropdown-content">
+                        <a href="{{ route('fresh.data.index') }}" class="dropdown-item">Fresh Data</a>
+                        <a href="{{ route('fresh.data.index', ['source' => 'database']) }}" class="dropdown-item">Database</a>
+                    </div>
+                </li>
                 <li>
                     <form method="POST" action="{{ route('logout') }}" style="display: inline;">
                         @csrf
