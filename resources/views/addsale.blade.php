@@ -1214,60 +1214,7 @@
     });
 
 
-    // ==================== IMPORT EXCEL MODAL ====================
 
-    // Open Import Modal
-    if (openImportBtn) {
-        openImportBtn.addEventListener('click', function(e) {
-            e.preventDefault();
-            document.body.style.overflow = 'hidden';
-        });
-    }
-
-    // Close Import Modal
-
-
-
-    // Click outside modal to close
-
-    // Handle Import Form Submission
-    importForm.addEventListener('submit', async function(e) {
-        e.preventDefault();
-        
-        const fileInput = document.getElementById('excel_file');
-        if (!fileInput.files || !fileInput.files[0]) {
-            alert('Please select an Excel file to import.');
-            return;
-        }
-
-        submitBtn.disabled = true;
-        submitBtn.textContent = 'Importing...';
-
-        try {
-            const response = await fetch('/import-sales', {
-                method: 'POST',
-                body: formData,
-                headers: {
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
-                }
-            });
-
-            const result = await response.json();
-
-            if (response.ok) {
-                alert("Success! " + result.message);
-                window.location.reload(); // Reload to show new sales
-            } else {
-                alert('Error: ' + (result.message || 'Failed to import sales'));
-            }
-        } catch (error) {
-            console.error('Import error:', error);
-            alert('An error occurred while importing. Please try again.');
-        } finally {
-            submitBtn.disabled = false;
-            submitBtn.textContent = '📊 Import Sales';
-        }
-    });
     // Edit Sale Function
     async function editSale(saleId) {
         try {

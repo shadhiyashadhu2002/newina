@@ -56,10 +56,8 @@ class StaffTargetController extends Controller
                 $status = 'achieved';
             } elseif ($percentage >= 25) {
                 $status = 'in-progress';
-            } elseif ($percentage > 0) {
-                $status = 'minimal-sale';
             } else {
-                $status = 'zero-sale';
+                $status = 'minimal-sale';
             }
 
             return (object)[
@@ -85,8 +83,8 @@ class StaffTargetController extends Controller
         $totalStaff = $prepared->count();
         $targetsAchieved = $prepared->where('status', 'achieved')->count();
         $inProgress = $prepared->where('status', 'in-progress')->count();
-        $minimalSale = $prepared->where('status', 'minimal-sale')->count();
-        $zeroSale = $prepared->where('status', 'zero-sale')->count();
+        $minimalSale = $prepared->where('status', 'minimal-sale')->where('achieved', '>', 0)->count();
+        $zeroSale = $prepared->where('achieved', 0)->count();
         $overallAchievement = $prepared->count() > 0 ? round($prepared->avg('percentage'), 2) : 0;
 
         return view('stafftarget', compact('staffUsers', 'prepared', 'totalStaff', 'targetsAchieved', 'inProgress', 'minimalSale', 'overallAchievement', 'zeroSale'));
