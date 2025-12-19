@@ -315,15 +315,24 @@
         <div class="profiles-section">
             <div class="profiles-header">
                 <div class="header-buttons">
-                    <a href="{{ route('add.fresh.data') }}" class="add-profile-btn">
-                        <span class="add-icon">+</span> Add New Data
-                    </a>
-                    <button class="add-profile-btn import-btn" onclick="openImportModal()">
-                        <span class="add-icon">📊</span> Import from Excel
-                    </button>
-                    <button class="add-profile-btn assign-btn" onclick="openBulkAssignModal()" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
-                        <span class="add-icon">👤</span> Assign To
-                    </button>
+                    @if(isset($source) && $source === 'database')
+                        <a href="{{ route('fresh.data.index') }}" class="add-profile-btn">
+                            <span class="add-icon">←</span> Back to Fresh Data
+                        </a>
+                        <a href="#" class="add-profile-btn import-btn" onclick="alert('Export not implemented yet')">
+                            <span class="add-icon">⬇️</span> Export Users
+                        </a>
+                    @else
+                        <a href="{{ route('add.fresh.data') }}" class="add-profile-btn">
+                            <span class="add-icon">+</span> Add New Data
+                        </a>
+                        <button class="add-profile-btn import-btn" onclick="openImportModal()">
+                            <span class="add-icon">📊</span> Import from Excel
+                        </button>
+                        <button class="add-profile-btn assign-btn" onclick="openBulkAssignModal()" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+                            <span class="add-icon">👤</span> Assign To
+                        </button>
+                    @endif
                 </div>
             </div>
 
@@ -332,32 +341,61 @@
                     <thead>
                         <tr>
                             <th style="width: 40px;"><input type="checkbox" id="selectAll" onclick="toggleSelectAll()"></th>
-                            <th>Name</th>
-                            <th>Mobile Number</th>
-                            <th>Gender</th>
-                            <th>Source</th>
-                            <th>Actions</th>
+                            @if(isset($source) && $source === 'database')
+                                <th>Name</th>
+                                <th>Email</th>
+                                <th>Mobile</th>
+                                <th>User Type</th>
+                                <th>Actions</th>
+                            @else
+                                <th>Name</th>
+                                <th>Mobile Number</th>
+                                <th>Gender</th>
+                                <th>Source</th>
+                                <th>Actions</th>
+                            @endif
                         </tr>
                     </thead>
                     <tbody>
-                        @forelse($freshData as $data)
-                        <tr>
-                            <td><input type="checkbox" class="record-checkbox" value="{{ $data->id }}"></td>
-                            <td>{{ $data->name }}</td>
-                            <td>{{ $data->mobile }}</td>
-                            <td>{{ $data->gender ?? '-' }}</td>
-                            <td>{{ $data->source }}</td>
-                            <td class="actions">
-                                <button class="action-btn history" onclick="viewHistory({{ $data->id }})" title="History">📜</button>
-                                <a href="{{ route('edit.fresh.data', $data->id) }}" class="action-btn edit-btn">✏️</a>
-                                <a href="{{ route('fresh.data.view', $data->id) }}" class="action-btn view-btn">👁️</a>
-                            </td>
-                        </tr>
-                        @empty
-                        <tr>
-                            <td colspan="5" style="text-align:center; padding: 40px;">No fresh data found.</td>
-                        </tr>
-                        @endforelse
+                        @if(isset($source) && $source === 'database')
+                            @forelse($databaseUsers as $u)
+                            <tr>
+                                <td><input type="checkbox" class="record-checkbox" value="{{ $u->id }}"></td>
+                                <td>{{ $u->name }}</td>
+                                <td>{{ $u->email }}</td>
+                                <td>{{ $u->phone ?? '-' }}</td>
+                                <td>{{ $u->user_type ?? '-' }}</td>
+                                <td class="actions">
+                                    <button class="action-btn history" title="Copy Email" onclick="navigator.clipboard.writeText('{{ $u->email }}')">📋</button>
+                                    <a href="#" class="action-btn edit-btn" title="Edit User">✏️</a>
+                                    <a href="#" class="action-btn view-btn" title="View User">👁️</a>
+                                </td>
+                            </tr>
+                            @empty
+                            <tr>
+                                <td colspan="6" style="text-align:center; padding: 40px;">No users found.</td>
+                            </tr>
+                            @endforelse
+                        @else
+                            @forelse($freshData as $data)
+                            <tr>
+                                <td><input type="checkbox" class="record-checkbox" value="{{ $data->id }}"></td>
+                                <td>{{ $data->name }}</td>
+                                <td>{{ $data->mobile }}</td>
+                                <td>{{ $data->gender ?? '-' }}</td>
+                                <td>{{ $data->source }}</td>
+                                <td class="actions">
+                                    <button class="action-btn history" onclick="viewHistory({{ $data->id }})" title="History">📜</button>
+                                    <a href="{{ route('edit.fresh.data', $data->id) }}" class="action-btn edit-btn">✏️</a>
+                                    <a href="{{ route('fresh.data.view', $data->id) }}" class="action-btn view-btn">👁️</a>
+                                </td>
+                            </tr>
+                            @empty
+                            <tr>
+                                <td colspan="5" style="text-align:center; padding: 40px;">No fresh data found.</td>
+                            </tr>
+                            @endforelse
+                        @endif
                     </tbody>
                 </table>
             </div>

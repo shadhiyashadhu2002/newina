@@ -20,20 +20,33 @@ class FreshDataController extends Controller
     public function index()
     {
         $user = Auth::user();
-        
-        if ($user->is_admin) {
-            // Admin sees UNASSIGNED profiles (to assign them)
-            $freshData = FreshData::with('user')
-                ->whereNull('assigned_to')
-                ->latest()
+        $source = request()->query('source');
+
+        // Ensure these variables exist so compact() won't throw if one mode is not used
+        $databaseUsers = collect();
+        $freshData = collect();
+
+        // If requested source is 'database', show users table instead
+        if ($source === 'database') {
+            $databaseUsers = \App\Models\User::select('id', 'name', 'email', 'phone', 'user_type')
+                ->orderBy('name')
                 ->get();
         } else {
-            // Service/Sales executives see profiles ASSIGNED TO THEM (their work)
-            $freshData = FreshData::with('user')
-                ->where('assigned_to', $user->id)
-                ->latest()
-                ->get();
+            if ($user->is_admin) {
+                // Admin sees UNASSIGNED profiles (to assign them)
+                $freshData = FreshData::with('user')
+                    ->whereNull('assigned_to')
+                    ->latest()
+                    ->get();
+            } else {
+                // Service/Sales executives see profiles ASSIGNED TO THEM (their work)
+                $freshData = FreshData::with('user')
+                    ->where('assigned_to', $user->id)
+                    ->latest()
+                    ->get();
+            }
         }
+
         // Fetch service executives (staff) with names
         $serviceExecutives = \App\Models\User::where('user_type', 'staff')
             ->whereNotNull('name')
@@ -49,11 +62,17 @@ class FreshDataController extends Controller
             ->orderBy('name')
             ->get(['id', 'name']);
         
-        return view('profile.fresh_data', compact('freshData', 'serviceExecutives', 'salesExecutives'));
+        return view('profile.fresh_data', compact('serviceExecutives', 'salesExecutives', 'source', 'freshData', 'databaseUsers'));
     }
 
     public function store(Request $request)
     {
+        // Log the incoming request for debugging
+        \Log::info('FreshData::store called', [
+            'user_id' => Auth::id(),
+            'input' => $request->all()
+        ]);
+
         $validated = $request->validate([
             'mobile' => 'required|digits:10',
             'name' => 'required|string|max:255',
@@ -63,16 +82,33 @@ class FreshDataController extends Controller
         ]);
 
         // Provide both 'name' and 'customer_name' fields
-        FreshData::create([
+        $createData = [
             'name' => $validated['name'],
             'customer_name' => $validated['name'],
             'mobile' => $validated['mobile'],
             'source' => $validated['source'],
             'remarks' => $validated['remarks'] ?? null,
             'welcome_call' => $request->has('welcome_call'),
-        ]);
+        ];
 
-        return redirect()->route('fresh.data')->with('success', 'Fresh data added successfully!');
+        // If the current user is not an admin, assign the new record to them
+        if (Auth::check() && !Auth::user()->is_admin) {
+            $createData['assigned_to'] = Auth::id();
+        }
+
+        try {
+            $fresh = FreshData::create($createData);
+            \Log::info('FreshData created', [ 'id' => $fresh->id ?? null, 'assigned_to' => $fresh->assigned_to ?? null ]);
+            return redirect()->route('fresh.data.index')->with('success', 'Fresh data added successfully!');
+        } catch (\Exception $e) {
+            \Log::error('FreshData::store exception', [
+                'message' => $e->getMessage(),
+                'input' => $createData,
+                'user_id' => Auth::id()
+            ]);
+
+            return back()->withInput()->with('error', 'Failed to add fresh data: ' . $e->getMessage());
+        }
     }
     public function update(Request $request, $id)
     {

@@ -12,7 +12,13 @@
                 <a href="{{ route('sales.management') }}" class="nav-link">Sales ▼</a>
             </div>
             <a href="{{ route('helpline.index') }}" class="nav-link">HelpLine</a>
-            <a href="{{ route('fresh.data') }}" class="nav-link">Fresh Data</a>
+            <div class="nav-dropdown fresh-data-dropdown">
+                <a href="#" class="nav-link" onclick="event.preventDefault();">Fresh Data ▼</a>
+                <div class="dropdown-content">
+                    <a href="{{ route('fresh.data.index') }}" class="dropdown-item">Fresh Data</a>
+                    <a href="{{ route('fresh.data.index', ['source' => 'database']) }}" class="dropdown-item">Database</a>
+                </div>
+            </div>
             <a href="#" class="nav-link">abc</a>
             <div class="nav-dropdown">
                 <a href="{{ route('services.page') }}" class="nav-link">Services ▼</a>

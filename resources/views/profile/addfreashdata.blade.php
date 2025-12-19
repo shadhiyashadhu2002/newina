@@ -269,40 +269,57 @@
   <main class="main-content">
   <div class="form-container" style="margin-bottom: 200px;">
       <h1 class="form-title">Add New Fresh Data</h1>
+
+      @if ($errors->any())
+      <div style="background:#fdecea;border:1px solid #f5c6cb;padding:12px;margin-bottom:16px;border-radius:8px;color:#721c24;">
+        <strong>There were some problems with your input:</strong>
+        <ul style="margin-top:8px;">
+          @foreach ($errors->all() as $error)
+            <li>{{ $error }}</li>
+          @endforeach
+        </ul>
+      </div>
+      @endif
+
+      @if(session('success'))
+      <div style="background:#e6ffed;border:1px solid #c3e6cb;padding:12px;margin-bottom:16px;border-radius:8px;color:#155724;">
+        {{ session('success') }}
+      </div>
+      @endif
       
       <form id="freshDataForm" method="POST" action="{{ route('add.fresh.data.store') }}">
         @csrf
         <div class="form-group">
           <label for="mobile">Mobile Number</label>
-          <input type="tel" id="mobile" name="mobile" placeholder="Enter mobile number" required>
+          <input type="tel" id="mobile" name="mobile" placeholder="Enter mobile number" required value="{{ old('mobile') }}">
         </div>
 
         <div class="form-group">
           <label for="name">Name</label>
-          <input type="text" id="name" name="name" placeholder="Enter full name" required>
+          <input type="text" id="name" name="name" placeholder="Enter full name" required value="{{ old('name') }}">
         </div>
 
         <div class="form-group">
           <label for="source">Source</label>
           <select id="source" name="source" required>
             <option value="">--Select Call Source--</option>
-            <option value="website">Website</option>
-            <option value="facebook">Facebook</option>
-            <option value="google">Google Ads</option>
-            <option value="instagram">Instagram</option>
-            <option value="youtube">YouTube</option>
-            <option value="referral">Referral</option>
-            <option value="direct">Direct Call</option>
-            <option value="whatsapp">WhatsApp</option>
-            <option value="email">Email</option>
-            <option value="newspaper">Newspaper</option>
-            <option value="other">Other</option>
+            <option value="website" {{ old('source') == 'website' ? 'selected' : '' }}>Website</option>
+            <option value="facebook" {{ old('source') == 'facebook' ? 'selected' : '' }}>Facebook</option>
+            <option value="google" {{ old('source') == 'google' ? 'selected' : '' }}>Google Ads</option>
+            <option value="instagram" {{ old('source') == 'instagram' ? 'selected' : '' }}>Instagram</option>
+            <option value="youtube" {{ old('source') == 'youtube' ? 'selected' : '' }}>YouTube</option>
+            <option value="referral" {{ old('source') == 'referral' ? 'selected' : '' }}>Referral</option>
+            <option value="direct" {{ old('source') == 'direct' ? 'selected' : '' }}>Direct Call</option>
+            <option value="whatsapp" {{ old('source') == 'whatsapp' ? 'selected' : '' }}>WhatsApp</option>
+            <option value="email" {{ old('source') == 'email' ? 'selected' : '' }}>Email</option>
+            <option value="newspaper" {{ old('source') == 'newspaper' ? 'selected' : '' }}>Newspaper</option>
+            <option value="other" {{ old('source') == 'other' ? 'selected' : '' }}>Other</option>
           </select>
         </div>
 
         <div class="form-group">
           <label for="remarks">Remarks</label>
-          <textarea id="remarks" name="remarks" placeholder="Enter any additional remarks or notes"></textarea>
+          <textarea id="remarks" name="remarks" placeholder="Enter any additional remarks or notes">{{ old('remarks') }}</textarea>
         </div>
 
         <div class="form-group" style="display: flex; align-items: center; gap: 10px;">
