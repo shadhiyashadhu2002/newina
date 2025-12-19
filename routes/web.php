@@ -489,6 +489,7 @@ Route::get('/add-fresh-data', function () {
     return view('profile.addfreashdata');
 })->name('add.fresh.data');
 Route::post('/add-fresh-data', [FreshDataController::class, 'store'])->name('add.fresh.data.store');
+Route::get('/fresh-data/export-users', [FreshDataController::class, 'exportUsers'])->name('fresh.data.export_users');
 Route::get('/edit-fresh-data/{id}', [FreshDataController::class, 'edit'])->name('edit.fresh.data');
 Route::get('/fresh-data/view/{id}', [FreshDataController::class, 'view'])->name('fresh.data.view');
 Route::get('/services', [ServiceController::class, 'servicesDashboard'])->name('services.page');

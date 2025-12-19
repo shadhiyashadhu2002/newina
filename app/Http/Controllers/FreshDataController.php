@@ -28,9 +28,11 @@ class FreshDataController extends Controller
 
         // If requested source is 'database', show users table instead
         if ($source === 'database') {
-            $databaseUsers = \App\Models\User::select('id', 'name', 'email', 'phone', 'user_type')
-                ->orderBy('name')
-                ->get();
+            // Show paginated users from users table - select first_name/last_name and phone/gender
+            $databaseUsers = \App\Models\User::select('id', 'first_name', 'last_name', 'name', 'email', 'phone', 'gender')
+                ->orderBy('first_name')
+                ->paginate(25)
+                ->withQueryString();
         } else {
             if ($user->is_admin) {
                 // Admin sees UNASSIGNED profiles (to assign them)
@@ -218,6 +220,42 @@ class FreshDataController extends Controller
                 'message' => 'Import failed: ' . $e->getMessage(),
             ], 500);
         }
+    }
+
+    /**
+     * Export all users as a CSV file (Database view)
+     */
+    public function exportUsers()
+    {
+        $filename = 'users_export_' . date('Ymd_His') . '.csv';
+
+        $headers = [
+            'Content-Type' => 'text/csv',
+            'Content-Disposition' => 'attachment; filename="' . $filename . '"',
+        ];
+
+        $columns = ['ID', 'Name', 'Email', 'Phone', 'User Type'];
+
+        $callback = function () use ($columns) {
+            $file = fopen('php://output', 'w');
+            fputcsv($file, $columns);
+
+            \App\Models\User::orderBy('name')->chunk(200, function ($users) use ($file) {
+                foreach ($users as $u) {
+                    fputcsv($file, [
+                        $u->id,
+                        $u->name,
+                        $u->email,
+                        $u->phone,
+                        $u->user_type,
+                    ]);
+                }
+            });
+
+            fclose($file);
+        };
+
+        return response()->stream($callback, 200, $headers);
     }
 
     public function downloadTemplate()

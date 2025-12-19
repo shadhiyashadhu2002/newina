@@ -319,7 +319,7 @@
                         <a href="{{ route('fresh.data.index') }}" class="add-profile-btn">
                             <span class="add-icon">←</span> Back to Fresh Data
                         </a>
-                        <a href="#" class="add-profile-btn import-btn" onclick="alert('Export not implemented yet')">
+                        <a href="{{ route('fresh.data.export_users') }}" class="add-profile-btn import-btn">
                             <span class="add-icon">⬇️</span> Export Users
                         </a>
                     @else
@@ -342,10 +342,10 @@
                         <tr>
                             <th style="width: 40px;"><input type="checkbox" id="selectAll" onclick="toggleSelectAll()"></th>
                             @if(isset($source) && $source === 'database')
-                                <th>Name</th>
-                                <th>Email</th>
-                                <th>Mobile</th>
-                                <th>User Type</th>
+                                    <th>Name</th>
+                                <th>Mobile Number</th>
+                                <th>Gender</th>
+                                <th>Source</th>
                                 <th>Actions</th>
                             @else
                                 <th>Name</th>
@@ -361,12 +361,12 @@
                             @forelse($databaseUsers as $u)
                             <tr>
                                 <td><input type="checkbox" class="record-checkbox" value="{{ $u->id }}"></td>
-                                <td>{{ $u->name }}</td>
-                                <td>{{ $u->email }}</td>
+                                <td>{{ trim(($u->first_name ?? '') . ' ' . ($u->last_name ?? '')) ?: ($u->name ?? '-') }}</td>
                                 <td>{{ $u->phone ?? '-' }}</td>
-                                <td>{{ $u->user_type ?? '-' }}</td>
+                                <td>{{ $u->gender ?? '-' }}</td>
+                                <td>database</td>
                                 <td class="actions">
-                                    <button class="action-btn history" title="Copy Email" onclick="navigator.clipboard.writeText('{{ $u->email }}')">📋</button>
+                                    <button class="action-btn history" title="Copy Mobile" onclick="navigator.clipboard.writeText('{{ $u->phone ?? '' }}')">📋</button>
                                     <a href="#" class="action-btn edit-btn" title="Edit User">✏️</a>
                                     <a href="#" class="action-btn view-btn" title="View User">👁️</a>
                                 </td>
@@ -376,6 +376,13 @@
                                 <td colspan="6" style="text-align:center; padding: 40px;">No users found.</td>
                             </tr>
                             @endforelse
+
+                            {{-- Pagination for users --}}
+                            <tr>
+                                <td colspan="6" style="text-align:center; padding: 14px; border-top: none;">
+                                    {{ $databaseUsers->links() }}
+                                </td>
+                            </tr>
                         @else
                             @forelse($freshData as $data)
                             <tr>
