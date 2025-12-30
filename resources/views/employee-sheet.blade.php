@@ -15,7 +15,7 @@
     }
 
 
-    
+
 
     .page-header {
         display: flex;
@@ -90,6 +90,11 @@
 
     .employee-table tbody tr:hover {
         background: #f9f9f9;
+        .employee-table thead th:last-child{
+            border-right:none;
+        }
+        
+        }
     }
 
     .employee-table tbody td {
