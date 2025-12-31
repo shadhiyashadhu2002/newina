@@ -954,47 +954,4 @@ window.onclick = function(event) {
 }
 </script>
 
-    // Show History Modal
-    function showHistory(profileId) {
-        console.log('Opening history for profile:', profileId);
-        
-        // Open the history modal
-        $('#historyModal').modal('show');
-        $('#history_table_body').html('<tr><td colspan="5" class="text-center">Loading history...</td></tr>');
-        
-        // Fetch history data
-        $.ajax({
-            url: '/profiles/' + profileId + '/history',
-            type: 'GET',
-            success: function(response) {
-                console.log('History response:', response);
-                
-                // Set profile info
-                $('#history_customer_name').text(response.profile.customer_name || response.profile.name || 'N/A');
-                $('#history_profile_id').text(response.profile.imid || response.profile.id);
-                
-                // Populate history table
-                if (response.history && response.history.length > 0) {
-                    let html = '';
-                    response.history.forEach(function(record) {
-                        html += '<tr>';
-                        html += '<td>' + (record.created_at || 'N/A') + '</td>';
-                        html += '<td>' + (record.executive_name || record.updated_by || 'N/A') + '</td>';
-                        html += '<td><span class="badge badge-primary">' + (record.status || 'N/A') + '</span></td>';
-                        html += '<td>' + (record.follow_up_date || '-') + '</td>';
-                        html += '<td>' + (record.remarks || '-') + '</td>';
-                        html += '</tr>';
-                    });
-                    $('#history_table_body').html(html);
-                } else {
-                    $('#history_table_body').html('<tr><td colspan="5" class="text-center text-muted">No history records found</td></tr>');
-                }
-            },
-            error: function(xhr) {
-                console.error('Error loading history:', xhr);
-                $('#history_table_body').html('<tr><td colspan="5" class="text-center text-danger">Error loading history. Please try again.</td></tr>');
-            }
-        });
-    }
-
 @endsection
