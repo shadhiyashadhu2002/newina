@@ -120,6 +120,14 @@ class DashboardController extends Controller
         $currentUser = Auth::user();
         $today = Carbon::today()->format('Y-m-d');
 
+        // Get all executives for the filter dropdown
+        $executives = \App\Models\User::where(function($query) {
+            $query->where('is_admin', 1)
+                  ->orWhere('user_type', 'staff');
+        })
+        ->orderBy('first_name')
+        ->get(['id', 'first_name', 'last_name']);
+
         // Get follow-up due profiles
         $query = \App\Models\FreshData::whereDate('follow_up_date', '<', $today)
             ->whereNotNull('follow_up_date')
@@ -130,9 +138,35 @@ class DashboardController extends Controller
             $query->where('assigned_to', $currentUser->id);
         }
 
-        // Get paginated results
-        $profiles = $query->orderBy('follow_up_date', 'asc')->paginate(20);
+        // Apply filters
+        // Executive filter
+        if ($request->filled('executive_id')) {
+            if ($request->executive_id === 'unassigned') {
+                $query->whereDoesntHave('user');
+            } else {
+                $query->where('assigned_to', $request->executive_id);
+            }
+        }
 
-        return view('profile.followup_due', compact('profiles', 'currentUser'));
+        // Assigned date filter
+        if ($request->filled('assigned_date')) {
+            $query->whereDate('created_at', $request->assigned_date);
+        }
+
+        // Follow-up date filter
+        if ($request->filled('followup_date')) {
+            $query->whereDate('follow_up_date', $request->followup_date);
+        }
+
+        // Status filter
+        if ($request->filled('status')) {
+            $query->where('status', $request->status);
+        }
+
+        // Get paginated results
+        $perPage = $request->input('per_page', 20);
+        $profiles = $query->orderBy('follow_up_date', 'asc')->paginate($perPage);
+
+        return view('profile.followup_due', compact('profiles', 'currentUser', 'executives'));
     }
 }

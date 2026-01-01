@@ -1,0 +1,186 @@
+<?php
+
+namespace App\Http\Controllers;
+
+use Illuminate\Http\Request;
+use App\Models\FreshData;
+use Illuminate\Support\Facades\Auth;
+use App\Imports\FreshDataImport;
+use Maatwebsite\Excel\Facades\Excel;
+use Illuminate\Support\Facades\Log;
+
+class FreshDataController extends Controller
+{
+    public function edit($id)
+    {
+        $freshData = FreshData::findOrFail($id);
+        return view('profile.edit_fresh_data', compact('freshData'));
+    }
+
+    public function index()
+    {
+        $user = Auth::user();
+        if ($user->is_admin) {
+            $freshData = FreshData::with('user')->latest()->get();
+        } else {
+            $freshData = FreshData::with('user')->where('assigned_to', $user->id)->latest()->get();
+        }
+        return view('profile.fresh_data', compact('freshData'));
+    }
+
+    public function store(Request $request)
+    {
+        $validated = $request->validate([
+            'mobile' => 'required|digits:10',
+            'name' => 'required|string|max:255',
+            'source' => 'required|string|max:255',
+            'remarks' => 'nullable|string',
+            'welcome_call' => 'nullable|boolean',
+        ]);
+        $validated['assigned_to'] = Auth::id();
+        $validated['welcome_call'] = $request->has('welcome_call');
+        FreshData::create($validated);
+        return redirect()->route('fresh.data')->with('success', 'Fresh data added successfully!');
+    }
+
+    public function update(Request $request, $id)
+    {
+        $freshData = FreshData::findOrFail($id);
+        $validated = $request->validate([
+            'mobile' => 'required|digits:10',
+            'name' => 'required|string|max:255',
+            'source' => 'required|string|max:255',
+            'remarks' => 'nullable|string',
+            'gender' => 'nullable|string',
+            'registration_date' => 'nullable|date',
+            'profile_id' => 'nullable|string',
+            'mobile_number_2' => 'nullable|string',
+            'whatsapp_number' => 'nullable|string',
+            'profile_created' => 'nullable|boolean',
+            'photo_uploaded' => 'nullable|boolean',
+            'welcome_call' => 'nullable|boolean',
+        ]);
+        $validated['profile_created'] = $request->has('profile_created');
+        $validated['photo_uploaded'] = $request->has('photo_uploaded');
+        $validated['welcome_call'] = $request->has('welcome_call');
+        $freshData->update($validated);
+        return redirect()->route('fresh.data')->with('success', 'Fresh data updated successfully!');
+    }
+
+    public function view($id)
+    {
+        $freshData = FreshData::with('user')->findOrFail($id);
+        return view('profile.fresh_data_view', compact('freshData'));
+    }
+
+    /**
+     * Import fresh data from Excel file
+     */
+    public function import(Request $request)
+    {
+        try {
+            // Validate the uploaded file
+            $request->validate([
+                'excel_file' => 'required|file|mimes:xlsx,xls,csv|max:10240', // Max 10MB
+            ]);
+
+            $file = $request->file('excel_file');
+            
+            // Create import instance
+            $import = new FreshDataImport();
+            
+            // Import the file
+            Excel::import($import, $file);
+
+            // Get import statistics
+            $imported = $import->getImportedCount();
+            $skipped = $import->getSkippedCount();
+            $errors = $import->getErrors();
+            $failures = $import->getFailures();
+
+            // Prepare response message
+            $message = "Import completed! ";
+            $message .= "Successfully imported: {$imported} records. ";
+            
+            if ($skipped > 0) {
+                $message .= "Skipped: {$skipped} records due to errors.";
+            }
+
+            // Log the import details
+            Log::info('Excel Import Completed', [
+                'user_id' => Auth::id(),
+                'imported' => $imported,
+                'skipped' => $skipped,
+                'filename' => $file->getClientOriginalName(),
+            ]);
+
+            // Return response with details
+            return response()->json([
+                'success' => true,
+                'message' => $message,
+                'imported' => $imported,
+                'skipped' => $skipped,
+                'errors' => $errors,
+                'failures' => $failures,
+            ]);
+
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Invalid file format. Please upload an Excel file (.xlsx, .xls, or .csv)',
+                'errors' => $e->errors(),
+            ], 422);
+
+        } catch (\Exception $e) {
+            Log::error('Excel Import Error', [
+                'user_id' => Auth::id(),
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Import failed: ' . $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    /**
+     * Download sample Excel template
+     */
+    public function downloadTemplate()
+    {
+        $filename = 'fresh_data_import_template.xlsx';
+        $filepath = storage_path('app/templates/' . $filename);
+
+        // If template doesn't exist, create it
+        if (!file_exists($filepath)) {
+            $this->createTemplate();
+        }
+
+        return response()->download($filepath, $filename);
+    }
+
+    /**
+     * Create sample template file
+     */
+    private function createTemplate()
+    {
+        $templateDir = storage_path('app/templates');
+        
+        // Create templates directory if it doesn't exist
+        if (!file_exists($templateDir)) {
+            mkdir($templateDir, 0755, true);
+        }
+
+        // Sample data for template
+        $data = [
+            ['Mobile', 'Name', 'Source', 'Gender', 'Remarks'],
+            ['9876543210', 'John Doe', 'Website', 'Male', 'Interested in premium package'],
+            ['9876543211', 'Jane Smith', 'Facebook', 'Female', 'Follow up next week'],
+        ];
+
+        // Create Excel file
+        Excel::store(new \App\Exports\FreshDataTemplateExport($data), 'templates/fresh_data_import_template.xlsx');
+    }
+}

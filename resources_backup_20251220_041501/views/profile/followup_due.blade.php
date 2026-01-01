@@ -1,0 +1,748 @@
+@extends('layouts.app')
+
+@section('content')
+<style>
+    * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+    }
+
+    body {
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        background: linear-gradient(135deg, #ac0742 0%, #9d1955 100%);
+        min-height: 100vh;
+    }
+
+    .new-profiles-container {
+        background: rgba(255, 255, 255, 0.1);
+        backdrop-filter: blur(10px);
+        min-height: 100vh;
+        padding: 30px;
+    }
+
+    .page-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 30px;
+    }
+
+    .page-title {
+        color: white;
+        font-size: 28px;
+        font-weight: 600;
+    }
+
+    .data-table-section {
+        background: rgba(255, 255, 255, 0.9);
+        border-radius: 15px;
+        overflow: hidden;
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+    }
+
+    .table-controls {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 20px;
+        background: #f8f9fa;
+        border-bottom: 2px solid #e0e0e0;
+    }
+
+    .show-entries {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        font-size: 14px;
+        color: #333;
+    }
+
+    .show-entries select {
+        padding: 8px 12px;
+        border: 2px solid #e0e0e0;
+        border-radius: 6px;
+        font-size: 14px;
+    }
+
+    .data-table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+    .data-table th {
+        background: #f8f9fa;
+        padding: 15px;
+        text-align: left;
+        font-weight: 600;
+        color: #333;
+        border-bottom: 2px solid #e0e0e0;
+    }
+
+    .data-table td {
+        padding: 15px;
+        border-bottom: 1px solid #e0e0e0;
+        color: #333;
+    }
+
+    .data-table tr:hover {
+        background: rgba(172, 7, 66, 0.05);
+    }
+
+    .status-badge {
+        background: #FF9800;
+        color: white;
+        padding: 4px 12px;
+        border-radius: 20px;
+        font-size: 12px;
+        font-weight: 500;
+        display: inline-block;
+    }
+
+    .status-badge.blank {
+        background: #e0e0e0;
+        color: #666;
+    }
+
+    .status-badge.overdue {
+        background: #dc3545;
+        color: white;
+    }
+
+    .action-btn {
+        padding: 8px 16px;
+        border: none;
+        border-radius: 6px;
+        cursor: pointer;
+        font-size: 13px;
+        margin-right: 5px;
+        transition: background 0.3s;
+        font-weight: 500;
+    }
+
+    .action-btn.update {
+        background: #4CAF50;
+        color: white;
+    }
+
+    .action-btn.update:hover {
+        background: #45a049;
+    }
+
+    .action-btn.history {
+        background: #ac0742;
+        color: white;
+    }
+
+    .action-btn.history:hover {
+        background: #9d1955;
+    }
+
+    .pagination-info {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 15px 20px;
+        background: #f8f9fa;
+        border-top: 2px solid #e0e0e0;
+    }
+
+    .pagination-text {
+        color: #333;
+        font-size: 14px;
+    }
+
+    .pagination-buttons {
+        display: flex;
+        gap: 8px;
+    }
+
+    .pagination-btn {
+        background: #4CAF50;
+        color: white;
+        padding: 8px 16px;
+        border: none;
+        border-radius: 6px;
+        cursor: pointer;
+        font-size: 14px;
+        text-decoration: none;
+        transition: all 0.3s;
+    }
+
+    .pagination-btn:hover {
+        background: #45a049;
+        text-decoration: none;
+        color: white;
+    }
+
+    .back-btn {
+        background: rgba(255, 255, 255, 0.2);
+        color: white;
+        padding: 10px 20px;
+        border: 1px solid rgba(255, 255, 255, 0.3);
+        border-radius: 8px;
+        cursor: pointer;
+        font-weight: 500;
+        text-decoration: none;
+        display: inline-block;
+        transition: all 0.3s;
+    }
+
+    .back-btn:hover {
+        background: rgba(255, 255, 255, 0.3);
+        text-decoration: none;
+        color: white;
+    }
+
+    .no-data {
+        padding: 40px;
+        text-align: center;
+        color: #666;
+        font-size: 16px;
+    }
+
+    .overdue-indicator {
+        background: #dc3545;
+        color: white;
+        padding: 2px 8px;
+        border-radius: 4px;
+        font-size: 11px;
+        margin-left: 5px;
+    }
+
+    /* Modal Styles */
+    .modal {
+        display: none;
+        position: fixed;
+        z-index: 100000;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.6);
+        backdrop-filter: blur(5px);
+    }
+
+    .modal.active {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .modal-content {
+        background: white;
+        padding: 30px;
+        border-radius: 15px;
+        width: 90%;
+        max-width: 600px;
+        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+        animation: slideDown 0.3s ease;
+        max-height: 90vh;
+        overflow-y: auto;
+    }
+
+    @keyframes slideDown {
+        from {
+            opacity: 0;
+            transform: translateY(-50px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .modal-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 25px;
+        padding-bottom: 15px;
+        border-bottom: 2px solid #f0f0f0;
+    }
+
+    .modal-title {
+        font-size: 22px;
+        font-weight: 600;
+        color: #333;
+    }
+
+    .close-btn {
+        background: none;
+        border: none;
+        font-size: 28px;
+        cursor: pointer;
+        color: #999;
+        line-height: 1;
+        transition: color 0.3s;
+    }
+
+    .close-btn:hover {
+        color: #333;
+    }
+
+    .modal-body {
+        margin-bottom: 0;
+    }
+
+    .form-group {
+        margin-bottom: 20px;
+    }
+
+    .form-group label {
+        display: block;
+        margin-bottom: 8px;
+        color: #333;
+        font-weight: 500;
+        font-size: 14px;
+    }
+
+    .form-input, .form-select, .form-textarea {
+        width: 100%;
+        padding: 12px;
+        border: 2px solid #e0e0e0;
+        border-radius: 8px;
+        font-size: 14px;
+        transition: border-color 0.3s;
+    }
+
+    .form-input:focus, .form-select:focus, .form-textarea:focus {
+        outline: none;
+        border-color: #ac0742;
+    }
+
+    .form-input:read-only {
+        background: #f8f9fa;
+        color: #666;
+        cursor: not-allowed;
+    }
+
+    .modal-footer {
+        display: flex;
+        gap: 10px;
+        justify-content: flex-end;
+        margin-top: 25px;
+        padding-top: 20px;
+        border-top: 2px solid #f0f0f0;
+    }
+
+    .cancel-btn, .submit-btn {
+        padding: 12px 24px;
+        border: none;
+        border-radius: 8px;
+        cursor: pointer;
+        font-weight: 500;
+        font-size: 14px;
+        transition: all 0.3s;
+    }
+
+    .cancel-btn {
+        background: #f0f0f0;
+        color: #333;
+    }
+
+    .cancel-btn:hover {
+        background: #e0e0e0;
+    }
+
+    .submit-btn {
+        background: linear-gradient(135deg, #4CAF50, #45a049);
+        color: white;
+    }
+
+    .submit-btn:hover {
+        background: linear-gradient(135deg, #45a049, #3d8b40);
+        box-shadow: 0 4px 15px rgba(76, 175, 80, 0.3);
+    }
+
+    .success-message {
+        background: #c6f6d5;
+        color: #22543d;
+        padding: 1rem 1.5rem;
+        margin-bottom: 1.5rem;
+        border-radius: 8px;
+        border-left: 4px solid #48bb78;
+    }
+
+    .hidden {
+        display: none;
+    }
+</style>
+
+<div class="new-profiles-container">
+    <div class="page-header">
+        <div>
+            <a href="{{ route('dashboard') }}" class="back-btn">← Back to Dashboard</a>
+        </div>
+        <h1 class="page-title">Follow-up Due (Overdue)</h1>
+    </div>
+
+    @if(session('success'))
+    <div class="success-message">
+        {{ session('success') }}
+    </div>
+    @endif
+
+    <div class="data-table-section">
+        <div class="table-controls">
+            <div class="show-entries">
+                <label for="per_page">Show</label>
+                <form method="get" style="margin: 0; display: inline;">
+                    <select name="per_page" id="per_page" onchange="this.form.submit()">
+                        <option value="10" {{ request('per_page', 20) == 10 ? 'selected' : '' }}>10</option>
+                        <option value="20" {{ request('per_page', 20) == 20 ? 'selected' : '' }}>20</option>
+                        <option value="50" {{ request('per_page') == 50 ? 'selected' : '' }}>50</option>
+                        <option value="100" {{ request('per_page') == 100 ? 'selected' : '' }}>100</option>
+                    </select>
+                </form>
+                <span>entries</span>
+            </div>
+        </div>
+
+        @if($profiles->count() > 0)
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>NAME</th>
+                    <th>MOBILE</th>
+                    <th>ASSIGNED DATE</th>
+                    <th>FOLLOW-UP DATE</th>
+                    <th>DAYS OVERDUE</th>
+                    <th>STATUS</th>
+                    <th>ACTION</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach($profiles as $profile)
+                @php
+                    $assignedDate = '-';
+                    if(isset($profile->created_at)) {
+                        if(is_object($profile->created_at) && method_exists($profile->created_at, 'format')) {
+                            $assignedDate = $profile->created_at->format('d-m-Y');
+                        } elseif(is_string($profile->created_at)) {
+                            $assignedDate = date('d-m-Y', strtotime($profile->created_at));
+                        }
+                    }
+
+                    $followUpDate = '-';
+                    $followUpDateInput = '';
+                    $daysOverdue = 0;
+                    if(isset($profile->follow_up_date) && $profile->follow_up_date) {
+                        if(is_object($profile->follow_up_date) && method_exists($profile->follow_up_date, 'format')) {
+                            $followUpDate = $profile->follow_up_date->format('d-m-Y');
+                            $followUpDateInput = $profile->follow_up_date->format('Y-m-d');
+                            $daysOverdue = \Carbon\Carbon::parse($profile->follow_up_date)->diffInDays(\Carbon\Carbon::today());
+                        } elseif(is_string($profile->follow_up_date)) {
+                            $followUpDate = date('d-m-Y', strtotime($profile->follow_up_date));
+                            $followUpDateInput = date('Y-m-d', strtotime($profile->follow_up_date));
+                            $daysOverdue = \Carbon\Carbon::parse($profile->follow_up_date)->diffInDays(\Carbon\Carbon::today());
+                        }
+                    }
+                @endphp
+                <tr>
+                    <td>{{ $profile->customer_name ?? $profile->name ?? '-' }}</td>
+                    <td>{{ $profile->mobile ?? '-' }}</td>
+                    <td>{{ $assignedDate }}</td>
+                    <td>
+                        {{ $followUpDate }}
+                        <span class="overdue-indicator">{{ $daysOverdue }} days</span>
+                    </td>
+                    <td>
+                        <span class="status-badge overdue">{{ $daysOverdue }} days</span>
+                    </td>
+                    <td>
+                        @if(empty($profile->status))
+                            <span class="status-badge blank">-</span>
+                        @else
+                            <span class="status-badge">{{ $profile->status }}</span>
+                        @endif
+                    </td>
+                    <td>
+                        <button class="action-btn update" onclick="openUpdateModal({{ json_encode($profile) }}, '{{ $followUpDateInput }}')">Update</button>
+                        <button class="action-btn history" onclick="showHistory({{ $profile->id }})">History</button>
+                    </td>
+                </tr>
+                @endforeach
+            </tbody>
+        </table>
+
+        <div class="pagination-info">
+            <div class="pagination-text">
+                Showing {{ $profiles->firstItem() ?? 0 }} to {{ $profiles->lastItem() ?? 0 }} of {{ $profiles->total() }} entries
+            </div>
+            <div class="pagination-buttons">
+                @if(!$profiles->onFirstPage())
+                    <a href="{{ $profiles->previousPageUrl() }}" class="pagination-btn">Previous</a>
+                @endif
+                @if($profiles->hasMorePages())
+                    <a href="{{ $profiles->nextPageUrl() }}" class="pagination-btn">Next</a>
+                @endif
+            </div>
+        </div>
+        @else
+        <div class="no-data">
+            <p>No overdue follow-ups. Great job keeping up!</p>
+        </div>
+        @endif
+    </div>
+</div>
+
+<!-- Update Profile Modal -->
+<div id="updateModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2 class="modal-title">Update Profile</h2>
+            <button class="close-btn" onclick="closeUpdateModal()">&times;</button>
+        </div>
+        <div class="modal-body">
+            <form id="updateProfileForm" method="POST">
+                @csrf
+                @method('PUT')
+
+                <input type="hidden" id="profile_id" name="profile_id">
+
+                <div class="form-group">
+                    <label for="customer_name">Name</label>
+                    <input type="text" id="customer_name" class="form-input" readonly>
+                </div>
+
+                <div class="form-group">
+                    <label for="status">Status *</label>
+                    <select id="status" name="status" class="form-select" required onchange="toggleCreatedFields()">
+                        <option value="">Select Status</option>
+                        <option value="Created">Created</option>
+                        <option value="RNR">RNR</option>
+                        <option value="CNC">CNC</option>
+                        <option value="Pending">Pending</option>
+                        <option value="Not Interested">Not Interested</option>
+                        <option value="Interested">Interested</option>
+                    </select>
+                </div>
+
+                <div id="createdFields" class="hidden">
+                    <div class="form-group">
+                        <label for="imid">IMID *</label>
+                        <input type="text" id="imid" name="imid" class="form-input">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="mobile_number_2">Secondary Phone Number</label>
+                        <input type="text" id="mobile_number_2" name="mobile_number_2" class="form-input">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="is_new_lead">Is this a new lead?</label>
+                        <select id="is_new_lead" name="is_new_lead" class="form-select">
+                            <option value="">Select</option>
+                            <option value="Yes">Yes</option>
+                            <option value="No">No</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="remarks">Remarks</label>
+                    <textarea id="remarks" name="remarks" class="form-textarea" rows="3"></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label for="follow_up_date">Follow-up Date *</label>
+                    <input type="date" id="follow_up_date" name="follow_up_date" class="form-input" required>
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button" class="cancel-btn" onclick="closeUpdateModal()">Cancel</button>
+                    <button type="submit" class="submit-btn">Update Profile</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- History Modal -->
+<div id="historyModal" class="modal">
+    <div class="modal-content" style="max-width: 1200px;">
+        <div class="modal-header">
+            <h2 class="modal-title">Profile Update History</h2>
+            <button class="close-btn" onclick="closeHistoryModal()">&times;</button>
+        </div>
+        <div class="modal-body" style="overflow-x: auto;">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Date & Time</th>
+                        <th>Executive</th>
+                        <th>Customer</th>
+                        <th>Status</th>
+                        <th>Assigned Date</th>
+                        <th>Follow-up Date</th>
+                        <th>IMID</th>
+                        <th>Remarks</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody id="historyTableBody">
+                    <tr>
+                        <td colspan="9" style="text-align: center; padding: 20px;">Loading...</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<script>
+    function openUpdateModal(profile, followUpDateInput) {
+        const modal = document.getElementById('updateModal');
+        const form = document.getElementById('updateProfileForm');
+
+        form.action = `/profiles/${profile.id}`;
+        document.getElementById('profile_id').value = profile.id;
+        document.getElementById('customer_name').value = profile.customer_name || profile.name || '-';
+        document.getElementById('status').value = profile.status || '';
+        document.getElementById('follow_up_date').value = followUpDateInput || '';
+        document.getElementById('imid').value = profile.imid || '';
+        document.getElementById('mobile_number_2').value = profile.mobile_number_2 || '';
+        document.getElementById('remarks').value = profile.remarks || '';
+
+        toggleCreatedFields();
+        modal.classList.add('active');
+    }
+
+    function closeUpdateModal() {
+        document.getElementById('updateModal').classList.remove('active');
+        document.getElementById('updateProfileForm').reset();
+    }
+
+    function toggleCreatedFields() {
+        const status = document.getElementById('status').value;
+        const createdFields = document.getElementById('createdFields');
+        const imidField = document.getElementById('imid');
+
+        if (status === 'Created') {
+            createdFields.classList.remove('hidden');
+            imidField.required = true;
+        } else {
+            createdFields.classList.add('hidden');
+            imidField.required = false;
+        }
+    }
+
+    function showHistory(profileId) {
+        const modal = document.getElementById('historyModal');
+        const tbody = document.getElementById('historyTableBody');
+
+        modal.classList.add('active');
+        tbody.innerHTML = '<tr><td colspan="9" style="text-align: center; padding: 20px;">Loading history...</td></tr>';
+
+        fetch(`/profiles/${profileId}/history`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.success && data.history.length > 0) {
+                    tbody.innerHTML = data.history.map(item => `
+                        <tr>
+                            <td>${formatDateTime(item.created_at)}</td>
+                            <td>${item.executive_name || 'N/A'}</td>
+                            <td>${item.customer_name || 'N/A'}</td>
+                            <td>
+                                <span class="status-badge" style="background: ${getStatusColor(item.status)}">
+                                    ${item.status || 'N/A'}
+                                </span>
+                            </td>
+                            <td>${formatDate(item.assigned_date)}</td>
+                            <td>${formatDate(item.follow_up_date)}</td>
+                            <td>${item.imid || 'N/A'}</td>
+                            <td style="max-width: 200px; word-wrap: break-word;">${item.remarks || 'N/A'}</td>
+                            <td>${item.action_type || 'update'}</td>
+                        </tr>
+                    `).join('');
+                } else {
+                    tbody.innerHTML = '<tr><td colspan="9" style="text-align: center; padding: 20px; color: #999;">No history found.</td></tr>';
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                tbody.innerHTML = '<tr><td colspan="9" style="text-align: center; padding: 20px; color: red;">Failed to load history.</td></tr>';
+            });
+    }
+
+    function closeHistoryModal() {
+        document.getElementById('historyModal').classList.remove('active');
+    }
+
+    function formatDateTime(datetime) {
+        if (!datetime) return 'N/A';
+        const date = new Date(datetime);
+        return date.toLocaleString('en-IN', {
+            year: 'numeric',
+            month: 'short',
+            day: '2-digit',
+            hour: '2-digit',
+            minute: '2-digit'
+        });
+    }
+
+    function formatDate(dateStr) {
+        if (!dateStr) return 'N/A';
+        const date = new Date(dateStr);
+        return date.toLocaleDateString('en-IN', {
+            year: 'numeric',
+            month: 'short',
+            day: '2-digit'
+        });
+    }
+
+    function getStatusColor(status) {
+        const colors = {
+            'Created': '#28a745',
+            'Interested': '#007bff',
+            'Not Interested': '#dc3545',
+            'Follow Up': '#ffc107',
+            'Pending': '#6c757d',
+            'CNC': '#17a2b8',
+            'RNR': '#6c757d',
+            'Closed': '#6c757d'
+        };
+        return colors[status] || '#ac0742';
+    }
+
+    // Close modals when clicking outside
+    window.onclick = function(event) {
+        const updateModal = document.getElementById('updateModal');
+        const historyModal = document.getElementById('historyModal');
+        if (event.target === updateModal) {
+            closeUpdateModal();
+        }
+        if (event.target === historyModal) {
+            closeHistoryModal();
+        }
+    }
+
+    // Handle form submission
+    document.getElementById('updateProfileForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        const formData = new FormData(this);
+        const actionUrl = this.action;
+
+        fetch(actionUrl, {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if(data.success) {
+                window.location.href = '/profiles/followup-due';
+            } else {
+                alert('Error: ' + (data.message || 'Failed to update profile'));
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Failed to update profile: ' + error.message);
+        });
+    });
+</script>
+@endsection

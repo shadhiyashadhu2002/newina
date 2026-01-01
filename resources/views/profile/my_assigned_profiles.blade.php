@@ -1,4 +1,5 @@
 @extends('layouts.app')
+<?php header("Cache-Control: no-cache, no-store, must-revalidate"); ?>
 
 @section('content')
 <style>
@@ -538,113 +539,183 @@
         </div>
     </div>
 
-        <div class="table-controls">
-            <div class="show-entries">
-                <label for="per_page">Show</label>
-                <form method="get" style="margin: 0; display: inline;">
-                    <select name="per_page" id="per_page" onchange="this.form.submit()">
-                        <option value="10" {{ request('per_page', 10) == 10 ? 'selected' : '' }}>10</option>
-                        <option value="25" {{ request('per_page') == 25 ? 'selected' : '' }}>25</option>
-                        <option value="50" {{ request('per_page') == 50 ? 'selected' : '' }}>50</option>
-                    </select>
-                </form>
-                <span>entries</span>
-            </div>
+        <!-- Tabs -->
+        <div style="display: flex; border-bottom: 2px solid #e0e0e0; margin-bottom: 20px;">
+            <button class="tab-btn active" onclick="switchTab('new-profiles')" id="tab-new-profiles" style="flex: 1; padding: 15px; background: #ac0742; color: white; border: none; cursor: pointer; font-weight: 600; border-radius: 10px 10px 0 0;">
+                New Profiles ({{ $stats['new_profiles'] ?? 0 }})
+            </button>
+            <button class="tab-btn" onclick="switchTab('followup-today')" id="tab-followup-today" style="flex: 1; padding: 15px; background: #f8f9fa; color: #333; border: none; cursor: pointer; font-weight: 600; border-radius: 10px 10px 0 0; margin-left: 5px;">
+                Follow-up Today ({{ $stats['followup_today'] ?? 0 }})
+            </button>
         </div>
 
-        @if($freshData->count() > 0)
-        <table class="data-table">
-            <thead>
-                <tr>
-                    <th>NAME</th>
-                    <th>MOBILE</th>
-                    <th>ASSIGNED DATE</th>
-                    <th>FOLLOW-UP DATE</th>
-                    <th>STATUS</th>
-                    <th>IMID</th>
-                    <th>SECONDARY PHONE</th>
-                    <th>NEW LEAD</th>
-                    <th>ACTION</th>
-                </tr>
-            </thead>
-            <tbody>
-                @foreach($freshData as $profile)
-                @php
-                    $assignedDate = '-';
-                    if(isset($profile->created_at)) {
-                        if(is_object($profile->created_at) && method_exists($profile->created_at, 'format')) {
-                            $assignedDate = $profile->created_at->format('d-m-Y');
-                        } elseif(is_string($profile->created_at)) {
-                            $assignedDate = date('d-m-Y', strtotime($profile->created_at));
+        <!-- New Profiles Tab Content -->
+        <div id="content-new-profiles" class="tab-content">
+            @if($newProfiles->count() > 0)
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>NAME</th>
+                        <th>MOBILE</th>
+                        <th>ASSIGNED DATE</th>
+                        <th>STATUS</th>
+                        <th>ACTION</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach($newProfiles as $profile)
+                    @php
+                        $assignedDate = '-';
+                        if(isset($profile->created_at)) {
+                            if(is_object($profile->created_at) && method_exists($profile->created_at, 'format')) {
+                                $assignedDate = $profile->created_at->format('d-m-Y');
+                            } elseif(is_string($profile->created_at)) {
+                                $assignedDate = date('d-m-Y', strtotime($profile->created_at));
+                            }
                         }
-                    }
-
-                    $followUpDate = '-';
-                    $followUpDateInput = '';
-                    if(isset($profile->follow_up_date) && $profile->follow_up_date) {
-                        if(is_object($profile->follow_up_date) && method_exists($profile->follow_up_date, 'format')) {
-                            $followUpDate = $profile->follow_up_date->format('d-m-Y');
-                            $followUpDateInput = $profile->follow_up_date->format('Y-m-d');
-                        } elseif(is_string($profile->follow_up_date)) {
-                            $followUpDate = date('d-m-Y', strtotime($profile->follow_up_date));
-                            $followUpDateInput = date('Y-m-d', strtotime($profile->follow_up_date));
-                        }
-                    }
-                @endphp
-                <tr>
-                    <td>{{ $profile->customer_name ?? $profile->name ?? '-' }}</td>
-                    <td>{{ $profile->mobile ?? '-' }}</td>
-                    <td>{{ $assignedDate }}</td>
-                    <td>{{ $followUpDate }}</td>
-                    <td>
-                        @if(empty($profile->status))
-                            <span class="status-badge blank">-</span>
-                        @else
-                            <span class="status-badge">{{ $profile->status }}</span>
-                        @endif
-                    </td>
-                    <td>{{ $profile->imid ?? "-" }}</td>
-                    <td>{{ $profile->secondary_phone ?? "-" }}</td>
-                    <td>
-                        @if($profile->is_new_lead === "yes")
-                            <span class="badge bg-success">Yes</span>
-                        @elseif($profile->is_new_lead === "no")
-                            <span class="badge bg-secondary">No</span>
-                        @else
-                            -
-                        @endif
-                    </td>
-                    <td>
-                        <button class="action-btn update" onclick="openUpdateModal({{ $profile->id }}, '{{ $profile->customer_name ?? $profile->name }}', '{{ $followUpDateInput }}', '{{ $profile->status ?? '' }}')">
-                            Update
-                        </button>
-                        <button class="action-btn history" onclick="showHistory({{ $profile->id }})" style="margin-left: 5px;">
-                            History
-                        </button>
-                    </td>
-                </tr>
-                @endforeach
-            </tbody>
-        </table>
-
-        <div class="pagination-info">
-            <div class="pagination-text">
-                Showing {{ $freshData->count() }} entries
+                    @endphp
+                    <tr>
+                        <td>{{ $profile->customer_name ?? $profile->name ?? '-' }}</td>
+                        <td>{{ $profile->mobile ?? '-' }}</td>
+                        <td>{{ $assignedDate }}</td>
+                        <td>
+                            @if(empty($profile->status))
+                                <span class="status-badge blank">-</span>
+                            @else
+                                <span class="status-badge">{{ $profile->status }}</span>
+                            @endif
+                        </td>
+                        <td>
+                            <button class="action-btn update" onclick="openUpdateModal({{ $profile->id }}, '{{ $profile->customer_name ?? $profile->name }}', '', '{{ $profile->status ?? '' }}')">
+                                Update
+                            </button>
+                            <button class="action-btn history" onclick="showHistory({{ $profile->id }})" style="margin-left: 5px;">
+                                History
+                            </button>
+                        </td>
+                    </tr>
+                    @endforeach
+                </tbody>
+            </table>
+            @else
+            <div class="no-data">
+                <p>No new profiles at the moment.</p>
             </div>
+            @endif
         </div>
-        @else
-        <div class="no-data">
-            <p>No profiles assigned to you yet.</p>
+
+        <!-- Follow-up Today Tab Content -->
+        <div id="content-followup-today" class="tab-content" style="display: none;">
+            @if($followupToday->count() > 0)
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>NAME</th>
+                        <th>MOBILE</th>
+                        <th>ASSIGNED DATE</th>
+                        <th>FOLLOW-UP DATE</th>
+                        <th>STATUS</th>
+                        <th>IMID</th>
+                        <th>SECONDARY PHONE</th>
+                        <th>NEW LEAD</th>
+                        <th>ACTION</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach($followupToday as $profile)
+                    @php
+                        $assignedDate = '-';
+                        if(isset($profile->created_at)) {
+                            if(is_object($profile->created_at) && method_exists($profile->created_at, 'format')) {
+                                $assignedDate = $profile->created_at->format('d-m-Y');
+                            } elseif(is_string($profile->created_at)) {
+                                $assignedDate = date('d-m-Y', strtotime($profile->created_at));
+                            }
+                        }
+
+                        $followUpDate = '-';
+                        $followUpDateInput = '';
+                        if(isset($profile->follow_up_date) && $profile->follow_up_date) {
+                            if(is_object($profile->follow_up_date) && method_exists($profile->follow_up_date, 'format')) {
+                                $followUpDate = $profile->follow_up_date->format('d-m-Y');
+                                $followUpDateInput = $profile->follow_up_date->format('Y-m-d');
+                            } elseif(is_string($profile->follow_up_date)) {
+                                $followUpDate = date('d-m-Y', strtotime($profile->follow_up_date));
+                                $followUpDateInput = date('Y-m-d', strtotime($profile->follow_up_date));
+                            }
+                        }
+                    @endphp
+                    <tr>
+                        <td>{{ $profile->customer_name ?? $profile->name ?? '-' }}</td>
+                        <td>{{ $profile->mobile ?? '-' }}</td>
+                        <td>{{ $assignedDate }}</td>
+                        <td>{{ $followUpDate }}</td>
+                        <td>
+                            @if(empty($profile->status))
+                                <span class="status-badge blank">-</span>
+                            @else
+                                <span class="status-badge">{{ $profile->status }}</span>
+                            @endif
+                        </td>
+                        <td>{{ $profile->imid ?? "-" }}</td>
+                        <td>{{ $profile->secondary_phone ?? "-" }}</td>
+                        <td>
+                            @if($profile->is_new_lead === "yes")
+                                <span class="badge bg-success">Yes</span>
+                            @elseif($profile->is_new_lead === "no")
+                                <span class="badge bg-secondary">No</span>
+                            @else
+                                -
+                            @endif
+                        </td>
+                        <td>
+                            <button class="action-btn update" onclick="openUpdateModal({{ $profile->id }}, '{{ $profile->customer_name ?? $profile->name }}', '{{ $followUpDateInput }}', '{{ $profile->status ?? '' }}')">
+                                Update
+                            </button>
+                            <button class="action-btn history" onclick="showHistory({{ $profile->id }})" style="margin-left: 5px;">
+                                History
+                            </button>
+                        </td>
+                    </tr>
+                    @endforeach
+                </tbody>
+            </table>
+            @else
+            <div class="no-data">
+                <p>No follow-ups scheduled for today.</p>
+            </div>
+            @endif
         </div>
-        @endif
+
+        <script>
+        function switchTab(tabName) {
+            // Hide all tab contents
+            document.querySelectorAll('.tab-content').forEach(content => {
+                content.style.display = 'none';
+            });
+            
+            // Remove active class from all tabs
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.style.background = '#f8f9fa';
+                btn.style.color = '#333';
+            });
+            
+            // Show selected tab content
+            document.getElementById('content-' + tabName).style.display = 'block';
+            
+            // Add active class to selected tab
+            document.getElementById('tab-' + tabName).style.background = '#ac0742';
+            document.getElementById('tab-' + tabName).style.color = 'white';
+        }
+        </script>
     </div>
 </div>
 
 <!-- History Modal -->
-<div id="historyModal" class="modal">
-    <div class="modal-content" style="max-width: 1200px;">
+<div id="historyModal2" class="modal">
+    <div class="modal-content" style="max-width: 1000px;">
         <div class="modal-header">
-            <h2 class="modal-title">Profile Update History</h2>
+            <h2 class="modal-title">Profile Update History - v3</h2>
             <button class="close-btn" onclick="closeHistoryModal()">&times;</button>
         </div>
         <div class="modal-body" style="overflow-x: auto;">
@@ -655,16 +726,13 @@
                         <th>Executive</th>
                         <th>Customer</th>
                         <th>Status</th>
-                        <th>Assigned Date</th>
                         <th>Follow-up Date</th>
-                        <th>IMID</th>
                         <th>Remarks</th>
-                        <th>Action</th>
                     </tr>
                 </thead>
                 <tbody id="historyTableBody">
                     <tr>
-                        <td colspan="9" style="text-align: center; padding: 20px;">Loading...</td>
+                        <td colspan="6" style="text-align: center; padding: 20px;">Loading...</td>
                     </tr>
                 </tbody>
             </table>
@@ -734,11 +802,11 @@
     // Close modals when clicking outside
     window.onclick = function(event) {
         const updateModal = document.getElementById('updateModal');
-        const historyModal = document.getElementById('historyModal');
+        const historyModal2 = document.getElementById('historyModal2');
         if (event.target === updateModal) {
             closeUpdateModal();
         }
-        if (event.target === historyModal) {
+        if (event.target === historyModal2) {
             closeHistoryModal();
         }
     }
@@ -921,6 +989,7 @@
 </div>
 
 <script>
+<!-- Script Version: 2025-12-31-v5 -->
 // Open Update Modal
 function openUpdateModal(profileId, customerName, followUpDate, status) {
     const modal = document.getElementById('updateModal');
@@ -943,6 +1012,47 @@ function openUpdateModal(profileId, customerName, followUpDate, status) {
 // Close Update Modal
 function closeUpdateModal() {
     document.getElementById('updateModal').style.display = 'none';
+}
+
+// Show history modal and fetch history data
+function showHistory(profileId) {
+    const modal = document.getElementById('historyModal2');
+    modal.style.display = 'block';
+    
+    // Fetch history data
+    fetch(`/fresh-data/history/${profileId}`)
+        .then(response => response.json())
+        .then(data => {
+            const tbody = document.querySelector('#historyModal2 tbody');
+            tbody.innerHTML = '';
+            
+            if (data.history && data.history.length > 0) {
+                data.history.forEach(record => {
+                    const row = `
+                        <tr>
+                            <td>${record.updated_at || '-'}</td>
+                            <td>${record.executive || 'N/A'}</td>
+                            <td>${record.customer_name || '-'}</td>
+                            <td><span class="status-badge" style="background-color: ${getStatusColor(record.status)}">${record.status || '-'}</span></td>
+                            <td>${record.follow_up_date || '-'}</td>
+                            <td>${record.remarks || '-'}</td>
+                        </tr>
+                    `;
+                    tbody.innerHTML += row;
+                });
+            } else {
+                tbody.innerHTML = '<tr><td colspan="6" style="text-align: center;">No history found</td></tr>';
+            }
+        })
+        .catch(error => {
+            console.error('Error fetching history:', error);
+            alert('Failed to load history');
+        });
+}
+
+// Close history modal
+function closeHistoryModal() {
+    document.getElementById('historyModal2').style.display = 'none';
 }
 
 // Close modal when clicking outside

@@ -491,6 +491,12 @@ Route::get('/add-fresh-data', function () {
 Route::post('/add-fresh-data', [FreshDataController::class, 'store'])->name('add.fresh.data.store');
 Route::get('/fresh-data/export-users', [FreshDataController::class, 'exportUsers'])->name('fresh.data.export_users');
 Route::get('/edit-fresh-data/{id}', [FreshDataController::class, 'edit'])->name('edit.fresh.data');
+
+// Fresh Data Modal Routes (AJAX)
+Route::get('/fresh-data/{id}/get-data', [FreshDataController::class, 'getUserData'])->name('fresh.data.get');
+Route::post('/fresh-data/{id}/update-followup', [FreshDataController::class, 'updateFollowup'])->name('fresh.data.update.followup');
+
+
 Route::get('/fresh-data/view/{id}', [FreshDataController::class, 'view'])->name('fresh.data.view');
 Route::get('/services', [ServiceController::class, 'servicesDashboard'])->name('services.page');
 Route::post('/services/update-status/{id}', [ServiceController::class, 'updateStatus'])->name('services.updateStatus');
@@ -1298,18 +1304,17 @@ Route::post('/get-member-data', function (Request $request) {
     }
 });
 // Fresh Data Excel Import Routes
-Route::middleware('auth')->group(function () {
-    Route::post('/fresh-data/import', [FreshDataController::class, 'import'])->name('fresh.data.import');
-    Route::get('/fresh-data/template', [FreshDataController::class, 'downloadTemplate'])->name('fresh.data.template');
-    Route::post('/fresh-data/assign/{id}', [FreshDataController::class, 'assign'])->name('fresh.data.assign');
-    Route::post('/fresh-data/bulk-assign', [FreshDataController::class, 'bulkAssign'])->name('fresh.data.bulk.assign');
-});
+// Fresh Data assignment and import routes
+Route::post('/fresh-data/import', [FreshDataController::class, 'import'])->name('fresh.data.import');
+Route::get('/fresh-data/template', [FreshDataController::class, 'downloadTemplate'])->name('fresh.data.template');
+Route::post('/fresh-data/assign/{id}', [FreshDataController::class, 'assign'])->name('fresh.data.assign');
 
 // Route for service/sales executives to view their assigned profiles
 Route::get('/my-assigned-profiles', [FreshDataController::class, 'myAssignedProfiles'])->name('assigned.profiles.view');
 
 // Update fresh data status
 Route::post('/fresh-data/update-status', [FreshDataController::class, 'updateStatus'])->name('fresh.data.update.status');
+Route::get('/fresh-data/history/{id}', [FreshDataController::class, 'getHistory'])->name('fresh.data.history');
 
 // Sales Management Page
 Route::middleware('auth')->get('/sales-management', [App\Http\Controllers\SalesDashboardController::class, 'index'])->name('sales.management');
@@ -1336,3 +1341,14 @@ Route::middleware('auth')->group(function () {
     Route::put('/helpline/{id}', [App\Http\Controllers\HelplineController::class, 'update'])->name('helpline.update');
     Route::delete('/helpline/{id}', [App\Http\Controllers\HelplineController::class, 'destroy'])->name('helpline.destroy');
 });
+
+// Fresh Data Assignment Routes
+Route::middleware(['auth'])->group(function () {
+    Route::get('/fresh-data/database', [App\Http\Controllers\FreshDataController::class, 'database'])->name('fresh-data.database');
+    Route::post('/fresh-data/assign', [App\Http\Controllers\FreshDataController::class, 'assignProfile'])->name('fresh-data.assign');
+    Route::post("/fresh-data/bulk-assign", [App\Http\Controllers\FreshDataController::class, "bulkAssign"])->name("fresh.data.bulk.assign");
+    Route::get('/fresh-data/my-assigned', [App\Http\Controllers\FreshDataController::class, 'myAssignedProfiles'])->name('fresh-data.my-assigned');
+    Route::get('/fresh-data/count', [App\Http\Controllers\FreshDataController::class, 'getNewProfilesCount'])->name('fresh-data.count');
+    Route::patch("/fresh-data/assignment/{id}/status", [App\Http\Controllers\FreshDataController::class, "updateAssignmentStatus"])->name("fresh-data.update-status");
+});
+

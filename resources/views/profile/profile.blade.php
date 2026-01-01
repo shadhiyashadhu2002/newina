@@ -378,13 +378,21 @@
     
     <nav>
       <ul class="header-nav">
-  <li><a href="{{ route('dashboard') }}">Home</a></li>
-  <li><a href="{{ route('profile.hellow') }}" class="active">Profiles</a></li>
-    <li><a href="{{ route('sales.management') }}">Sales <span class="dropdown-arrow">▼</span></a></li>
-    <li><a href="#" data-page="helpline">HelpLine</a></li>
-    <li><a href="{{ route('fresh.data') }}">Fresh Data <span class="dropdown-arrow">▼</span></a></li>
-    <li><a href="#" data-page="abc">abc</a></li>
-  <li><a href="{{ route('services.page') }}">Services <span class="dropdown-arrow">▼</span></a></li>
+        @if($currentUser->team === 'service')
+          {{-- SERVICE Team - Only Profiles, Sales, Services --}}
+          <li><a href="{{ route('profile.hellow') }}" class="active">Profiles</a></li>
+          <li><a href="{{ route('sales.management') }}">Sales <span class="dropdown-arrow">▼</span></a></li>
+          <li><a href="{{ route('services.page') }}">Services <span class="dropdown-arrow">▼</span></a></li>
+        @else
+          {{-- Admin or other teams - Full navigation --}}
+          <li><a href="{{ route('dashboard') }}">Home</a></li>
+          <li><a href="{{ route('profile.hellow') }}" class="active">Profiles</a></li>
+          <li><a href="{{ route('sales.management') }}">Sales <span class="dropdown-arrow">▼</span></a></li>
+          <li><a href="#" data-page="helpline">HelpLine</a></li>
+          <li><a href="{{ route('fresh.data') }}">Fresh Data <span class="dropdown-arrow">▼</span></a></li>
+          <li><a href="#" data-page="abc">abc</a></li>
+          <li><a href="{{ route('services.page') }}">Services <span class="dropdown-arrow">▼</span></a></li>
+        @endif
       </ul>
     </nav>
     

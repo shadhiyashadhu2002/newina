@@ -1,5 +1,61 @@
 @extends('layouts.app')
 
+@section('scripts')
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+<script>
+$(document).ready(function() {
+    console.log('jQuery and Select2 loaded');
+    
+    window.openAddTargetModal = function() {
+        document.getElementById('addTargetModal').style.display = 'flex';
+        setTimeout(function() {
+            if ($('#serviceExecutiveSelect').length && !$('#serviceExecutiveSelect').hasClass('select2-hidden-accessible')) {
+                $('#serviceExecutiveSelect').select2({
+                    placeholder: 'Type to search...',
+                    allowClear: true,
+                    width: '100%',
+                    dropdownParent: $('#addTargetModal')
+                });
+            }
+        }, 300);
+    };
+});
+@endsection
+
+@section('styles')
+<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+@endsection
+
+@push('page-scripts')
+<script>
+$(document).ready(function() {
+    // Initialize Select2 when document is ready
+    console.log('Select2 initializing...');
+    
+    // This will initialize Select2 when the modal is opened
+    window.originalOpenAddTargetModal = window.openAddTargetModal || function() {};
+    
+    window.openAddTargetModal = function() {
+        document.getElementById('addTargetModal').style.display = 'flex';
+        
+        // Initialize Select2 after modal is visible
+        setTimeout(function() {
+            if ($('#serviceExecutiveSelect').length) {
+                $('#serviceExecutiveSelect').select2({
+                    placeholder: 'Type to search for a staff member...',
+                    allowClear: true,
+                    width: '100%',
+                    dropdownParent: $('#addTargetModal')
+                });
+                console.log('Select2 initialized!');
+            }
+        }, 200);
+    };
+});
+</script>
+@endpush
+
 @section('content')
 <meta name="csrf-token" content="{{ csrf_token() }}">
 <div class="dashboard-header">
@@ -735,7 +791,7 @@
                 @csrf
                 <div style="margin-bottom:16px;">
                     <label style="font-weight:600; color:#2c3e50;">Service Executive<span style="color:#ac0742;">*</span></label>
-                    <select name="service_executive" required style="width:100%; padding:10px; border-radius:8px; border:1px solid #e0e0e0;">
+                    <select name="service_executive" id="serviceExecutiveSelect" required style="width:100%; padding:10px; border-radius:8px; border:1px solid #e0e0e0;">
                         <option value="">Select Service Executive</option>
                         @if(isset($staffUsers) && $staffUsers->count() > 0)
                             @foreach($staffUsers as $staff)
@@ -762,8 +818,10 @@
                     <label style="font-weight:600; color:#2c3e50;">Department<span style="color:#ac0742;">*</span></label>
                     <select name="department" required style="width:100%; padding:10px; border-radius:8px; border:1px solid #e0e0e0;">
                         <option value="">Select Department</option>
-                        <option value="Sales 1">Sales 1</option>
-                        <option value="Sales 2">Sales 2</option>
+                        <option value="Sale A">Sale A</option>
+                        <option value="Sale B">Sale B</option>
+                        <option value="Sale C">Sale C</option>
+                        <option value="Royal">Royal</option>
                         <option value="Service Muslims">Service Muslims</option>
                         <option value="Service Hindu">Service Hindu</option>
                         <option value="Service Christian">Service Christian</option>
@@ -854,8 +912,10 @@
                     <label style="display: block; font-size: 14px; font-weight: 500; color: #555; margin-bottom: 5px;">Department</label>
                     <select name="department" style="width: 100%; padding: 10px 12px; border: 2px solid #e0e0e0; border-radius: 8px; font-size: 14px; background: white;">
                         <option value="">All Departments</option>
-                        <option value="Sales 1" {{ request('department') == 'Sales 1' ? 'selected' : '' }}>Sales 1</option>
-                        <option value="Sales 2" {{ request('department') == 'Sales 2' ? 'selected' : '' }}>Sales 2</option>
+                        <option value="Sale A" {{ request('department') == 'Sale A' ? 'selected' : '' }}>Sale A</option>
+                        <option value="Sale B" {{ request('department') == 'Sale B' ? 'selected' : '' }}>Sale B</option>
+                        <option value="Sale C" {{ request('department') == 'Sale C' ? 'selected' : '' }}>Sale C</option>
+                        <option value="Royal" {{ request('department') == 'Royal' ? 'selected' : '' }}>Royal</option>
                         <option value="Service Muslims" {{ request('department') == 'Service Muslims' ? 'selected' : '' }}>Service Muslims</option>
                         <option value="Service Hindu" {{ request('department') == 'Service Hindu' ? 'selected' : '' }}>Service Hindu</option>
                         <option value="Service Christian" {{ request('department') == 'Service Christian' ? 'selected' : '' }}>Service Christian</option>
@@ -1085,6 +1145,7 @@
 
 
 <script>
+<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
 // Month filter functionality
 
 const monthFilter = document.getElementById('monthFilter');
@@ -1122,6 +1183,15 @@ function getMonthName(monthValue) {
 }
 
 function openAddTargetModal() {
+    // Initialize Select2 for service executive dropdown
+    setTimeout(function() {
+        $('#serviceExecutiveSelect').select2({
+            placeholder: 'Type to search for a staff member...',
+            allowClear: true,
+            width: '100%',
+            dropdownParent: $('#addTargetModal')
+        });
+    }, 100);
     document.getElementById('addTargetModal').style.display = 'flex';
 }
 function closeAddTargetModal() {

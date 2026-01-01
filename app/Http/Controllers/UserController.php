@@ -234,22 +234,48 @@ class UserController extends Controller
         $perPage = $request->get('per_page', 50);
         $currentUser = Auth::user();
         $today = \Carbon\Carbon::today()->format('Y-m-d');
-        
-        // Get profiles with today's follow-up date
-        if ($currentUser->is_admin) {
-            // Admin sees all follow-ups for today
-            $profiles = \DB::table('fresh_data')->whereDate('follow_up_date', $today)
-                            ->orderBy('follow_up_date', 'desc')
-                            ->paginate($perPage);
-        } else {
-            // Staff/Sales sees only their follow-ups for today
-            $profiles = \DB::table('fresh_data')->where('assigned_to', $currentUser->id)
-                            ->whereDate('follow_up_date', $today)
-                            ->orderBy('follow_up_date', 'desc')
-                            ->paginate($perPage);
+
+        // Get all executives for the filter dropdown
+        $executives = \App\Models\User::where(function($query) {
+            $query->where('is_admin', 1)
+                  ->orWhere('user_type', 'staff');
+        })
+        ->orderBy('first_name')
+        ->get(['id', 'first_name', 'last_name']);
+
+        // Build query using Eloquent for better filtering
+        $query = \App\Models\FreshData::whereDate('follow_up_date', $today)
+            ->with('user');
+
+        // Filter based on user role
+        if (!$currentUser->is_admin) {
+            $query->where('assigned_to', $currentUser->id);
         }
-        
-        return view('profile.followup_today', compact('profiles'));
+
+        // Apply filters
+        // Executive filter
+        if ($request->filled('executive_id')) {
+            if ($request->executive_id === 'unassigned') {
+                $query->whereDoesntHave('user');
+            } else {
+                $query->where('assigned_to', $request->executive_id);
+            }
+        }
+
+        // Assigned date filter
+        if ($request->filled('assigned_date')) {
+            $query->whereDate('created_at', $request->assigned_date);
+        }
+
+        // Status filter
+        if ($request->filled('status')) {
+            $query->where('status', $request->status);
+        }
+
+        // Get paginated results
+        $profiles = $query->orderBy('follow_up_date', 'desc')->paginate($perPage);
+
+        return view('profile.followup_today', compact('profiles', 'executives', 'currentUser'));
     }
 
     public function index(Request $request)
@@ -323,7 +349,7 @@ class UserController extends Controller
         Log::info("Query SQL", ["sql" => $query->toSql(), "bindings" => $query->getBindings()]);
         $profiles = $query->orderBy("created_at", "desc")->paginate($perPage);
         
-        return view("profile.profile", compact("profiles", "filter"));
+        return view("profile.profile", compact("profiles", "filter", "currentUser"));
     }
 
 

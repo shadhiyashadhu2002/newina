@@ -6,11 +6,14 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>Dashboard</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    @yield('styles')
 </head>
 <body>
     <!-- Navbar removed -->
     <main class="py-4">
         @yield('content')
     </main>
+    @yield('scripts')
+    @stack('page-scripts')
 </body>
 </html>

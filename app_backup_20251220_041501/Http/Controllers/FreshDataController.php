@@ -1,0 +1,540 @@
+<?php
+
+namespace App\Http\Controllers;
+
+use Illuminate\Http\Request;
+use App\Models\FreshData;
+use Illuminate\Support\Facades\Auth;
+use App\Imports\FreshDataImport;
+use Maatwebsite\Excel\Facades\Excel;
+use Illuminate\Support\Facades\Log;
+
+class FreshDataController extends Controller
+{
+    public function edit($id)
+    {
+        // First, try to find in users table (for database users)
+        $user = \App\Models\User::find($id);
+        
+        if ($user) {
+            // It's a database user - convert to fresh data format for the form
+            $freshData = (object)[
+                'id' => $user->id,
+                'code' => $user->code ?? 'IM' . date('Ym') . 'I' . $user->id,
+                'name' => $user->name ?? trim(($user->first_name ?? '') . ' ' . ($user->last_name ?? '')),
+                'gender' => $user->gender ?? '',
+                'registration_date' => $user->created_at ?? now(),
+                'verified_date' => $user->email_verified_at ?? null,
+                'mobile_number_1' => $user->phone ?? '',
+                'mobile_number_2' => $user->phone2 ?? '',
+                'whatsapp_number' => $user->whatsapp ?? '',
+                'comments' => $user->comments ?? '',
+                'is_database_user' => true
+            ];
+            return view('profile.edit_fresh_data', compact('freshData'));
+        }
+        
+        // If not found in users, try fresh_data table
+        $freshData = FreshData::findOrFail($id);
+        $freshData->is_database_user = false;
+        return view('profile.edit_fresh_data', compact('freshData'));
+    }
+
+    public function index()
+    {
+        $user = Auth::user();
+        $source = request()->query('source');
+
+        // Ensure these variables exist so compact() won't throw if one mode is not used
+        $databaseUsers = collect();
+        $freshData = collect();
+
+        // If requested source is 'database', show users table instead
+        if ($source === 'database') {
+            // Show paginated users from users table - select first_name/last_name and phone/gender
+            $databaseUsers = \App\Models\User::select('id', 'code', 'first_name', 'last_name', 'name', 'email', 'phone', 'gender')
+                ->orderBy('first_name')
+                ->paginate(25)
+                ->withQueryString();
+        } else {
+            if ($user->is_admin) {
+                // Admin sees UNASSIGNED profiles (to assign them)
+                $freshData = FreshData::with('user')
+                    ->whereNull('assigned_to')
+                    ->latest()
+                    ->get();
+            } else {
+                // Service/Sales executives see profiles ASSIGNED TO THEM (their work)
+                $freshData = FreshData::with('user')
+                    ->where('assigned_to', $user->id)
+                    ->latest()
+                    ->get();
+            }
+        }
+
+        // Fetch service executives (staff) with names
+        $serviceExecutives = \App\Models\User::where('user_type', 'staff')
+            ->whereNotNull('name')
+            ->orderBy('name')
+            ->get(['id', 'name']);
+        
+        // Fetch sales executives
+        $salesExecutives = \App\Models\User::whereIn('name', [
+            'SAFA', 'RIMA', 'ASNA', 'MIZHI', 'THARA', 'ISHA', 
+            'AKSHARA', 'MIYA', 'DIVYA', 'FIDHA', 'JANNA', 'ZARA', 
+            'NEHA', 'FARHA', 'RIYA'
+        ])
+            ->orderBy('name')
+            ->get(['id', 'name']);
+        
+        return view('profile.fresh_data', compact('serviceExecutives', 'salesExecutives', 'source', 'freshData', 'databaseUsers'));
+    }
+
+    public function store(Request $request)
+    {
+        // Log the incoming request for debugging
+        \Log::info('FreshData::store called', [
+            'user_id' => Auth::id(),
+            'input' => $request->all()
+        ]);
+
+        $validated = $request->validate([
+            'mobile' => 'required|digits:10',
+            'name' => 'required|string|max:255',
+            'source' => 'required|string|max:255',
+            'remarks' => 'nullable|string',
+            'welcome_call' => 'nullable|boolean',
+        ]);
+
+        // Provide both 'name' and 'customer_name' fields
+        $createData = [
+            'name' => $validated['name'],
+            'customer_name' => $validated['name'],
+            'mobile' => $validated['mobile'],
+            'source' => $validated['source'],
+            'remarks' => $validated['remarks'] ?? null,
+            'welcome_call' => $request->has('welcome_call'),
+        ];
+
+        // If the current user is not an admin, assign the new record to them
+        if (Auth::check() && !Auth::user()->is_admin) {
+            $createData['assigned_to'] = Auth::id();
+        }
+
+        try {
+            $fresh = FreshData::create($createData);
+            \Log::info('FreshData created', [ 'id' => $fresh->id ?? null, 'assigned_to' => $fresh->assigned_to ?? null ]);
+            return redirect()->route('fresh.data.index')->with('success', 'Fresh data added successfully!');
+        } catch (\Exception $e) {
+            \Log::error('FreshData::store exception', [
+                'message' => $e->getMessage(),
+                'input' => $createData,
+                'user_id' => Auth::id()
+            ]);
+
+            return back()->withInput()->with('error', 'Failed to add fresh data: ' . $e->getMessage());
+        }
+    }
+    public function update(Request $request, $id)
+    {
+        $freshData = FreshData::findOrFail($id);
+        $validated = $request->validate([
+            'mobile' => 'required|digits:10',
+            'name' => 'required|string|max:255',
+            'source' => 'required|string|max:255',
+            'remarks' => 'nullable|string',
+            'gender' => 'nullable|string',
+            'registration_date' => 'nullable|date',
+            'profile_id' => 'nullable|string',
+            'mobile_number_2' => 'nullable|string',
+            'whatsapp_number' => 'nullable|string',
+            'profile_created' => 'nullable|boolean',
+            'photo_uploaded' => 'nullable|boolean',
+            'welcome_call' => 'nullable|boolean',
+        ]);
+        $validated['profile_created'] = $request->has('profile_created');
+        $validated['photo_uploaded'] = $request->has('photo_uploaded');
+        $validated['welcome_call'] = $request->has('welcome_call');
+        $freshData->update($validated);
+        return redirect()->route('fresh.data')->with('success', 'Fresh data updated successfully!');
+    }
+
+    public function view($id)
+    {
+        $freshData = FreshData::with('user')->findOrFail($id);
+        return view('profile.fresh_data_view', compact('freshData'));
+    }
+
+    public function import(Request $request)
+    {
+        try {
+            Log::info("=== IMPORT STARTED ===");
+            Log::info("Request Data", [
+                "source" => $request->input("source"),
+                "has_file" => $request->hasFile("excel_file"),
+                "file_original_name" => $request->file('excel_file') ? $request->file('excel_file')->getClientOriginalName() : 'none',
+                "file_mime" => $request->file('excel_file') ? $request->file('excel_file')->getMimeType() : 'none',
+                "file_extension" => $request->file('excel_file') ? $request->file('excel_file')->getClientOriginalExtension() : 'none',
+                "file_size" => $request->file('excel_file') ? $request->file('excel_file')->getSize() : 0,
+            ]);
+
+            // More permissive validation - allow text/plain and text/csv
+            $validated = $request->validate([
+                'excel_file' => 'required|file|mimes:xlsx,xls,csv,txt|mimetypes:text/plain,text/csv,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet|max:10240',
+                'source' => 'required|string|in:Facebook,Instagram,Google Ads,Justdial,Website,Referral,Other',
+            ]);
+
+            Log::info("✓ Validation passed");
+
+            $file = $request->file('excel_file');
+            $source = $request->input('source');
+
+            Log::info("Processing import", [
+                "filename" => $file->getClientOriginalName(),
+                "source" => $source,
+                "size" => $file->getSize()
+            ]);
+
+            // Create import instance WITH source
+            $import = new FreshDataImport($source);
+
+            // Import the file
+            Excel::import($import, $file);
+
+            $imported = $import->getImportedCount();
+            $skipped = $import->getSkippedCount();
+
+            $message = "Import completed! Successfully imported: {$imported} records from {$source}. ";
+            if ($skipped > 0) {
+                $message .= "Skipped: {$skipped} records.";
+            }
+
+            Log::info('Excel Import Completed', [
+                'user_id' => Auth::id(),
+                'imported' => $imported,
+                'skipped' => $skipped,
+                'source' => $source,
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'message' => $message,
+                'imported' => $imported,
+                'skipped' => $skipped,
+            ]);
+
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            Log::error("✗ VALIDATION FAILED", ["errors" => $e->errors()]);
+            return response()->json([
+                'success' => false,
+                'message' => 'Validation error: ' . json_encode($e->errors()),
+                'errors' => $e->errors(),
+            ], 422);
+
+        } catch (\Exception $e) {
+            Log::error("✗ IMPORT EXCEPTION", [
+                "message" => $e->getMessage(),
+                "line" => $e->getLine(),
+                "file" => $e->getFile()
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Import failed: ' . $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    /**
+     * Export all users as a CSV file (Database view)
+     */
+    public function exportUsers()
+    {
+        $filename = 'users_export_' . date('Ymd_His') . '.csv';
+
+        $headers = [
+            'Content-Type' => 'text/csv',
+            'Content-Disposition' => 'attachment; filename="' . $filename . '"',
+        ];
+
+        $columns = ['ID', 'Name', 'Email', 'Phone', 'User Type'];
+
+        $callback = function () use ($columns) {
+            $file = fopen('php://output', 'w');
+            fputcsv($file, $columns);
+
+            \App\Models\User::orderBy('name')->chunk(200, function ($users) use ($file) {
+                foreach ($users as $u) {
+                    fputcsv($file, [
+                        $u->id,
+                        $u->name,
+                        $u->email,
+                        $u->phone,
+                        $u->user_type,
+                    ]);
+                }
+            });
+
+            fclose($file);
+        };
+
+        return response()->stream($callback, 200, $headers);
+    }
+
+    public function downloadTemplate()
+    {
+        $filename = 'fresh_data_template.csv';
+        $headers = [
+            'Content-Type' => 'text/csv',
+            'Content-Disposition' => 'attachment; filename="' . $filename . '"',
+        ];
+
+        $columns = ['Mobile'];
+        $sampleData = [
+            ['9876543210'],
+            ['9876543211'],
+            ['9876543212'],
+        ];
+
+        $callback = function() use ($columns, $sampleData) {
+            $file = fopen('php://output', 'w');
+            fputcsv($file, $columns);
+            foreach ($sampleData as $row) {
+                fputcsv($file, $row);
+            }
+            fclose($file);
+        };
+
+        return response()->stream($callback, 200, $headers);
+    }
+
+    /**
+     * Assign fresh data to a sales/service executive
+     */
+    public function assign(Request $request, $id)
+    {
+        try {
+            $request->validate([
+                'assigned_to' => 'required|integer|exists:users,id'
+            ]);
+
+            $freshData = FreshData::findOrFail($id);
+            $freshData->assigned_to = $request->assigned_to;
+            // Keep status as NULL/empty so it appears in "New Profiles" count
+            $freshData->status = null;
+            $freshData->save();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Successfully assigned to ' . $request->assigned_to
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to assign: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Bulk assign fresh data to a sales/service executive
+     */
+    public function bulkAssign(Request $request)
+    {
+        try {
+            $request->validate([
+                'record_ids' => 'required|array',
+                'record_ids.*' => 'integer',
+                'assigned_to' => 'required|integer|exists:users,id'
+            ]);
+
+            $recordIds = $request->record_ids;
+            $assignedTo = $request->assigned_to;
+
+            // Update all selected records - set status to NULL so it appears in "New Profiles" count
+            $updated = FreshData::whereIn('id', $recordIds)
+                ->update([
+                    'assigned_to' => $assignedTo,
+                    'status' => null // Keep status NULL/empty so it appears in new profiles count
+                ]);
+
+            return response()->json([
+                'success' => true,
+                'message' => "Successfully assigned {$updated} record(s) to {$assignedTo}"
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to assign: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    // View assigned profiles for service/sales executives
+   public function myAssignedProfiles()
+    {
+        $user = Auth::user();
+        $today = now()->format('Y-m-d');
+
+        if ($user->is_admin) {
+            // Admin sees ALL assigned profiles
+            $freshData = FreshData::with('user')
+                ->whereNotNull('assigned_to')
+                ->latest()
+                ->get();
+            
+            // Calculate follow-up today count for admin
+            $followupTodayCount = FreshData::whereDate('follow_up_date', $today)->count();
+        } else {
+            // Service/Sales executives see only profiles assigned to them
+            $freshData = FreshData::where('assigned_to', $user->id)
+                ->latest()
+                ->get();
+            
+            // Calculate follow-up today count for staff
+            $followupTodayCount = FreshData::where('assigned_to', $user->id)
+                ->whereDate('follow_up_date', $today)
+                ->count();
+        }
+
+        // Calculate stats
+        $stats = [
+            'total' => $freshData->count(),
+            'pending' => $freshData->where('status', '!=', 'Completed')->count(),
+            'completed' => $freshData->where('status', 'Completed')->count(),
+            'followup_today' => $followupTodayCount
+        ];
+
+        // DEBUG: Check what data we're passing
+        \Log::info('MyAssignedProfiles data:', [
+            'count' => $freshData->count(),
+            'stats' => $stats,
+            'today' => $today,
+            'first_profile' => $freshData->first() ? [
+                'id' => $freshData->first()->id,
+                'status' => $freshData->first()->status,
+                'follow_up_date' => $freshData->first()->follow_up_date,
+                'customer_name' => $freshData->first()->customer_name,
+                'imid' => $freshData->first()->imid,
+            ] : null
+        ]);
+
+        return view('profile.my_assigned_profiles', compact('freshData', 'stats'));
+    }
+
+    // Update status for assigned profile
+    public function updateStatus(Request $request)
+    {
+        $validated = $request->validate([
+            'profile_id' => 'required|integer|exists:fresh_data,id',
+            'status' => 'required|string',
+            'follow_up_date' => 'nullable|date',
+            'customer_name' => 'nullable|string|max:255',
+            'imid' => 'nullable|string|max:100',
+            'secondary_phone' => 'nullable|string|max:20',
+            'is_new_lead' => 'nullable|in:yes,no',
+            'remarks' => 'nullable|string'
+        ]);
+
+        $profile = FreshData::findOrFail($validated['profile_id']);
+
+        if (!Auth::user()->is_admin && $profile->assigned_to != Auth::id()) {
+            return back()->with('error', 'Unauthorized access.');
+        }
+
+        $updateData = ['status' => $validated['status']];
+
+        if (isset($validated['follow_up_date'])) $updateData['follow_up_date'] = $validated['follow_up_date'];
+        if (isset($validated['customer_name'])) $updateData['customer_name'] = $validated['customer_name'];
+        if (isset($validated['imid'])) $updateData['imid'] = $validated['imid'];
+        if (isset($validated['secondary_phone'])) $updateData['secondary_phone'] = $validated['secondary_phone'];
+        if (isset($validated['is_new_lead'])) $updateData['is_new_lead'] = $validated['is_new_lead'];
+        if (isset($validated['remarks'])) $updateData['remarks'] = $validated['remarks'];
+
+        $profile->update($updateData);
+
+        if (request()->ajax() || request()->wantsJson()) {
+            $profile->refresh();
+            return response()->json([
+                'success' => true,
+                'message' => 'Status updated successfully!',
+                'profile' => $profile
+            ]);
+        }
+
+        return redirect()->back()->with('success', 'Status updated successfully!');
+    }
+
+    
+    // Get user data for modal (AJAX)
+    public function getUserData($id)
+    {
+        $source = request()->query('source', 'fresh_data');
+        
+        if ($source === 'database') {
+            $user = \App\Models\User::find($id);
+            if ($user) {
+                return response()->json([
+                    'id' => $user->id,
+                    'name' => $user->name ?? trim(($user->first_name ?? '') . ' ' . ($user->last_name ?? '')),
+                    'code' => $user->code ?? 'IM' . date('Ym') . 'I' . $user->id,
+                    'profile_id' => $user->code ?? 'IM' . date('Ym') . 'I' . $user->id,
+                    'status' => $user->status ?? '',
+                    'follow_up_date' => $user->follow_up_date ?? '',
+                    'next_follow_up_date' => $user->follow_up_date ?? ''
+                ]);
+            }
+        } else {
+            $freshData = FreshData::find($id);
+            if ($freshData) {
+                return response()->json([
+                    'id' => $freshData->id,
+                    'name' => $freshData->name,
+                    'code' => $freshData->code,
+                    'profile_id' => $freshData->code,
+                    'status' => $freshData->status ?? '',
+                    'follow_up_date' => $freshData->follow_up_date ?? '',
+                    'next_follow_up_date' => $freshData->next_follow_up_date ?? ''
+                ]);
+            }
+        }
+        
+        return response()->json(['error' => 'User not found'], 404);
+    }
+    
+    // Update follow-up data (AJAX)
+    public function updateFollowup($id)
+    {
+        $source = request()->input('source', 'fresh_data');
+        
+        $validated = request()->validate([
+            'status' => 'required|string',
+            'next_follow_up_date' => 'nullable|date',
+            'remarks' => 'nullable|string'
+        ]);
+        
+        if ($source === 'database') {
+            $user = \App\Models\User::findOrFail($id);
+            $user->status = $validated['status'];
+            $user->follow_up_date = $validated['next_follow_up_date'];
+            $user->comments = $validated['remarks'];
+            $user->save();
+            
+            return response()->json([
+                'success' => true,
+                'message' => 'Follow-up updated successfully'
+            ]);
+        } else {
+            $freshData = FreshData::findOrFail($id);
+            $freshData->status = $validated['status'];
+            $freshData->next_follow_up_date = $validated['next_follow_up_date'];
+            $freshData->comments = $validated['remarks'];
+            $freshData->save();
+            
+            return response()->json([
+                'success' => true,
+                'message' => 'Follow-up updated successfully'
+            ]);
+        }
+    }
+}

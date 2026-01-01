@@ -349,32 +349,49 @@ class FreshDataController extends Controller
         $today = now()->format('Y-m-d');
 
         if ($user->is_admin) {
-            // Admin sees ALL assigned profiles
+            // Admin sees profiles that are either:
+            // 1. Not updated yet (no follow_up_date) OR
+            // 2. Follow-up date is today
             $freshData = FreshData::with('user')
                 ->whereNotNull('assigned_to')
+                ->where(function($query) use ($today) {
+                    $query->whereNull('follow_up_date')
+                          ->orWhereDate('follow_up_date', $today);
+                })
                 ->latest()
                 ->get();
-            
+
             // Calculate follow-up today count for admin
             $followupTodayCount = FreshData::whereDate('follow_up_date', $today)->count();
         } else {
-            // Service/Sales executives see only profiles assigned to them
+            // Service/Sales executives see only their profiles that are either:
+            // 1. Not updated yet (no follow_up_date) OR
+            // 2. Follow-up date is today
             $freshData = FreshData::where('assigned_to', $user->id)
+                ->where(function($query) use ($today) {
+                    $query->whereNull('follow_up_date')
+                          ->orWhereDate('follow_up_date', $today);
+                })
                 ->latest()
                 ->get();
-            
+
             // Calculate follow-up today count for staff
             $followupTodayCount = FreshData::where('assigned_to', $user->id)
                 ->whereDate('follow_up_date', $today)
                 ->count();
         }
 
+        // Separate into new profiles and follow-up today
+        $newProfiles = $freshData->whereNull('follow_up_date');
+        $followupToday = $freshData->whereNotNull('follow_up_date');
+
         // Calculate stats
         $stats = [
             'total' => $freshData->count(),
             'pending' => $freshData->where('status', '!=', 'Completed')->count(),
             'completed' => $freshData->where('status', 'Completed')->count(),
-            'followup_today' => $followupTodayCount
+            'followup_today' => $followupTodayCount,
+            'new_profiles' => $newProfiles->count()
         ];
 
         // DEBUG: Check what data we're passing
@@ -382,19 +399,59 @@ class FreshDataController extends Controller
             'count' => $freshData->count(),
             'stats' => $stats,
             'today' => $today,
-            'first_profile' => $freshData->first() ? [
-                'id' => $freshData->first()->id,
-                'status' => $freshData->first()->status,
-                'follow_up_date' => $freshData->first()->follow_up_date,
-                'customer_name' => $freshData->first()->customer_name,
-                'imid' => $freshData->first()->imid,
-            ] : null
+            'new_profiles_count' => $newProfiles->count(),
+            'followup_today_count' => $followupToday->count(),
         ]);
 
-        return view('profile.my_assigned_profiles', compact('freshData', 'stats'));
+        return view('profile.my_assigned_profiles', compact('freshData', 'stats', 'newProfiles', 'followupToday'));
     }
 
-    // Update status for assigned profile
+    /**
+     * Get history for a profile
+     */
+    public function getHistory($id)
+    {
+        try {
+            $profile = FreshData::findOrFail($id);
+            
+            // Check if user has access to this profile
+            if (!Auth::user()->is_admin && $profile->assigned_to != Auth::id()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Unauthorized access'
+                ], 403);
+            }
+
+            // Get all history records for this profile from profile_history table
+            $history = \DB::table('profile_history')
+                ->where('profile_id', $id)
+                ->orderBy('created_at', 'desc')
+                ->get()
+                ->map(function($record) {
+                    return [
+                        'updated_at' => date('d M Y, h:i a', strtotime($record->created_at)),
+                        'executive' => $record->executive_name ?? 'N/A',
+                        'customer_name' => $record->customer_name ?? '-',
+                        'status' => $record->status ?? '-',
+                        'assigned_date' => $record->assigned_date ? date('d M Y', strtotime($record->assigned_date)) : 'N/A',
+                        'follow_up_date' => $record->follow_up_date ? date('d M Y', strtotime($record->follow_up_date)) : '-',
+                        'imid' => $record->imid ?? 'N/A',
+                        'remarks' => $record->remarks ?? '-',
+                        'action' => $record->action_type ?? 'update'
+                    ];
+                });
+
+            return response()->json([
+                'success' => true,
+                'history' => $history
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to fetch history: ' . $e->getMessage()
+            ], 500);
+        }
+    }
     public function updateStatus(Request $request)
     {
         $validated = $request->validate([
@@ -407,24 +464,39 @@ class FreshDataController extends Controller
             'is_new_lead' => 'nullable|in:yes,no',
             'remarks' => 'nullable|string'
         ]);
-
+        
         $profile = FreshData::findOrFail($validated['profile_id']);
-
+        
         if (!Auth::user()->is_admin && $profile->assigned_to != Auth::id()) {
             return back()->with('error', 'Unauthorized access.');
         }
-
+        
         $updateData = ['status' => $validated['status']];
-
         if (isset($validated['follow_up_date'])) $updateData['follow_up_date'] = $validated['follow_up_date'];
         if (isset($validated['customer_name'])) $updateData['customer_name'] = $validated['customer_name'];
         if (isset($validated['imid'])) $updateData['imid'] = $validated['imid'];
         if (isset($validated['secondary_phone'])) $updateData['secondary_phone'] = $validated['secondary_phone'];
         if (isset($validated['is_new_lead'])) $updateData['is_new_lead'] = $validated['is_new_lead'];
         if (isset($validated['remarks'])) $updateData['remarks'] = $validated['remarks'];
-
+        
         $profile->update($updateData);
-
+        
+        // Save to profile_history table
+        \DB::table('profile_history')->insert([
+            'profile_id' => $profile->id,
+            'updated_by' => Auth::id(),
+            'executive_name' => Auth::user()->name,
+            'customer_name' => $validated['customer_name'] ?? $profile->customer_name,
+            'status' => $validated['status'],
+            'follow_up_date' => $validated['follow_up_date'] ?? null,
+            'remarks' => $validated['remarks'] ?? null,
+            'imid' => $validated['imid'] ?? $profile->imid,
+            'assigned_date' => $profile->created_at,
+            'action_type' => 'update',
+            'created_at' => now(),
+            'updated_at' => now()
+        ]);
+        
         if (request()->ajax() || request()->wantsJson()) {
             $profile->refresh();
             return response()->json([
@@ -433,8 +505,8 @@ class FreshDataController extends Controller
                 'profile' => $profile
             ]);
         }
-
+        
         return redirect()->back()->with('success', 'Status updated successfully!');
-    }
 
     }
+}

@@ -383,6 +383,68 @@
     </div>
     @endif
 
+        @if($currentUser->is_admin)
+        <!-- Filters Section -->
+        <div class="filters-section" style="background: white; padding: 20px; border-radius: 8px; margin-bottom: 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+            <form method="GET" action="{{ route('profiles.followup.due') }}" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; align-items: end;">
+                
+                <!-- Executive Name Filter -->
+                <div style="display: flex; flex-direction: column;">
+                    <label style="margin-bottom: 5px; font-weight: 600; color: #333;">Executive</label>
+                    <select name="executive_id" style="padding: 8px; border: 1px solid #ddd; border-radius: 4px; background: white;">
+                        <option value="">All Executives</option>
+                        @foreach($executives as $executive)
+                            <option value="{{ $executive->id }}" {{ request('executive_id') == $executive->id ? 'selected' : '' }}>
+                                {{ $executive->first_name }} {{ $executive->last_name ?? '' }}
+                            </option>
+                        @endforeach
+                        <option value="unassigned" {{ request('executive_id') == 'unassigned' ? 'selected' : '' }}>Unassigned</option>
+                    </select>
+                </div>
+
+                <!-- Assigned Date Filter -->
+                <div style="display: flex; flex-direction: column;">
+                    <label style="margin-bottom: 5px; font-weight: 600; color: #333;">Assigned Date</label>
+                    <input type="date" name="assigned_date" value="{{ request('assigned_date') }}" 
+                           style="padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                </div>
+
+                <!-- Follow-up Date Filter -->
+                <div style="display: flex; flex-direction: column;">
+                    <label style="margin-bottom: 5px; font-weight: 600; color: #333;">Follow-up Date</label>
+                    <input type="date" name="followup_date" value="{{ request('followup_date') }}" 
+                           style="padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                </div>
+
+                <!-- Status Filter -->
+                <div style="display: flex; flex-direction: column;">
+                    <label style="margin-bottom: 5px; font-weight: 600; color: #333;">Status</label>
+                    <select name="status" style="padding: 8px; border: 1px solid #ddd; border-radius: 4px; background: white;">
+                        <option value="">All Status</option>
+                        <option value="Pending" {{ request('status') == 'Pending' ? 'selected' : '' }}>Pending</option>
+                        <option value="Created" {{ request('status') == 'Created' ? 'selected' : '' }}>Created</option>
+                        <option value="CNC" {{ request('status') == 'CNC' ? 'selected' : '' }}>CNC</option>
+                        <option value="Not Interested" {{ request('status') == 'Not Interested' ? 'selected' : '' }}>Not Interested</option>
+                        <option value="Not Responding" {{ request('status') == 'Not Responding' ? 'selected' : '' }}>Not Responding</option>
+                    </select>
+                </div>
+
+                <!-- Filter Buttons -->
+                <div style="display: flex; gap: 10px;">
+                    <button type="submit" style="padding: 8px 20px; background: #ac0742; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: 600;">
+                        Apply Filters
+                    </button>
+                    <a href="{{ route('profiles.followup.due') }}" style="padding: 8px 20px; background: #6c757d; color: white; text-decoration: none; border-radius: 4px; display: inline-block; text-align: center; font-weight: 600;">
+                        Clear
+                    </a>
+                </div>
+                
+                <!-- Keep per_page value -->
+                <input type="hidden" name="per_page" value="{{ request('per_page', 20) }}">
+            </form>
+        </div>
+
+        @endif
     <div class="data-table-section">
         <div class="table-controls">
             <div class="show-entries">
@@ -405,6 +467,7 @@
                 <tr>
                     <th>NAME</th>
                     <th>MOBILE</th>
+                    <th>EXECUTIVE</th>
                     <th>ASSIGNED DATE</th>
                     <th>FOLLOW-UP DATE</th>
                     <th>DAYS OVERDUE</th>
@@ -442,6 +505,7 @@
                 <tr>
                     <td>{{ $profile->customer_name ?? $profile->name ?? '-' }}</td>
                     <td>{{ $profile->mobile ?? '-' }}</td>
+                    <td>{{ $profile->user ? ($profile->user->first_name . ' ' . ($profile->user->last_name ?? '')) : 'Unassigned' }}</td>
                     <td>{{ $assignedDate }}</td>
                     <td>
                         {{ $followUpDate }}

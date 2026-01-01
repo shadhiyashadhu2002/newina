@@ -6,46 +6,96 @@
         <div class="header-left">
             <h1 class="dashboard-title">INA</h1>
             <nav class="main-nav">
-                <a href="{{ route('dashboard') }}" class="nav-link active">Home</a>
-                <a href="{{ route('profile.hellow') }}" class="nav-link">Profiles</a>
-                <div class="nav-dropdown">
-                    <a href="{{ route('sales.management') }}" class="nav-link">Sales ▼</a>
-                </div>
-                <a href="{{ route('helpline.index') }}" class="nav-link">HelpLine</a>
-                @if($currentUser->is_admin)
-                <div class="nav-dropdown fresh-data-dropdown">
-                    <a href="#" class="nav-link" tabindex="0" onclick="event.preventDefault();">Fresh Data ▼</a>
-                    <div class="dropdown-content" style="overflow: visible !important;" aria-hidden="false">
-                        <a href="{{ route('fresh.data.index') }}" class="dropdown-item">Fresh Data</a>
-                        <a href="{{ route('fresh.data.index', ['source' => 'database']) }}" class="dropdown-item">Database</a>
+                @if($currentUser->team === 'hr')
+                    {{-- HR User - Home, Staff Management, Asset --}}
+                    <a href="{{ route('dashboard') }}" class="nav-link active">Home</a>
+                    <div class="nav-dropdown staff-management-dropdown">
+                        <a href="#" class="nav-link" tabindex="0" onclick="event.preventDefault();">Staff Management ▼</a>
+                        <div class="dropdown-content" style="overflow: visible !important;" aria-hidden="false">
+                            <a href="{{ route('employee.sheet') }}" class="dropdown-item">Employee Sheet</a>
+                        </div>
                     </div>
-                </div>
+                    <a href="#" class="nav-link">Asset</a>
+                    
+                @elseif($currentUser->team === 'sales')
+                    {{-- SALES Team - Profiles, Sales, Fresh Data, abc --}}
+                    <a href="{{ route('profile.hellow') }}" class="nav-link">Profiles</a>
+                    <div class="nav-dropdown">
+                        <a href="{{ route('sales.management') }}" class="nav-link">Sales ▼</a>
+                    </div>
+                    @if($currentUser->is_admin)
+                    <div class="nav-dropdown fresh-data-dropdown">
+                        <a href="#" class="nav-link" tabindex="0" onclick="event.preventDefault();">Fresh Data ▼</a>
+                        <div class="dropdown-content" style="overflow: visible !important;" aria-hidden="false">
+                            <a href="{{ route('fresh.data.index') }}" class="dropdown-item">Fresh Data</a>
+                            <a href="{{ route('fresh.data.index', ['source' => 'database']) }}" class="dropdown-item">Database</a>
+                        </div>
+                    </div>
+                    @endif
+                    <a href="#" class="nav-link">abc</a>
+                    
+                @elseif($currentUser->team === 'service')
+                    {{-- SERVICE Team - Profiles, Sales, Services --}}
+                    <a href="{{ route('profile.hellow') }}" class="nav-link">Profiles</a>
+                    <div class="nav-dropdown">
+                        <a href="{{ route('sales.management') }}" class="nav-link">Sales ▼</a>
+                    </div>
+                    <div class="nav-dropdown">
+                        <a href="{{ route('services.page') }}" class="nav-link">Services ▼</a>
+                    </div>
+                    
+                @elseif($currentUser->team === 'helpline')
+                    {{-- HELPLINE Team - Home, Profiles, Sales, Helpline --}}
+                    <a href="{{ route('dashboard') }}" class="nav-link active">Home</a>
+                    <a href="{{ route('profile.hellow') }}" class="nav-link">Profiles</a>
+                    <div class="nav-dropdown">
+                        <a href="{{ route('sales.management') }}" class="nav-link">Sales ▼</a>
+                    </div>
+                    <a href="{{ route('helpline.index') }}" class="nav-link">HelpLine</a>
+                    
+                @else
+                    {{-- Admin or Default - Full Navigation --}}
+                    <a href="{{ route('dashboard') }}" class="nav-link active">Home</a>
+                    <a href="{{ route('profile.hellow') }}" class="nav-link">Profiles</a>
+                    <div class="nav-dropdown">
+                        <a href="{{ route('sales.management') }}" class="nav-link">Sales ▼</a>
+                    </div>
+                    <a href="{{ route('helpline.index') }}" class="nav-link">HelpLine</a>
+                    @if($currentUser->is_admin)
+                    <div class="nav-dropdown fresh-data-dropdown">
+                        <a href="#" class="nav-link" tabindex="0" onclick="event.preventDefault();">Fresh Data ▼</a>
+                        <div class="dropdown-content" style="overflow: visible !important;" aria-hidden="false">
+                            <a href="{{ route('fresh.data.index') }}" class="dropdown-item">Fresh Data</a>
+                            <a href="{{ route('fresh.data.index', ['source' => 'database']) }}" class="dropdown-item">Database</a>
+                        </div>
+                    </div>
+                    @endif
+                    <a href="#" class="nav-link">abc</a>
+                    <div class="nav-dropdown">
+                        <a href="{{ route('services.page') }}" class="nav-link">Services ▼</a>
+                    </div>
+                    <div class="nav-dropdown business-dropdown">
+                        <a href="#" class="nav-link" tabindex="0" onclick="event.preventDefault();">Business ▼</a>
+                        <div class="dropdown-content" style="overflow: visible !important;" aria-hidden="false">
+                            <a href="{{ route('addsale.page') }}" class="dropdown-item">Add Sale</a>
+                            <a href="{{ route('stafftarget.page') }}" class="dropdown-item">Staff Target Assign</a>
+                            <a href="{{ route('staffproductivity.page') }}" class="dropdown-item">Staff Productivity</a>
+                        </div>
+                    </div>
+                    <div class="nav-dropdown accounts-dropdown">
+                        <a href="#" class="nav-link" tabindex="0" onclick="event.preventDefault();">Accounts ▼</a>
+                        <div class="dropdown-content" style="overflow: visible !important;" aria-hidden="false">
+                            <a href="{{ route('expense.page') }}" class="dropdown-item">Expense Page</a>
+                        </div>
+                    </div>
+                    <div class="nav-dropdown staff-management-dropdown">
+                        <a href="#" class="nav-link" tabindex="0" onclick="event.preventDefault();">Staff Management ▼</a>
+                        <div class="dropdown-content" style="overflow: visible !important;" aria-hidden="false">
+                            <a href="{{ route('employee.sheet') }}" class="dropdown-item">Employee Sheet</a>
+                        </div>
+                    </div>
+                    <a href="#" class="nav-link">Asset</a>
                 @endif
-                <a href="#" class="nav-link">abc</a>
-                <div class="nav-dropdown">
-                    <a href="{{ route('services.page') }}" class="nav-link">Services ▼</a>
-                </div>
-                <div class="nav-dropdown business-dropdown">
-                    <a href="#" class="nav-link" tabindex="0" onclick="event.preventDefault();">Business ▼</a>
-                    <div class="dropdown-content" style="overflow: visible !important;" aria-hidden="false">
-                        <a href="{{ route('addsale.page') }}" class="dropdown-item">Add Sale</a>
-                        <a href="{{ route('stafftarget.page') }}" class="dropdown-item">Staff Target Assign</a>
-                        <a href="{{ route('staffproductivity.page') }}" class="dropdown-item">Staff Productivity</a>
-                    </div>
-                </div>
-                <div class="nav-dropdown accounts-dropdown">
-                    <a href="#" class="nav-link" tabindex="0" onclick="event.preventDefault();">Accounts ▼</a>
-                    <div class="dropdown-content" style="overflow: visible !important;" aria-hidden="false">
-                        <a href="{{ route('expense.page') }}" class="dropdown-item">Expense Page</a>
-                    </div>
-                </div>
-                <div class="nav-dropdown staff-management-dropdown">
-                    <a href="#" class="nav-link" tabindex="0" onclick="event.preventDefault();">Staff Management ▼</a>
-                    <div class="dropdown-content" style="overflow: visible !important;" aria-hidden="false">
-                        <a href="{{ route('employee.sheet') }}" class="dropdown-item">Employee Sheet</a>
-                    </div>
-                </div>
-                <a href="#" class="nav-link">Asset</a>
             </nav>
 
         </div>
@@ -66,12 +116,19 @@
                 <div class="stat-number">{{ $stats['followup_today'] ?? 0 }}</div>
             </div>
         </a>
-        <a href="{{ route('profiles.followup.due') }}" class="stat-card-link">
-            <div class="stat-card orange">
+        @if(Auth::user()->is_admin)
+            <a href="{{ route('profiles.followup.due') }}" class="stat-card-link">
+                <div class="stat-card orange">
+                    <h3>Follow-up Due</h3>
+                    <div class="stat-number">{{ $stats['followup_due'] ?? 0 }}</div>
+                </div>
+            </a>
+        @else
+            <div class="stat-card orange" style="cursor: not-allowed; opacity: 0.7;">
                 <h3>Follow-up Due</h3>
                 <div class="stat-number">{{ $stats['followup_due'] ?? 0 }}</div>
             </div>
-        </a>
+        @endif
 
         <a href="{{ route('assigned.profiles.view') }}" class="stat-card-link">
             <div class="stat-card blue">

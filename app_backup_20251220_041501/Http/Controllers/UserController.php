@@ -1,0 +1,390 @@
+<?php
+namespace App\Http\Controllers;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
+use App\Models\User;
+
+class UserController extends Controller
+{
+    public function dashboard()
+    {
+        $user = Auth::user();
+        
+        // If user is admin or staff, redirect to main dashboard
+        if ($user->is_admin || $user->user_type === 'staff') {
+            return redirect()->route('dashboard'); 
+        }
+        
+        return view('user.dashboard', compact('user'));
+    }
+
+    // Show the edit profile page
+    public function editProfile($id)
+    {
+        $user = User::findOrFail($id);
+        return view('profile.profile_edit', compact('user'));
+    }
+
+    public function updateProfile(Request $request, $id)
+    {
+        $user = User::findOrFail($id);
+
+        $validatedData = $request->validate([
+            'first_name' => 'required|string|max:255',
+            'gender' => 'required|in:Male,Female,Other',
+            'phone' => 'nullable|string|max:20',
+            'phone2' => 'nullable|string|max:20',
+            'whatsapp_phone' => 'nullable|string|max:20',
+            'welcome_call_completed' => 'nullable|boolean',
+            'comments' => 'nullable|string|max:1000',
+        ]);
+
+        $user->first_name = $validatedData['first_name'];
+        $user->gender = $validatedData['gender'];
+        $user->phone = $validatedData['phone'] ?? null;
+        $user->phone2 = $validatedData['phone2'] ?? null;
+        $user->whatsapp_number = $validatedData['whatsapp_phone'] ?? null;
+        $user->welcome_call_completed = $request->has('welcome_call_completed');
+        $user->comments = $validatedData['comments'] ?? null;
+        $user->save();
+
+        return redirect()->route('profile.hellow')->with('success', 'Profile updated successfully!');
+    }
+
+    public function store(Request $request)
+    {
+    // Validation and creation logic
+    $validated = $request->validate([
+        'code' => 'required|unique:users',
+        'first_name' => 'required|string|max:255',
+        'gender' => 'required|in:Male,Female,Other',
+        'phone' => 'required|string',
+        'phone2' => 'nullable|string',
+        'whatsapp_phone' => 'nullable|string',
+        'comments' => 'nullable|string',
+        'status' => 'nullable|string',
+    ]);
+
+    $user = new User();
+    $user->code = $validated['code'];
+    $user->first_name = $validated['first_name'];
+    $user->name = $validated['first_name']; 
+    $user->phone = $validated['phone'];
+    $user->phone2 = $validated['phone2'] ?? null;
+    $user->whatsapp_number = $validated['whatsapp_phone'] ?? null;
+    $user->comments = $validated['comments'] ?? null;
+    $user->status = $validated['status'] ?? null;
+    $user->save();
+
+    return redirect()->route('profile.hellow')->with('success', 'Profile created successfully!');
+    }
+    // Display new profiles in a table
+    public function newProfiles(Request $request)
+    {
+        $perPage = $request->get('per_page', 50);
+        
+        // Get the currently logged-in user
+        $currentUser = auth()->user();
+        
+        // Get fresh data assigned to the current service/sale executive
+        $profiles = \DB::table('fresh_data')
+                        ->where('assigned_to', $currentUser->id)
+                        ->orderBy('created_at', 'desc')
+                        ->where(function($query) {
+                            $query->whereNull('status')
+                                  ->orWhere('status', '');
+                        })
+                        ->paginate($perPage);
+        
+        return view('profile.new_profiles', compact('profiles'));
+    }
+    // Update profile status and follow-up date from modal
+    public function updateStatus(Request $request, $id)
+    {
+        $validated = $request->validate([
+            'status' => 'required|string',
+            'followup_date' => 'required|date',
+            'customer_name' => 'required|string|max:255',
+            'profile_id' => 'required|string',
+        ]);
+
+        // Update fresh_data table instead of users
+        \DB::table('fresh_data')
+            ->where('id', $id)
+            ->update([
+                'status' => $validated['status'],
+                'follow_up_date' => $validated['followup_date'],
+                'customer_name' => $validated['customer_name'],
+                'imid' => $validated['profile_id'],
+                'updated_at' => now(),
+            ]);
+
+        return redirect()->route('profiles.new')->with('success', 'Profile updated successfully!');
+    }
+
+    public function update(Request $request, $id)
+    {
+        try {
+            $rules = [
+                'status' => 'required|string',
+                'follow_up_date' => 'required|date',
+                'remarks' => 'nullable|string',
+            ];
+
+            if ($request->status === 'Created') {
+                $rules['imid'] = 'required|string|max:50';
+                $rules['mobile_number_2'] = 'nullable|string|max:20';
+                $rules['is_new_lead'] = 'nullable|string';
+            }
+
+            $validated = $request->validate($rules);
+
+            $profile = DB::table('fresh_data')
+                ->where('id', $id)
+                ->first();
+
+            if (!$profile) {
+                return response()->json(['success' => false, 'message' => 'Profile not found'], 404);
+            }
+
+            // Preserve customer_name - use existing or fall back to name column
+            $customerName = $profile->customer_name ?? $profile->name;
+
+            $updateData = [
+                'status' => $validated['status'],
+                'follow_up_date' => $validated['follow_up_date'],
+                'remarks' => $validated['remarks'] ?? null,
+                'customer_name' => $customerName,
+                'updated_at' => now()
+            ];
+
+            if ($request->status === 'Created') {
+                $updateData['imid'] = $validated['imid'];
+                if (isset($validated['mobile_number_2'])) {
+                    $updateData['mobile_number_2'] = $validated['mobile_number_2'];
+                }
+            }
+
+            DB::table('fresh_data')
+                ->where('id', $id)
+                ->update($updateData);
+
+            // Log to history
+            DB::table('profile_history')->insert([
+                'profile_id' => $id,
+                'updated_by' => auth()->id(),
+                'executive_name' => auth()->user()->name,
+                'customer_name' => $customerName,
+                'status' => $validated['status'],
+                'follow_up_date' => $validated['follow_up_date'],
+                'remarks' => $validated['remarks'] ?? null,
+                'imid' => $request->status === 'Created' ? $validated['imid'] : $profile->imid,
+                'assigned_date' => $profile->created_at,
+                'action_type' => 'update',
+                'created_at' => now(),
+                'updated_at' => now()
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Profile updated successfully!' .
+                            ($request->status === 'Created' ? ' IMID: ' . $validated['imid'] : '')
+            ]);
+        } catch (\Exception $e) {
+            \Log::error('Profile update error: ' . $e->getMessage());
+            return response()->json(['success' => false, 'message' => $e->getMessage()], 500);
+        }
+    }
+    public function getHistory($id)
+    {
+        try {
+            // Get profile information from fresh_data table
+            $profile = DB::table('fresh_data')
+                ->where('id', $id)
+                ->select('id', 'customer_name')
+                ->first();
+            
+            // Get history data
+            $history = DB::table('profile_history')
+                ->leftJoin('users', 'profile_history.updated_by', '=', 'users.id')
+                ->where('profile_history.profile_id', $id)
+                ->select(
+                    'profile_history.*',
+                    'users.name as executive_name'
+                )
+                ->orderBy('profile_history.created_at', 'desc')
+                ->get();
+            
+            return response()->json([
+                'success' => true,
+                'profile' => $profile,
+                'history' => $history
+            ]);
+        } catch (\Exception $e) {
+            \Log::error('Get history error: ' . $e->getMessage());
+            return response()->json(['success' => false, 'message' => $e->getMessage()], 500);
+        }
+    }
+
+    // Display profiles with today's follow-up date
+    public function followupToday(Request $request)
+    {
+        $perPage = $request->get('per_page', 50);
+        $currentUser = Auth::user();
+        $today = \Carbon\Carbon::today()->format('Y-m-d');
+        
+        // Get profiles with today's follow-up date
+        if ($currentUser->is_admin) {
+            // Admin sees all follow-ups for today
+            $profiles = \DB::table('fresh_data')->whereDate('follow_up_date', $today)
+                            ->orderBy('follow_up_date', 'desc')
+                            ->paginate($perPage);
+        } else {
+            // Staff/Sales sees only their follow-ups for today
+            $profiles = \DB::table('fresh_data')->where('assigned_to', $currentUser->id)
+                            ->whereDate('follow_up_date', $today)
+                            ->orderBy('follow_up_date', 'desc')
+                            ->paginate($perPage);
+        }
+        
+        return view('profile.followup_today', compact('profiles'));
+    }
+
+    public function index(Request $request)
+    {
+        $perPage = $request->get("per_page", 50);
+        Log::info("Profile Index Called", ["filter" => $request->get("filter"), "user_id" => Auth::id()]);
+        Log::info("Request Details", ["all_params" => $request->all(), "query_string" => $request->getQueryString(), "url" => $request->fullUrl()]);
+        $filter = $request->get("filter", "all");
+        $search = $request->get("search", "");
+        
+        $currentUser = Auth::user();
+        $today = \Carbon\Carbon::today();
+        
+        $query = \DB::table("fresh_data");
+        
+        if (!$currentUser->is_admin && $filter !== "not_assigned") {
+            $query->where("assigned_to", $currentUser->id);
+        }
+        
+        switch($filter) {
+            case "12_more_days":
+                $query->whereNotNull("follow_up_date")
+                      ->where("follow_up_date", "<=", $today->copy()->subDays(12)->format("Y-m-d"))
+                      ->whereNotIn("status", ["Closed", "Completed", "Created"]);
+                break;
+                
+            case "no_welcome_calls":
+                $query->where(function($q) {
+                    $q->whereNull("welcome_call")
+                      ->orWhere("welcome_call", 0);
+                });
+                break;
+                
+            case "postpone_payment":
+                $query->where("status", "Postpone Payment");
+                break;
+                
+            case "not_assigned":
+                $query->whereNull("assigned_to");
+                break;
+                
+            case "zero_followups":
+                $query->where(function($q) {
+                    $q->whereNull("follow_up_date")
+                      ->orWhere("follow_up_date", "");
+                });
+                break;
+                
+            case "followup_today":
+                $query->whereDate("follow_up_date", $today->format("Y-m-d"));
+                break;
+                
+            case "followup_due":
+                $query->whereNotNull("follow_up_date")
+                      ->where("follow_up_date", "<", $today->format("Y-m-d"))
+                      ;
+                break;
+        }
+        
+        if (!empty($search)) {
+            $query->where(function($q) use ($search) {
+                $q->where("mobile", "like", "%{$search}%")
+                  ->orWhere("mobile_number_2", "like", "%{$search}%")
+                  ->orWhere("imid", "like", "%{$search}%")
+                  ->orWhere("customer_name", "like", "%{$search}%")
+                  ->orWhere("name", "like", "%{$search}%");
+            });
+        }
+        
+        Log::info("Query SQL", ["sql" => $query->toSql(), "bindings" => $query->getBindings()]);
+        Log::info("Query SQL", ["sql" => $query->toSql(), "bindings" => $query->getBindings()]);
+        $profiles = $query->orderBy("created_at", "desc")->paginate($perPage);
+        
+        return view("profile.profile", compact("profiles", "filter"));
+    }
+
+
+
+    public function getEditData($id)
+    {
+        try {
+            $profile = \DB::table('fresh_data')->where('id', $id)->first();
+            
+            if (!$profile) {
+                return response()->json(['error' => 'Profile not found'], 404);
+            }
+            
+            return response()->json($profile);
+        } catch (\Exception $e) {
+            \Log::error('Error fetching profile: ' . $e->getMessage());
+            return response()->json(['error' => 'Server error'], 500);
+        }
+    }
+
+    public function updateFollowup(Request $request, $id)
+    {
+        try {
+            $request->validate([
+                'status' => 'required|string',
+                'follow_up_date' => 'nullable|date',
+                'remarks' => 'nullable|string'
+            ]);
+
+            $profile = \DB::table('fresh_data')->where('id', $id)->first();
+            
+            if (!$profile) {
+                return response()->json(['error' => 'Profile not found'], 404);
+            }
+
+            \DB::table('fresh_data')->where('id', $id)->update([
+                'status' => $request->status,
+                'follow_up_date' => $request->follow_up_date,
+                'updated_at' => now()
+            ]);
+
+            \DB::table('profile_history')->insert([
+                'profile_id' => $id,
+                'updated_by' => auth()->id(),
+                'executive_name' => auth()->user()->name,
+                'customer_name' => $profile->customer_name ?? $profile->name,
+                'status' => $request->status,
+                'follow_up_date' => $request->follow_up_date,
+                'remarks' => $request->remarks,
+                'imid' => $profile->imid ?? null,
+                'assigned_date' => $profile->assigned_date ?? null,
+                'action_type' => 'update',
+                'created_at' => now(),
+                'updated_at' => now()
+            ]);
+
+            return response()->json(['success' => true, 'message' => 'Updated successfully']);
+
+        } catch (\Exception $e) {
+            \Log::error('Error updating profile: ' . $e->getMessage());
+            return response()->json(['error' => $e->getMessage()], 500);
+        }
+    }
+}

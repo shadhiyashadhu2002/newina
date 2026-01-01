@@ -254,6 +254,7 @@ class ServiceController extends Controller
     // List expired/deleted services (admin only)
     public function expiredServices()
     {
+        $currentUser = auth()->user();
         $user = Auth::user();
 
         // Only admins can view expired services
@@ -294,7 +295,7 @@ class ServiceController extends Controller
         // Append parameters to pagination links
         $services->appends(['per_page' => $perPage, 'search' => $search]);
 
-        return view('profile.expiredservices', compact('services'));
+        return view('profile.expiredservices', compact('services', 'currentUser'));
     }
 
     // List services for the logged-in executive
@@ -345,7 +346,7 @@ class ServiceController extends Controller
             ->orderBy('first_name')
             ->get(['id', 'first_name', 'name']);
 
-        return view('profile.newservice', compact('services', 'staffUsers', 'perPage', 'search'));
+        return view('profile.newservice', compact('services', 'staffUsers', 'perPage', 'search', 'currentUser'));
     }
 
     // List all services (admin view)
@@ -393,7 +394,7 @@ class ServiceController extends Controller
             ->orderBy('first_name')
             ->get(['id', 'first_name', 'name']);
 
-        return view('profile.newservice', compact('services', 'staffUsers', 'perPage', 'search'));
+        return view('profile.newservice', compact('services', 'staffUsers', 'perPage', 'search', 'currentUser'));
     }
 
     // List active services (for admin show all, for staff show assigned)
@@ -448,7 +449,7 @@ class ServiceController extends Controller
             ->orderBy('first_name')
             ->get(['id', 'first_name', 'name']);
 
-        return view('profile.activeservice', compact('services', 'perPage', 'search', 'staffUsers'));
+        return view('profile.activeservice', compact('services', 'perPage', 'search', 'staffUsers', 'currentUser'));
     }
 
     // Service Dashboard with dynamic counts
@@ -510,7 +511,7 @@ class ServiceController extends Controller
                 ->orderBy('first_name')
                 ->get(['id', 'first_name', 'name']);
 
-            return view('profile.services', compact('totalServices', 'newServices', 'activeServices', 'completedServices', 'expiredServices', 'recentServices', 'staffUsers'));
+            return view('profile.services', compact('totalServices', 'newServices', 'activeServices', 'completedServices', 'expiredServices', 'recentServices', 'staffUsers', 'currentUser'));
         } catch (\Exception $e) {
             // Log the error and return a fallback response
             Log::error('Services Dashboard Error: ' . $e->getMessage());
@@ -528,7 +529,7 @@ class ServiceController extends Controller
                 ->orderBy('first_name')
                 ->get(['id', 'first_name', 'name']);
 
-            return view('profile.services', compact('totalServices', 'newServices', 'activeServices', 'completedServices', 'expiredServices', 'recentServices', 'staffUsers'));
+            return view('profile.services', compact('totalServices', 'newServices', 'activeServices', 'completedServices', 'expiredServices', 'recentServices', 'staffUsers', 'currentUser'));
         }
     }
 
