@@ -50,7 +50,8 @@ class SaleController extends Controller
             'GPAY R' => 'GPAY R',
             'GPAY A' => 'GPAY A',
             'GPAY AXIS' => 'GPAY AXIS',
-            'GPAY S' => 'GPAY S'
+            'GPAY S' => 'GPAY S',
+            'GPAY J' => 'GPAY J'
         ];
 
         $cashTypes = array_keys($cashTypeOptions);
@@ -187,7 +188,7 @@ class SaleController extends Controller
                 'status' => 'nullable|string|in:new,active,completed,pending,cancelled',
                 'sale_status' => 'nullable|string|in:PAID,PENDING,NOT RECIEVED,REFUND,PARTIALLY PAID,FULL PAID,RENEW,ADVANCE PAYMENT',
                 'office' => 'required|string|max:255',
-                'cash_type' => 'nullable|string|in:GPAY CANARA,ACCOUNT TRANSFER,OFFICE PAYMENT,GPAY B,GPAY P,GPAY R,GPAY A,GPAY AXIS,GPAY S',
+                'cash_type' => 'nullable|string|in:GPAY CANARA,ACCOUNT TRANSFER,OFFICE PAYMENT,GPAY B,GPAY P,GPAY R,GPAY A,GPAY AXIS,GPAY S,GPAY J',
                 'notes' => 'nullable|string|max:1000',
             ]);
 
@@ -301,7 +302,7 @@ class SaleController extends Controller
                 'status' => 'nullable|string|in:new,active,completed,pending,cancelled',
                 'sale_status' => 'nullable|string|in:PAID,PENDING,NOT RECIEVED,REFUND,PARTIALLY PAID,FULL PAID,RENEW,ADVANCE PAYMENT',
                 'office' => 'required|string|max:255',
-                'cash_type' => 'nullable|string|in:GPAY CANARA,ACCOUNT TRANSFER,OFFICE PAYMENT,GPAY B,GPAY P,GPAY R,GPAY A,GPAY AXIS,GPAY S',
+                'cash_type' => 'nullable|string|in:GPAY CANARA,ACCOUNT TRANSFER,OFFICE PAYMENT,GPAY B,GPAY P,GPAY R,GPAY A,GPAY AXIS,GPAY S,GPAY J',
                 'notes' => 'nullable|string|max:1000',
             ]);
 

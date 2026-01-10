@@ -271,7 +271,24 @@ class StaffUsersSeeder extends Seeder
                 'comments' => 'Service Executive',
                 'created_by' => 1,
             ],
-            
+            [
+                'name' => 'Bincy',
+                'first_name' => 'Bincy',
+                'email' => 'bincy@service.com',
+                'password' => '1030',
+                'user_type' => 'staff',
+                'is_admin' => false,
+                'code' => 'STAFF999',
+                'gender' => 'Female',
+                'phone' => '7777001030',
+                'phone2' => '7777001030',
+                'mobile_number_1' => '7777001030',
+                'mobile_number_2' => null,
+                'whatsapp_number' => '7777001030',
+                'welcome_call_completed' => false,
+                'comments' => 'Service Executive',
+                'created_by' => 1,
+            ],
             
         ];
 
