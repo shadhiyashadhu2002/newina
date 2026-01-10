@@ -28,8 +28,16 @@ class FreshDataController extends Controller
 
         // If requested source is 'database', show users table instead
         if ($source === 'database') {
-            // Show paginated users from users table - select first_name/last_name and phone/gender
+            // Show paginated users from users table - exclude users that already have an assigned fresh_data profile
             $databaseUsers = \App\Models\User::select('id', 'first_name', 'last_name', 'name', 'email', 'phone', 'gender')
+                ->whereNotExists(function($query) {
+                    $query->select(\DB::raw(1))
+                          ->from('fresh_data')
+                          ->whereRaw('fresh_data.mobile = users.phone')
+                          ->whereNotNull('fresh_data.assigned_to');
+                })
+                // Oldest users first (created long back shown first)
+                ->orderBy('created_at', 'asc')
                 ->orderBy('first_name')
                 ->paginate(25)
                 ->withQueryString();
