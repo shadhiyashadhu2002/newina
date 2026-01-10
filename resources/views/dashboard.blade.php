@@ -149,10 +149,12 @@
             </div>
         </a>
 
-        <div class="stat-card dark-green">
-            <h3>Clients Contacted</h3>
-            <div class="stat-number">0</div>
-        </div>
+        <a href="{{ route('profiles.new') }}" class="stat-card-link">
+            <div class="stat-card dark-green">
+                <h3>My Profiles</h3>
+                <div class="stat-number">{{ $stats['my_profiles'] ?? 0 }}</div>
+            </div>
+        </a>
 
         <a href="{{ url('/add-sale') }}" style="text-decoration: none; color: inherit;">
         <div class="stat-card sales-card" style="cursor: pointer; transition: transform 0.2s, box-shadow 0.2s;" 

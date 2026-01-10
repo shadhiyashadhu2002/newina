@@ -15,7 +15,7 @@ class FreshData extends Model
         'status',
         'remarks',
         'follow_up_date',
-        'imid',
+        'profile_id',
         'assigned_to',
         'secondary_phone',
         'is_new_lead',

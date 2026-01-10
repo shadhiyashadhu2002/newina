@@ -458,7 +458,7 @@
         @foreach($profiles as $user)
           <tr>
             <td><input type="checkbox"></td>
-            <td><a href="#" class="profile-link">{{ $user->imid ?? $user->id }}</a></td>
+            <td><a href="#" class="profile-link">{{ $user->profile_id ?? $user->id }}</a></td>
             <td class="name-cell">{{ $user->customer_name ?? $user->name ?? '-' }}</td>
             <td>{{ $user->created_at ? \Carbon\Carbon::parse($user->created_at)->format('d-M-Y') : '-' }}</td>
             <td>{{ $user->created_at ? \Carbon\Carbon::parse($user->created_at)->format('d-M-Y') : '-' }}</td>

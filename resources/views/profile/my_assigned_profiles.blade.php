@@ -683,7 +683,7 @@
                                 <span class="status-badge">{{ $profile->status }}</span>
                             @endif
                         </td>
-                        <td>{{ $profile->imid ?? "-" }}</td>
+                        <td>{{ $profile->profile_id ?? "-" }}</td>
                         <td>{{ $profile->secondary_phone ?? "-" }}</td>
                         <td>
                             @if($profile->is_new_lead === "yes")

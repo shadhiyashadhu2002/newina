@@ -29,16 +29,24 @@ class FreshDataController extends Controller
         // If requested source is 'database', show users table instead
         if ($source === 'database') {
             // Show paginated users from users table - exclude users that already have an assigned fresh_data profile
-            $databaseUsers = \App\Models\User::select('id', 'first_name', 'last_name', 'name', 'email', 'phone', 'gender')
+            // Additionally: show only free members (exclude users with an active premium package)
+            $databaseUsers = \App\Models\User::select('users.id', 'users.first_name', 'users.last_name', 'users.name', 'users.email', 'users.phone', 'users.gender', 'members.current_package_id', 'members.package_validity')
+                ->leftJoin('members', 'members.user_id', '=', 'users.id')
                 ->whereNotExists(function($query) {
                     $query->select(\DB::raw(1))
                           ->from('fresh_data')
                           ->whereRaw('fresh_data.mobile = users.phone')
                           ->whereNotNull('fresh_data.assigned_to');
                 })
-                // Oldest users first (created long back shown first)
-                ->orderBy('created_at', 'asc')
-                ->orderBy('first_name')
+                // Only include free members: those without a current package, current_package_id = 0, or package expired
+                ->where(function($q) {
+                    $q->whereNull('members.current_package_id')
+                      ->orWhere('members.current_package_id', 0)
+                      ->orWhereRaw('members.package_validity < NOW()');
+                })
+                // Oldest users first (created long back shown first) — qualify columns to avoid ambiguity when joining members
+                ->orderBy('users.created_at', 'asc')
+                ->orderBy('users.first_name')
                 ->paginate(25)
                 ->withQueryString();
         } else {
@@ -534,7 +542,7 @@ class FreshDataController extends Controller
         $updateData = ['status' => $validated['status']];
         if (isset($validated['follow_up_date'])) $updateData['follow_up_date'] = $validated['follow_up_date'];
         if (isset($validated['customer_name'])) $updateData['customer_name'] = $validated['customer_name'];
-        if (isset($validated['imid'])) $updateData['imid'] = $validated['imid'];
+        if (isset($validated['imid'])) $updateData['profile_id'] = $validated['imid'];
         if (isset($validated['secondary_phone'])) $updateData['secondary_phone'] = $validated['secondary_phone'];
         if (isset($validated['is_new_lead'])) $updateData['is_new_lead'] = $validated['is_new_lead'];
         if (isset($validated['remarks'])) $updateData['remarks'] = $validated['remarks'];
@@ -550,7 +558,7 @@ class FreshDataController extends Controller
             'status' => $validated['status'],
             'follow_up_date' => $validated['follow_up_date'] ?? null,
             'remarks' => $validated['remarks'] ?? null,
-            'imid' => $validated['imid'] ?? $profile->imid,
+            'imid' => $validated['imid'] ?? $profile->profile_id,
             'assigned_date' => $profile->created_at,
             'action_type' => 'update',
             'created_at' => now(),

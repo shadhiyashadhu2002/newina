@@ -198,11 +198,13 @@
         </div>
       </a>
 
-      <!-- Clients Contacted - Not clickable (no route yet) -->
-      <div class="stat-card dark-green">
-        <h3>Clients Contacted</h3>
-        <div class="stat-number">{{ $stats['clients_contacted'] ?? 0 }}</div>
-      </div>
+      <!-- My Profiles - Clickable -->
+      <a href="{{ route('profiles.new') }}" class="stat-card-link">
+        <div class="stat-card dark-green">
+          <h3>My Profiles</h3>
+          <div class="stat-number">{{ $stats['my_profiles'] ?? 0 }}</div>
+        </div>
+      </a>
 
       <!-- Total Sales - Not clickable -->
       <div class="stat-card sales-card">

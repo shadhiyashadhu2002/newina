@@ -75,13 +75,16 @@ class SalesDashboardController extends Controller
                 ->count();
         }
 
-        // Calculate Clients Contacted (profiles with last_touched_at today)
+        // Calculate My Profiles (profiles assigned to the current user with no status)
         if ($currentUser->is_admin) {
-            $clientsContacted = FreshData::whereDate('last_touched_at', Carbon::today())->count();
+            $myProfiles = FreshData::where(function($q){
+                $q->whereNull('status')->orWhere('status', '');
+            })->count();
         } else {
-            $clientsContacted = FreshData::where('assigned_to', $currentUser->id)
-                ->whereDate('last_touched_at', Carbon::today())
-                ->count();
+            $myProfiles = FreshData::where('assigned_to', $currentUser->id)
+                ->where(function($q){
+                    $q->whereNull('status')->orWhere('status', '');
+                })->count();
         }
 
         // Calculate Reassigned Profiles (profiles reassigned this month)
@@ -138,7 +141,7 @@ class SalesDashboardController extends Controller
             'new_leads' => $newLeadsCount ?? 0,
             'reassigned_profiles' => $reassignedProfiles,
             'assigned_today' => $assignedToday,
-            'clients_contacted' => $clientsContacted,
+            'my_profiles' => $myProfiles,
             'total_sales' => number_format($totalSales, 0),
             'target' => number_format($target, 0),
             'achievement_percentage' => $achievementPercentage,

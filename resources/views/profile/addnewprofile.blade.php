@@ -187,6 +187,28 @@
             <div class="add-profiles-header-line"></div>
         </div>
 
+        <!-- Flash & Validation Messages -->
+        @if(session('success'))
+            <div style="background:#d1fae5; border:1px solid #10b981; padding:12px; border-radius:8px; color:#065f46; margin-bottom:16px;">
+                {{ session('success') }}
+            </div>
+        @endif
+        @if(session('error'))
+            <div style="background:#fee2e2; border:1px solid #ef4444; padding:12px; border-radius:8px; color:#991b1b; margin-bottom:16px;">
+                {{ session('error') }}
+            </div>
+        @endif
+        @if($errors->any())
+            <div style="background:#fff7ed; border:1px solid #f59e0b; padding:12px; border-radius:8px; color:#92400e; margin-bottom:16px;">
+                <strong>There were some problems with your input:</strong>
+                <ul style="margin-top:8px;">
+                    @foreach($errors->all() as $error)
+                        <li>{{ $error }}</li>
+                    @endforeach
+                </ul>
+            </div>
+        @endif
+
         <!-- Form -->
         <form action="{{ route('profile.store') }}" method="POST">
             @csrf
@@ -322,4 +344,66 @@
         </form>
     </div>
 </div>
+
+<script>
+// Auto-fill Add New Profiles form when Profile ID (code / IMID) is entered
+document.addEventListener('DOMContentLoaded', function() {
+    const profileField = document.getElementById('profile_id');
+    if (!profileField) return;
+
+    let debounceTimer = null;
+
+    async function fetchProfile(code) {
+        if (!code) return;
+        try {
+            const res = await fetch('/profile/fetch-by-code/' + encodeURIComponent(code));
+            if (!res.ok) {
+                // not found or server error — ignore
+                return;
+            }
+            const data = await res.json();
+            if (!data.success) return;
+            const user = data.user;
+
+            document.getElementById('name').value = user.first_name || '';
+            // Normalize and set gender select (handle 'male','Male','M', etc.)
+            if (user.gender) {
+                const genderEl = document.getElementById('gender');
+                const g = String(user.gender).trim().toLowerCase();
+                let normalized = '';
+                if (g.startsWith('m')) normalized = 'Male';
+                else if (g.startsWith('f')) normalized = 'Female';
+                else if (g.includes('other')) normalized = 'Other';
+                // If normalized matches an available option, set it; otherwise set raw value
+                if (normalized) {
+                    genderEl.value = normalized;
+                } else {
+                    genderEl.value = user.gender;
+                }
+                // Trigger change for any UI listeners
+                genderEl.dispatchEvent(new Event('change'));
+            }
+            document.getElementById('mobile_number_1').value = user.phone || '';
+            document.getElementById('mobile_number_2').value = user.phone2 || '';
+            document.getElementById('whatsapp_number').value = user.whatsapp_number || '';
+            document.getElementById('status').value = user.status || '';
+            if (user.created_at) document.getElementById('registration_date').value = user.created_at;
+        } catch (err) {
+            console.error('Error fetching profile:', err);
+        }
+    }
+
+    profileField.addEventListener('input', function() {
+        const code = this.value.trim();
+        clearTimeout(debounceTimer);
+        debounceTimer = setTimeout(() => fetchProfile(code), 500);
+    });
+
+    profileField.addEventListener('blur', function() {
+        const code = this.value.trim();
+        fetchProfile(code);
+    });
+});
+</script>
+
 @endsection

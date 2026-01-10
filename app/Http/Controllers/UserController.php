@@ -76,10 +76,63 @@ class UserController extends Controller
     $user->whatsapp_number = $validated['whatsapp_phone'] ?? null;
     $user->comments = $validated['comments'] ?? null;
     $user->status = $validated['status'] ?? null;
-    $user->save();
 
-    return redirect()->route('profile.hellow')->with('success', 'Profile created successfully!');
+    // Save user and also create/update a corresponding fresh_data row so new profiles show up in the Profiles table
+    try {
+        $user->save();
+
+        // Prepare fresh_data payload
+        $freshPayload = [
+            'name' => $user->first_name,
+            'customer_name' => $user->first_name,
+            'mobile' => $user->phone,
+            'source' => 'Manual',
+            'status' => $user->status,
+            'profile_id' => $user->code,
+            'assigned_to' => (Auth::check() && !Auth::user()->is_admin) ? Auth::id() : null,
+        ];
+
+        // Update existing fresh_data with same mobile, or create a new one
+        $existing = \App\Models\FreshData::where('mobile', $user->phone)->first();
+        if ($existing) {
+            $existing->update($freshPayload);
+            \Log::info('Updated existing fresh_data for new user', ['user_id' => $user->id, 'fresh_id' => $existing->id]);
+        } else {
+            $fresh = \App\Models\FreshData::create(array_merge($freshPayload, ['created_at' => now(), 'updated_at' => now()]));
+            \Log::info('Created fresh_data for new user', ['user_id' => $user->id, 'fresh_id' => $fresh->id]);
+        }
+
+        return redirect()->route('profile.hellow')->with('success', 'Profile created successfully!');
+    } catch (\Exception $e) {
+        \Log::error('Error creating profile or fresh_data: ' . $e->getMessage());
+        return back()->withInput()->with('error', 'Failed to create profile: ' . $e->getMessage());
     }
+    }
+    // Fetch user by profile code (IMID) — returns JSON for auto-fill
+    public function fetchByCode($code)
+    {
+        try {
+            $user = User::where('code', $code)->first();
+            if (!$user) {
+                return response()->json(['success' => false, 'message' => 'Profile not found'], 404);
+            }
+
+            return response()->json(['success' => true, 'user' => [
+                'code' => $user->code,
+                'first_name' => $user->first_name,
+                'gender' => $user->gender,
+                'phone' => $user->phone,
+                'phone2' => $user->phone2,
+                'whatsapp_number' => $user->whatsapp_number,
+                'status' => $user->status,
+                'created_at' => $user->created_at ? $user->created_at->format('Y-m-d') : null
+            ]]);
+        } catch (\Exception $e) {
+            \Log::error('fetchByCode error: ' . $e->getMessage());
+            return response()->json(['success' => false, 'message' => 'Server error'], 500);
+        }
+    }
+
     // Display new profiles in a table
     public function newProfiles(Request $request)
     {
@@ -117,7 +170,7 @@ class UserController extends Controller
                 'status' => $validated['status'],
                 'follow_up_date' => $validated['followup_date'],
                 'customer_name' => $validated['customer_name'],
-                'imid' => $validated['profile_id'],
+                'profile_id' => $validated['profile_id'],
                 'updated_at' => now(),
             ]);
 
@@ -161,7 +214,8 @@ class UserController extends Controller
             ];
 
             if ($request->status === 'Created') {
-                $updateData['imid'] = $validated['imid'];
+                // Map IMID form field into the profile_id column
+                $updateData['profile_id'] = $validated['imid'];
                 if (isset($validated['mobile_number_2'])) {
                     $updateData['mobile_number_2'] = $validated['mobile_number_2'];
                 }
@@ -180,7 +234,7 @@ class UserController extends Controller
                 'status' => $validated['status'],
                 'follow_up_date' => $validated['follow_up_date'],
                 'remarks' => $validated['remarks'] ?? null,
-                'imid' => $request->status === 'Created' ? $validated['imid'] : $profile->imid,
+                'imid' => $request->status === 'Created' ? $validated['imid'] : $profile->profile_id,
                 'assigned_date' => $profile->created_at,
                 'action_type' => 'update',
                 'created_at' => now(),
@@ -399,7 +453,7 @@ class UserController extends Controller
                 'status' => $request->status,
                 'follow_up_date' => $request->follow_up_date,
                 'remarks' => $request->remarks,
-                'imid' => $profile->imid ?? null,
+                'imid' => $profile->profile_id ?? null,
                 'assigned_date' => $profile->assigned_date ?? null,
                 'action_type' => 'update',
                 'created_at' => now(),

@@ -319,6 +319,9 @@ Route::middleware('auth')->group(function () {
 Route::get('/profile/add', function () {
         return view('profile.addnewprofile');
     })->name('profile.addnew');
+
+    // Fetch profile by code (IMID) for auto-fill
+    Route::get('/profile/fetch-by-code/{code}', [UserController::class, 'fetchByCode'])->name('profile.fetch');
     // Add New Profile from Modal (POST)
     Route::post('/profile/add', [UserController::class, 'storeFromModal'])->name('profile.addnew.store');
     // New Profiles listing page

@@ -15,7 +15,7 @@ try {
     echo "✓ Kernel bootstrapped\n";
     
     // Simple direct query
-    $result = DB::select("SELECT id, customer_name, mobile, status, follow_up_date, imid FROM fresh_data WHERE assigned_to IS NOT NULL LIMIT 5");
+    $result = DB::select("SELECT id, customer_name, mobile, status, follow_up_date, profile_id FROM fresh_data WHERE assigned_to IS NOT NULL LIMIT 5");
     
     echo "\nFound " . count($result) . " profiles:\n";
     echo str_repeat("-", 100) . "\n";
