@@ -455,8 +455,11 @@ class ServiceController extends Controller
     // Service Dashboard with dynamic counts
     public function servicesDashboard()
     {
+        $currentUser = Auth::user(); // ensure defined for any return path
+
         try {
             $user = Auth::user();
+            $currentUser = $user; // expose current user to views
 
             if (!$user) {
                 return redirect()->route('login');
@@ -511,10 +514,22 @@ class ServiceController extends Controller
                 ->orderBy('first_name')
                 ->get(['id', 'first_name', 'name']);
 
-            return view('profile.services', compact('totalServices', 'newServices', 'activeServices', 'completedServices', 'expiredServices', 'recentServices', 'staffUsers', 'currentUser'));
+            return view('profile.services', [
+                'totalServices' => $totalServices,
+                'newServices' => $newServices,
+                'activeServices' => $activeServices,
+                'completedServices' => $completedServices,
+                'expiredServices' => $expiredServices,
+                'recentServices' => $recentServices,
+                'staffUsers' => $staffUsers,
+                'currentUser' => $currentUser,
+            ]);
         } catch (\Exception $e) {
             // Log the error and return a fallback response
             Log::error('Services Dashboard Error: ' . $e->getMessage());
+
+            // Ensure currentUser is defined for the view even on error
+            $currentUser = Auth::user();
 
             // Return with default values if there's an error
             $totalServices = 0;
@@ -529,7 +544,16 @@ class ServiceController extends Controller
                 ->orderBy('first_name')
                 ->get(['id', 'first_name', 'name']);
 
-            return view('profile.services', compact('totalServices', 'newServices', 'activeServices', 'completedServices', 'expiredServices', 'recentServices', 'staffUsers', 'currentUser'));
+            return view('profile.services', [
+                'totalServices' => $totalServices,
+                'newServices' => $newServices,
+                'activeServices' => $activeServices,
+                'completedServices' => $completedServices,
+                'expiredServices' => $expiredServices,
+                'recentServices' => $recentServices,
+                'staffUsers' => $staffUsers,
+                'currentUser' => $currentUser,
+            ]);
         }
     }
 

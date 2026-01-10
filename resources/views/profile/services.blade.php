@@ -378,6 +378,7 @@
   </style>
 </head>
 <body>
+@php $currentUser = $currentUser ?? auth()->user(); @endphp
 
   <!-- Main Dashboard Header -->
   <header class="main-header">

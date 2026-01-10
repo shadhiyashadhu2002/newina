@@ -130,7 +130,7 @@
             </div>
         @endif
 
-        <a href="{{ route('assigned.profiles.view') }}" class="stat-card-link">
+        <a href="{{ route('assigned.profiles.view', ['tab' => 'new-profiles']) }}" class="stat-card-link">
             <div class="stat-card blue">
                 <h3>New Profiles</h3>
                 <div class="stat-number">{{ $stats['new_profiles'] ?? 0 }}</div>
@@ -142,10 +142,12 @@
             <div class="stat-number">0</div>
         </div>
 
-        <div class="stat-card red">
-            <h3>Assigned Today</h3>
-            <div class="stat-number">0</div>
-        </div>
+        <a href="{{ route('assigned.profiles.view', ['tab' => 'new-leads']) }}" class="stat-card-link">
+            <div class="stat-card red">
+                <h3>New Lead</h3>
+                <div class="stat-number">{{ $stats['new_leads'] ?? $stats['assigned_today'] ?? 0 }}</div>
+            </div>
+        </a>
 
         <div class="stat-card dark-green">
             <h3>Clients Contacted</h3>

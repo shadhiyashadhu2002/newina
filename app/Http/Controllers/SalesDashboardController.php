@@ -17,22 +17,26 @@ class SalesDashboardController extends Controller
         // Get current user
         $currentUser = Auth::user();
         
-        // Calculate New Profiles count (only profiles WITHOUT status or with empty status)
+        // Calculate New Leads and New Profiles counts
         if ($currentUser->is_admin) {
-            // Admin sees total assigned profiles without status
+            $newLeadsCount = FreshData::whereNotNull('assigned_to')
+                ->whereNull('follow_up_date')
+                ->where('is_new_lead', 'yes')
+                ->count();
+
             $newProfilesCount = FreshData::whereNotNull('assigned_to')
-                ->where(function($query) {
-                    $query->whereNull('status')
-                          ->orWhere('status', '');
-                })
+                ->whereNull('follow_up_date')
+                ->where('is_new_lead', 'no')
                 ->count();
         } else {
-            // Staff/Sales sees only profiles assigned to them WITHOUT status
+            $newLeadsCount = FreshData::where('assigned_to', $currentUser->id)
+                ->whereNull('follow_up_date')
+                ->where('is_new_lead', 'yes')
+                ->count();
+
             $newProfilesCount = FreshData::where('assigned_to', $currentUser->id)
-                ->where(function($query) {
-                    $query->whereNull('status')
-                          ->orWhere('status', '');
-                })
+                ->whereNull('follow_up_date')
+                ->where('is_new_lead', 'no')
                 ->count();
         }
 
@@ -131,6 +135,7 @@ class SalesDashboardController extends Controller
             'followup_today' => $followupTodayCount,
             'followup_due' => $followupDueCount,
             'new_profiles' => $newProfilesCount,
+            'new_leads' => $newLeadsCount ?? 0,
             'reassigned_profiles' => $reassignedProfiles,
             'assigned_today' => $assignedToday,
             'clients_contacted' => $clientsContacted,

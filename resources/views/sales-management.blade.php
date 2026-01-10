@@ -177,7 +177,7 @@
       </a>
 
       <!-- New Profiles - Clickable -->
-      <a href="{{ route('assigned.profiles.view') }}" class="stat-card-link">
+      <a href="{{ route('assigned.profiles.view', ['tab' => 'new-profiles']) }}" class="stat-card-link">
         <div class="stat-card blue">
           <h3>New Profiles</h3>
           <div class="stat-number">{{ $stats['new_profiles'] ?? 0 }}</div>
@@ -190,11 +190,13 @@
         <div class="stat-number">{{ $stats['reassigned_profiles'] ?? 0 }}</div>
       </div>
 
-      <!-- Assigned Today - Not clickable (no route yet) -->
-      <div class="stat-card red">
-        <h3>Assigned Today</h3>
-        <div class="stat-number">{{ $stats['assigned_today'] ?? 0 }}</div>
-      </div>
+      <!-- Assigned Today - Clickable (redirects to assigned profiles) -->
+      <a href="{{ route('assigned.profiles.view') }}" class="stat-card-link">
+        <div class="stat-card red">
+          <h3>New Lead</h3>
+          <div class="stat-number">{{ $stats['assigned_today'] ?? 0 }}</div>
+        </div>
+      </a>
 
       <!-- Clients Contacted - Not clickable (no route yet) -->
       <div class="stat-card dark-green">

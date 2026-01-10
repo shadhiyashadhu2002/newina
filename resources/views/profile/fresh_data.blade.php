@@ -638,6 +638,9 @@
             const selected = Array.from(document.querySelectorAll('.record-checkbox:checked'))
                 .map(cb => cb.value);
 
+            // Include current page source so server can decide 'is_new_lead'
+            const pageSource = "{{ $source ?? 'fresh' }}";
+
             try {
                 const response = await fetch('{{ route("fresh.data.bulk.assign") }}', {
                     method: 'POST',
@@ -648,7 +651,8 @@
                     },
                     body: JSON.stringify({
                         record_ids: selected,
-                        assigned_to: assignedTo
+                        assigned_to: assignedTo,
+                        source: pageSource
                     })
                 });
 

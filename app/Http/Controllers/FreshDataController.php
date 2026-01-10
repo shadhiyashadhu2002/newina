@@ -292,16 +292,26 @@ class FreshDataController extends Controller
     {
         try {
             $request->validate([
-                'assigned_to' => 'required|integer|exists:users,id'
+                'assigned_to' => 'required|integer|exists:users,id',
+                'source' => 'nullable|string'
             ]);
 
             $freshData = FreshData::findOrFail($id);
             $freshData->assigned_to = $request->assigned_to;
+
+            // If source is provided and equals 'database', mark as not a new lead; otherwise mark as new lead
+            if ($request->input('source') === 'database') {
+                $freshData->is_new_lead = 'no';
+            } else {
+                $freshData->is_new_lead = 'yes';
+            }
+
             $freshData->save();
 
             return response()->json([
                 'success' => true,
-                'message' => 'Successfully assigned to ' . $request->assigned_to
+                'message' => 'Successfully assigned to ' . $request->assigned_to,
+                'profile' => $freshData
             ]);
         } catch (\Exception $e) {
             return response()->json([
@@ -320,15 +330,54 @@ class FreshDataController extends Controller
             $request->validate([
                 'record_ids' => 'required|array',
                 'record_ids.*' => 'integer',
-                'assigned_to' => 'required|integer|exists:users,id'
+                'assigned_to' => 'required|integer|exists:users,id',
+                'source' => 'nullable|string'
             ]);
 
             $recordIds = $request->record_ids;
             $assignedTo = $request->assigned_to;
+            $source = $request->input('source');
 
-            // Update all selected records
+            $created = 0;
+            $updated = 0;
+
+            if ($source === 'database') {
+                // record_ids are user IDs from the database view - create or update matching FreshData by phone
+                foreach ($recordIds as $userId) {
+                    $user = \App\Models\User::find($userId);
+                    if (!$user) continue;
+
+                    // try to find an existing fresh_data by mobile
+                    $existing = FreshData::where('mobile', $user->phone)->first();
+                    if ($existing) {
+                        $existing->assigned_to = $assignedTo;
+                        $existing->is_new_lead = 'no';
+                        $existing->save();
+                        $updated++;
+                    } else {
+                        FreshData::create([
+                            'name' => $user->name ?? trim(($user->first_name ?? '') . ' ' . ($user->last_name ?? '')),
+                            'customer_name' => $user->name ?? trim(($user->first_name ?? '') . ' ' . ($user->last_name ?? '')),
+                            'mobile' => $user->phone,
+                            'source' => 'database',
+                            'assigned_to' => $assignedTo,
+                            'is_new_lead' => 'no'
+                        ]);
+                        $created++;
+                    }
+                }
+
+                return response()->json([
+                    'success' => true,
+                    'message' => "Successfully assigned {$created} created and {$updated} updated record(s) from database to {$assignedTo}",
+                    'created' => $created,
+                    'updated' => $updated
+                ]);
+            }
+
+            // Default behaviour: update existing fresh_data records and mark as new lead
             $updated = FreshData::whereIn('id', $recordIds)
-                ->update(['assigned_to' => $assignedTo]);
+                ->update(['assigned_to' => $assignedTo, 'is_new_lead' => 'yes']);
 
             return response()->json([
                 'success' => true,
@@ -381,8 +430,9 @@ class FreshDataController extends Controller
                 ->count();
         }
 
-        // Separate into new profiles and follow-up today
-        $newProfiles = $freshData->whereNull('follow_up_date');
+        // Separate into new leads (from fresh data), new profiles (from database assignments), and follow-up today
+        $newLeads = $freshData->whereNull('follow_up_date')->where('is_new_lead', 'yes');
+        $newProfiles = $freshData->whereNull('follow_up_date')->where('is_new_lead', 'no');
         $followupToday = $freshData->whereNotNull('follow_up_date');
 
         // Calculate stats
@@ -391,7 +441,8 @@ class FreshDataController extends Controller
             'pending' => $freshData->where('status', '!=', 'Completed')->count(),
             'completed' => $freshData->where('status', 'Completed')->count(),
             'followup_today' => $followupTodayCount,
-            'new_profiles' => $newProfiles->count()
+            'new_profiles' => $newProfiles->count(),
+            'new_leads' => $newLeads->count()
         ];
 
         // DEBUG: Check what data we're passing
@@ -400,10 +451,11 @@ class FreshDataController extends Controller
             'stats' => $stats,
             'today' => $today,
             'new_profiles_count' => $newProfiles->count(),
+            'new_leads_count' => $newLeads->count(),
             'followup_today_count' => $followupToday->count(),
         ]);
 
-        return view('profile.my_assigned_profiles', compact('freshData', 'stats', 'newProfiles', 'followupToday'));
+        return view('profile.my_assigned_profiles', compact('freshData', 'stats', 'newProfiles', 'newLeads', 'followupToday'));
     }
 
     /**

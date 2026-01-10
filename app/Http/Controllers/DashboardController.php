@@ -21,22 +21,28 @@ class DashboardController extends Controller
         // Get current user
         $currentUser = Auth::user();
 
-        // Calculate New Profiles count (only profiles WITHOUT status or with empty status)
+        // Calculate New Leads and New Profiles counts
         if ($currentUser->is_admin) {
-            // Admin sees total assigned profiles without status
+            // Admin sees totals
+            $newLeadsCount = \App\Models\FreshData::whereNotNull('assigned_to')
+                ->whereNull('follow_up_date')
+                ->where('is_new_lead', 'yes')
+                ->count();
+
             $newProfilesCount = \App\Models\FreshData::whereNotNull('assigned_to')
-                ->where(function($query) {
-                    $query->whereNull('status')
-                          ->orWhere('status', '');
-                })
+                ->whereNull('follow_up_date')
+                ->where('is_new_lead', 'no')
                 ->count();
         } else {
-            // Staff/Sales sees only profiles assigned to them WITHOUT status
+            // Staff/Sales sees only their counts
+            $newLeadsCount = \App\Models\FreshData::where('assigned_to', $currentUser->id)
+                ->whereNull('follow_up_date')
+                ->where('is_new_lead', 'yes')
+                ->count();
+
             $newProfilesCount = \App\Models\FreshData::where('assigned_to', $currentUser->id)
-                ->where(function($query) {
-                    $query->whereNull('status')
-                          ->orWhere('status', '');
-                })
+                ->whereNull('follow_up_date')
+                ->where('is_new_lead', 'no')
                 ->count();
         }
 
@@ -104,6 +110,7 @@ class DashboardController extends Controller
         $stats = [
             'total_users' => User::count(),
             'new_profiles' => $newProfilesCount,
+            'new_leads' => $newLeadsCount ?? 0,
             'followup_today' => $followupTodayCount,
             'followup_due' => $followupDueCount,
             'target_amount' => $targetAmount,

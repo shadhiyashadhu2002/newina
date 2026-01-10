@@ -503,45 +503,16 @@
     @endif
 
     <div class="data-table-section">
-    <!-- Stats Cards -->
-    <div class="row mb-4">
-        <div class="col-md-3">
-            <div class="card text-white bg-primary">
-                <div class="card-body text-center">
-                    <h5 class="card-title mb-2">Total Profiles</h5>
-                    <h2 class="mb-0">{{ $stats['total'] ?? 0 }}</h2>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-3">
-            <div class="card text-white bg-warning">
-                <div class="card-body text-center">
-                    <h5 class="card-title mb-2">Pending</h5>
-                    <h2 class="mb-0">{{ $stats['pending'] ?? 0 }}</h2>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-3">
-            <div class="card text-white bg-success">
-                <div class="card-body text-center">
-                    <h5 class="card-title mb-2">Completed</h5>
-                    <h2 class="mb-0">{{ $stats['completed'] ?? 0 }}</h2>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-3">
-            <div class="card text-white bg-info">
-                <div class="card-body text-center">
-                    <h5 class="card-title mb-2">Follow-up Today</h5>
-                    <h2 class="mb-0">{{ $stats['followup_today'] ?? 0 }}</h2>
-                </div>
-            </div>
-        </div>
-    </div>
+    <!-- Stats Cards removed -->
+
+        <!-- Tabs -->
 
         <!-- Tabs -->
         <div style="display: flex; border-bottom: 2px solid #e0e0e0; margin-bottom: 20px;">
-            <button class="tab-btn active" onclick="switchTab('new-profiles')" id="tab-new-profiles" style="flex: 1; padding: 15px; background: #ac0742; color: white; border: none; cursor: pointer; font-weight: 600; border-radius: 10px 10px 0 0;">
+            <button class="tab-btn active" onclick="switchTab('new-leads')" id="tab-new-leads" style="flex: 1; padding: 15px; background: #ac0742; color: white; border: none; cursor: pointer; font-weight: 600; border-radius: 10px 10px 0 0;">
+                New Leads ({{ $stats['new_leads'] ?? 0 }})
+            </button>
+            <button class="tab-btn" onclick="switchTab('new-profiles')" id="tab-new-profiles" style="flex: 1; padding: 15px; background: #f8f9fa; color: #333; border: none; cursor: pointer; font-weight: 600; border-radius: 10px 10px 0 0; margin-left: 5px;">
                 New Profiles ({{ $stats['new_profiles'] ?? 0 }})
             </button>
             <button class="tab-btn" onclick="switchTab('followup-today')" id="tab-followup-today" style="flex: 1; padding: 15px; background: #f8f9fa; color: #333; border: none; cursor: pointer; font-weight: 600; border-radius: 10px 10px 0 0; margin-left: 5px;">
@@ -549,8 +520,63 @@
             </button>
         </div>
 
+        <!-- New Leads Tab Content -->
+        <div id="content-new-leads" class="tab-content">
+            @if($newLeads->count() > 0)
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>NAME</th>
+                        <th>MOBILE</th>
+                        <th>ASSIGNED DATE</th>
+                        <th>STATUS</th>
+                        <th>ACTION</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach($newLeads as $profile)
+                    @php
+                        $assignedDate = '-';
+                        if(isset($profile->created_at)) {
+                            if(is_object($profile->created_at) && method_exists($profile->created_at, 'format')) {
+                                $assignedDate = $profile->created_at->format('d-m-Y');
+                            } elseif(is_string($profile->created_at)) {
+                                $assignedDate = date('d-m-Y', strtotime($profile->created_at));
+                            }
+                        }
+                    @endphp
+                    <tr>
+                        <td>{{ $profile->customer_name ?? $profile->name ?? '-' }}</td>
+                        <td>{{ $profile->mobile ?? '-' }}</td>
+                        <td>{{ $assignedDate }}</td>
+                        <td>
+                            @if(empty($profile->status))
+                                <span class="status-badge blank">-</span>
+                            @else
+                                <span class="status-badge">{{ $profile->status }}</span>
+                            @endif
+                        </td>
+                        <td>
+                            <button class="action-btn update" onclick="openUpdateModal({{ $profile->id }}, '{{ $profile->customer_name ?? $profile->name }}', '', '{{ $profile->status ?? '' }}')">
+                                Update
+                            </button>
+                            <button class="action-btn history" onclick="showHistory({{ $profile->id }})" style="margin-left: 5px;">
+                                History
+                            </button>
+                        </td>
+                    </tr>
+                    @endforeach
+                </tbody>
+            </table>
+            @else
+            <div class="no-data">
+                <p>No new leads at the moment.</p>
+            </div>
+            @endif
+        </div>
+
         <!-- New Profiles Tab Content -->
-        <div id="content-new-profiles" class="tab-content">
+        <div id="content-new-profiles" class="tab-content" style="display: none;">
             @if($newProfiles->count() > 0)
             <table class="data-table">
                 <thead>
@@ -694,19 +720,35 @@
                 content.style.display = 'none';
             });
             
-            // Remove active class from all tabs
+            // Reset tab styles
             document.querySelectorAll('.tab-btn').forEach(btn => {
                 btn.style.background = '#f8f9fa';
                 btn.style.color = '#333';
             });
             
-            // Show selected tab content
-            document.getElementById('content-' + tabName).style.display = 'block';
-            
-            // Add active class to selected tab
-            document.getElementById('tab-' + tabName).style.background = '#ac0742';
-            document.getElementById('tab-' + tabName).style.color = 'white';
+            // Show selected tab content (if present)
+            const content = document.getElementById('content-' + tabName);
+            const tabBtn = document.getElementById('tab-' + tabName);
+            if (content && tabBtn) {
+                content.style.display = 'block';
+                tabBtn.style.background = '#ac0742';
+                tabBtn.style.color = 'white';
+            }
         }
+
+        // On page load, respect ?tab= query param to open the requested tab
+        (function() {
+            const params = new URLSearchParams(window.location.search);
+            const tab = params.get('tab');
+            if (tab === 'new-profiles') {
+                switchTab('new-profiles');
+            } else if (tab === 'followup-today') {
+                switchTab('followup-today');
+            } else {
+                // default to new-leads
+                switchTab('new-leads');
+            }
+        })();
         </script>
     </div>
 </div>
@@ -992,40 +1034,53 @@
 <!-- Script Version: 2025-12-31-v5 -->
 // Open Update Modal
 function openUpdateModal(profileId, customerName, followUpDate, status) {
+    console.log('openUpdateModal called for:', profileId);
     const modal = document.getElementById('updateModal');
     const form = document.getElementById('updateProfileForm');
-    
+    if (!modal || !form) { console.error('Modal or form missing'); return; }
+
     // Set form action
     form.action = '{{ route("fresh.data.update.status") }}';
-    
+
     // Fill form fields
     document.getElementById('profile_id').value = profileId;
-    document.getElementById('customer_name').value = customerName;
-    document.getElementById('follow_up_date').value = followUpDate;
-    document.getElementById('status').value = status;
+    document.getElementById('customer_name').value = customerName || '';
+    document.getElementById('follow_up_date').value = followUpDate || '';
+    document.getElementById('status').value = status || '';
     document.getElementById('remarks').value = '';
-    
-    // Show modal
-    modal.style.display = 'block';
+
+    // Show modal using .active class for consistent styling
+    modal.classList.add('active');
+    document.body.classList.add('modal-open');
 }
 
 // Close Update Modal
 function closeUpdateModal() {
-    document.getElementById('updateModal').style.display = 'none';
+    const modal = document.getElementById('updateModal');
+    if (modal) {
+        modal.classList.remove('active');
+    }
+    document.body.classList.remove('modal-open');
 }
 
 // Show history modal and fetch history data
 function showHistory(profileId) {
+    console.log('showHistory called for:', profileId);
     const modal = document.getElementById('historyModal2');
-    modal.style.display = 'block';
-    
+    const tbody = document.getElementById('historyTableBody');
+
+    if (!modal || !tbody) { console.error('History modal or tbody missing'); return; }
+
+    // Show modal
+    modal.classList.add('active');
+    document.body.classList.add('modal-open');
+
     // Fetch history data
     fetch(`/fresh-data/history/${profileId}`)
         .then(response => response.json())
         .then(data => {
-            const tbody = document.querySelector('#historyModal2 tbody');
             tbody.innerHTML = '';
-            
+
             if (data.history && data.history.length > 0) {
                 data.history.forEach(record => {
                     const row = `
@@ -1052,7 +1107,9 @@ function showHistory(profileId) {
 
 // Close history modal
 function closeHistoryModal() {
-    document.getElementById('historyModal2').style.display = 'none';
+    const modal = document.getElementById('historyModal2');
+    if (modal) modal.classList.remove('active');
+    document.body.classList.remove('modal-open');
 }
 
 // Close modal when clicking outside
