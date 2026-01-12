@@ -730,8 +730,12 @@
                     <td><span style="background: #c8e6c9; padding: 4px 8px; border-radius: 4px; font-size: 11px; font-weight: 600;">{{ $sale->sale_status ?? '-' }}</span></td>
                     <td>{{ Str::limit($sale->notes ?? '-', 30) }}</td>
                     <td>
-                        <button type="button" style="padding: 8px 16px; background: linear-gradient(135deg, #2196F3, #1976D2); color: white; border: none; border-radius: 5px; cursor: pointer; font-weight: 600; font-size: 13px; transition: all 0.3s ease;" onclick="editSale({{ $sale->id }})">
+                        <button type="button" style="padding: 8px 12px; background: linear-gradient(135deg, #2196F3, #1976D2); color: white; border: none; border-radius: 5px; cursor: pointer; font-weight: 600; font-size: 13px; transition: all 0.3s ease; margin-right:8px;" onclick="editSale({{ $sale->id }})">
                             ✏️ Edit
+                        </button>
+
+                        <button type="button" style="padding: 8px 12px; background: linear-gradient(135deg, #e53935, #c62828); color: white; border: none; border-radius: 5px; cursor: pointer; font-weight: 600; font-size: 13px; transition: all 0.3s ease;" onclick="deleteSale({{ $sale->id }})">
+                            🗑️ Delete
                         </button>
                     </td>
                 </tr>
@@ -1300,6 +1304,34 @@
     // CSRF Token for AJAX requests
     const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content || '';
 
+    // Delete sale (AJAX)
+    async function deleteSale(saleId) {
+        if (!confirm('Are you sure you want to delete this sale? This action cannot be undone.')) return;
+
+        try {
+            const response = await fetch(`/add-sale/${saleId}`, {
+                method: 'DELETE',
+                headers: {
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content || csrfToken,
+                    'Accept': 'application/json'
+                }
+            });
+
+            const data = await response.json();
+
+            if (response.ok && data.success) {
+                alert(data.message || 'Sale deleted');
+                window.location.reload();
+            } else if (response.status === 403) {
+                alert('You are not authorized to delete this sale');
+            } else {
+                alert('Failed to delete sale: ' + (data.message || 'Unknown error'));
+            }
+        } catch (err) {
+            console.error('Error deleting sale', err);
+            alert('Error deleting sale');
+        }
+    }
 
     // Dropdown click handling
     document.querySelectorAll('.nav-dropdown > .nav-link').forEach(function(link) {

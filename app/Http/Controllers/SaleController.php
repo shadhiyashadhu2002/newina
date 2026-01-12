@@ -442,4 +442,31 @@ class SaleController extends Controller
             $filename
         );
     }
+
+    /**
+     * Delete sale (AJAX)
+     */
+    public function destroy(Request $request, $id)
+    {
+        try {
+            $sale = Sale::findOrFail($id);
+
+            $user = Auth::user();
+
+            // Only admins or the staff who created/owns the sale can delete
+            if (!$user->is_admin && !($user->user_type === 'staff' && ($sale->staff_id == $user->id || $sale->created_by == $user->id))) {
+                return response()->json(['error' => 'Unauthorized'], 403);
+            }
+
+            $sale->delete();
+
+            Log::info('Sale deleted', ['sale_id' => $id, 'user_id' => $user->id]);
+
+            return response()->json(['success' => true, 'message' => 'Sale deleted successfully']);
+        } catch (\Exception $e) {
+            Log::error('Error deleting sale', ['id' => $id, 'error' => $e->getMessage()]);
+            return response()->json(['success' => false, 'message' => 'Failed to delete sale'], 500);
+        }
+    }
 }
+

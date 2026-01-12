@@ -1034,6 +1034,9 @@ Route::post("/sales/import", [SaleController::class, "importSales"])->name("sale
     // Update sale (AJAX)
     Route::put('/add-sale/{id}', [SaleController::class, 'update'])->name('sale.update');
     Route::post('/add-sale/{id}', [SaleController::class, 'update'])->name('sale.update.post');
+
+    // Delete sale
+    Route::delete('/add-sale/{id}', [SaleController::class, 'destroy'])->name('sale.delete');
     
     // Get profile info for auto-fetch
     Route::get('/get-profile-info/{profileId}', [SaleController::class, 'getProfileInfo']);
