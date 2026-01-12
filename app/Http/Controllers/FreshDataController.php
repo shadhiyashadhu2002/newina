@@ -32,13 +32,7 @@ class FreshDataController extends Controller
             // Additionally: show only free members (exclude users with an active premium package)
             $databaseUsers = \App\Models\User::select('users.id', 'users.first_name', 'users.last_name', 'users.name', 'users.email', 'users.phone', 'users.gender', 'members.current_package_id', 'members.package_validity')
                 ->leftJoin('members', 'members.user_id', '=', 'users.id')
-                ->whereNotExists(function($query) {
-                    $query->select(\DB::raw(1))
-                          ->from('fresh_data')
-                          ->whereRaw('fresh_data.mobile = users.phone')
-                          ->whereNotNull('fresh_data.assigned_to');
-                })
-                // Only include free members: those without a current package, current_package_id = 0, or package expired
+                // Show ALL free members (includes users even if they already have a fresh_data assigned)
                 ->where(function($q) {
                     $q->whereNull('members.current_package_id')
                       ->orWhere('members.current_package_id', 0)
