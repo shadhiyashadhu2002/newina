@@ -405,7 +405,7 @@
     </div>
 </div>
 
-<script>
+<script>/* CACHE_BUST_1767767403 */
 document.addEventListener('DOMContentLoaded', function() {
     const form = document.getElementById('registrationForm');
     const fetchBtn = document.getElementById('fetchBtn');
@@ -426,10 +426,15 @@ document.addEventListener('DOMContentLoaded', function() {
         fetchBtn.disabled = true;
 
         try {
-            const response = await fetch(`/api/registration-form/profile/fetch/${imid}`);
+            const response = await fetch(`/api/registration-form/profile/fetch2/${imid}`);
             const result = await response.json();
 
             if (result.success && result.data) {
+                console.log("Full API Response:", result);
+                console.log("All data keys:", Object.keys(result.data));
+                console.log("Member Data:", result.data.member);
+                console.log("User gender:", result.data.user ? result.data.user.gender : "N/A");
+                console.log("Member gender:", result.data.member ? result.data.member.gender : "N/A");
                 // Fill form with fetched data
                 const data = result.data;
                 
@@ -437,7 +442,6 @@ document.addEventListener('DOMContentLoaded', function() {
                     form.querySelector('[name="firstName"]').value = data.user.first_name || '';
                     form.querySelector('[name="lastName"]').value = data.user.last_name || '';
                     form.querySelector('[name="email"]').value = data.user.email || '';
-                    form.querySelector('[name="gender"]').value = data.user.gender || '';
                     form.querySelector('[name="phone"]').value = data.user.phone || '';
                 }
 
@@ -462,12 +466,17 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
                 
                 if (data.member) {
-                    // Populate Gender (convert numeric to text)
+                        const genderValue = data.member.gender;
                     if (data.member.gender) {
-                        const genderValue = data.member.gender == '1' ? 'Male' : data.member.gender == '2' ? 'Female' : '';
+                        console.log("Gender from API:", data.member.gender);
+                        console.log("Gender type:", typeof data.member.gender);
                         const genderSelect = form.querySelector('select[name="gender"]');
+                        console.log("Gender select element found:", genderSelect);
+                        console.log("Setting value to:", genderValue);
                         if (genderSelect) {
                             genderSelect.value = genderValue;
+                            genderSelect.dispatchEvent(new Event("change"));
+                            console.log("Gender value after setting:", genderSelect.value);
                         }
                     }
                     
@@ -515,6 +524,64 @@ document.addEventListener('DOMContentLoaded', function() {
                 if (data.career) {
                     form.querySelector('[name="designation"]').value = data.career.designation || '';
                     form.querySelector('[name="company"]').value = data.career.company || '';
+                }
+
+
+                // Populate Partner Preferences
+                if (!data.partner) { console.log("❌ NO PARTNER DATA IN RESPONSE"); }
+                if (data.partner) {
+                    console.log("✅ PARTNER DATA FOUND:", data.partner);
+                    const prefs = data.partner;
+                    console.log("Partner Preferences Data:", prefs);
+                    
+                    // Preferred Age
+                    if (prefs.preferred_age_min && prefs.preferred_age_max) {
+                        const preferredAgeInput = form.querySelector('input[name="preferredAge"]');
+                        if (preferredAgeInput) {
+                            preferredAgeInput.value = `${prefs.preferred_age_min}-${prefs.preferred_age_max}`;
+                            console.log("Preferred Age set to:", `${prefs.preferred_age_min}-${prefs.preferred_age_max}`);
+                        }
+                    }
+                    
+                    // Preferred Height
+                    if (prefs.height) {
+                        const preferredHeightInput = form.querySelector('input[name="preferredHeight"]');
+                        if (preferredHeightInput) {
+                            preferredHeightInput.value = prefs.height;
+                        }
+                    }
+                    
+                    // Preferred Education
+                    if (prefs.preferred_education) {
+                        const preferredEducationInput = form.querySelector('input[name="preferredEducation"]');
+                        if (preferredEducationInput) {
+                            preferredEducationInput.value = prefs.preferred_education;
+                        }
+                    }
+                    
+                    // Preferred District
+                    if (prefs.preferred_location) {
+                        const preferredDistrictInput = form.querySelector('input[name="preferredDistrict"]');
+                        if (preferredDistrictInput) {
+                            preferredDistrictInput.value = prefs.preferred_location;
+                        }
+                    }
+                    
+                    // Preferred Family Value
+                    if (prefs.preferred_family_value_id) {
+                        const preferredFamilyValueInput = form.querySelector('input[name="preferredFamilyValue"]');
+                        if (preferredFamilyValueInput) {
+                            preferredFamilyValueInput.value = prefs.preferred_family_value_id;
+                        }
+                    }
+                    
+                    // Preferred Complexion
+                    if (prefs.complexion) {
+                        const preferredComplexionInput = form.querySelector('input[name="preferredComplexion"]');
+                        if (preferredComplexionInput) {
+                            preferredComplexionInput.value = prefs.complexion;
+                        }
+                    }
                 }
 
                 fetchStatus.innerHTML = '<span style="color: #4CAF50;">✅ Profile fetched successfully!</span>';
