@@ -1358,3 +1358,11 @@ Route::middleware(['auth'])->group(function () {
     Route::patch("/fresh-data/assignment/{id}/status", [App\Http\Controllers\FreshDataController::class, "updateAssignmentStatus"])->name("fresh-data.update-status");
 });
 
+
+// Settings Routes
+Route::middleware(['auth'])->group(function () {
+    Route::get('/settings', [App\Http\Controllers\SettingsController::class, 'index'])->name('settings.index');
+    Route::post('/settings/add-staff', [App\Http\Controllers\SettingsController::class, 'addStaff'])->name('settings.add-staff');
+    Route::post('/settings/add-status', [App\Http\Controllers\SettingsController::class, 'addStatus'])->name('settings.add-status');
+    Route::post('/settings/add-department', [App\Http\Controllers\SettingsController::class, 'addDepartment'])->name('settings.add-department');
+});

@@ -346,12 +346,15 @@ class ServiceController extends Controller
             ->orderBy('first_name')
             ->get(['id', 'first_name', 'name']);
 
+        $currentUser = auth()->user();
+
         return view('profile.newservice', compact('services', 'staffUsers', 'perPage', 'search', 'currentUser'));
     }
 
     // List all services (admin view)
     public function allServices()
     {
+        $currentUser = Auth::user();
         // Get per page count from request, default to 10
         $perPage = request('per_page', 10);
 
@@ -394,6 +397,8 @@ class ServiceController extends Controller
             ->orderBy('first_name')
             ->get(['id', 'first_name', 'name']);
 
+        $currentUser = auth()->user();
+
         return view('profile.newservice', compact('services', 'staffUsers', 'perPage', 'search', 'currentUser'));
     }
 
@@ -401,6 +406,7 @@ class ServiceController extends Controller
     public function activeServiceList()
     {
         $user = Auth::user();
+        $currentUser = $user;
 
         // Get per page count from request, default to 10
         $perPage = request('per_page', 10);
@@ -448,6 +454,8 @@ class ServiceController extends Controller
         $staffUsers = \App\Models\User::where('user_type', 'staff')
             ->orderBy('first_name')
             ->get(['id', 'first_name', 'name']);
+
+        $currentUser = auth()->user();
 
         return view('profile.activeservice', compact('services', 'perPage', 'search', 'staffUsers', 'currentUser'));
     }
@@ -1987,4 +1995,68 @@ class ServiceController extends Controller
             return response()->json(['success' => false, 'message' => 'Failed to retrieve shortlists'], 500);
         }
     }
+
+    public function uploadScreenshot(Request $request)
+    {
+        try {
+            $request->validate([
+                'profile_id' => 'required|string',
+                'screenshot' => 'required|image|mimes:jpeg,png,jpg,gif|max:5120', // 5MB max
+                'description' => 'nullable|string|max:500'
+            ]);
+
+            $profileId = $request->profile_id;
+            $file = $request->file('screenshot');
+            
+            // Create unique filename
+            $filename = $profileId . '_' . time() . '_' . $file->getClientOriginalName();
+            
+            // Create directory if it doesn't exist
+            $uploadPath = storage_path('app/public/screenshots');
+            if (!file_exists($uploadPath)) {
+                mkdir($uploadPath, 0755, true);
+            }
+            
+            // Store the file
+            $filepath = $file->storeAs('screenshots', $filename, 'public');
+            
+            // Save to database
+            \DB::table('service_screenshots')->insert([
+                'profile_id' => $profileId,
+                'filename' => $filename,
+                'filepath' => $filepath,
+                'description' => $request->description,
+                'uploaded_by' => auth()->user()->name ?? 'Unknown',
+                'created_at' => now(),
+                'updated_at' => now()
+            ]);
+            
+            return response()->json([
+                'success' => true,
+                'message' => 'Screenshot uploaded successfully!',
+                'filename' => $filename
+            ]);
+            
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Upload failed: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+
+    public function getScreenshots($profileId)
+    {
+        $screenshots = \DB::table('service_screenshots')
+            ->where('profile_id', $profileId)
+            ->orderBy('created_at', 'desc')
+            ->get();
+        
+        return response()->json([
+            'success' => true,
+            'screenshots' => $screenshots
+        ]);
+    }
+
 }

@@ -16,6 +16,7 @@
                         </div>
                     </div>
                     <a href="#" class="nav-link">Asset</a>
+                    <a href="{{ route('settings.index') }}" class="nav-link">Settings</a>
                     
                 @elseif($currentUser->team === 'sales')
                     {{-- SALES Team - Profiles, Sales, Fresh Data, abc --}}
@@ -95,6 +96,7 @@
                         </div>
                     </div>
                     <a href="#" class="nav-link">Asset</a>
+                    <a href="{{ route('settings.index') }}" class="nav-link">Settings</a>
                 @endif
             </nav>
 
