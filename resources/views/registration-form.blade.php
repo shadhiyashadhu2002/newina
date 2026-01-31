@@ -510,17 +510,36 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
                 
                 if (data.address) {
-                    form.querySelector('[name="houseName"]').value = data.address.house_name || '';
-                    form.querySelector('[name="po"]').value = data.address.po || '';
-                    form.querySelector('[name="via"]').value = data.address.via || '';
-                    form.querySelector('[name="city"]').value = data.address.district || '';
+                    console.log("Address data:", data.address);
+                    // If address has the old structure with separate fields
+                    if (data.address.house_name) {
+                        form.querySelector('[name="houseName"]').value = data.address.house_name || '';
+                        form.querySelector('[name="po"]').value = data.address.po || '';
+                        form.querySelector('[name="via"]').value = data.address.via || '';
+                        form.querySelector('[name="city"]').value = data.address.district || '';
+                    } 
+                    // If address has the new structure with semicolon-separated values
+                    else if (data.address.address) {
+                        const addressParts = data.address.address.split(';');
+                        if (addressParts.length >= 4) {
+                            form.querySelector('[name="houseName"]').value = addressParts[0] || '';
+                            form.querySelector('[name="po"]').value = addressParts[1] || '';
+                            form.querySelector('[name="via"]').value = addressParts[2] || '';
+                            form.querySelector('[name="city"]').value = addressParts[3] || '';
+                        } else {
+                            // If format is different, just put the whole address in houseName
+                            form.querySelector('[name="houseName"]').value = data.address.address || '';
+                        }
+                    }
                 }
                 
                 if (data.education) {
+                console.log("Education data:", data.education);
                     form.querySelector('[name="education"]').value = data.education.degree || '';
                     form.querySelector('[name="institution"]').value = data.education.institution || '';
                 }
                 
+                console.log("Career data:", data.career);
                 if (data.career) {
                     form.querySelector('[name="designation"]').value = data.career.designation || '';
                     form.querySelector('[name="company"]').value = data.career.company || '';
