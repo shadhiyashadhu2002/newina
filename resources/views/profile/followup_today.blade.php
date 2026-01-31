@@ -400,11 +400,9 @@
                     <label style="margin-bottom: 5px; font-weight: 600; color: #333;">Status</label>
                     <select name="status" style="padding: 8px; border: 1px solid #ddd; border-radius: 4px; background: white;">
                         <option value="">All Status</option>
-                        <option value="Pending" {{ request('status') == 'Pending' ? 'selected' : '' }}>Pending</option>
-                        <option value="Created" {{ request('status') == 'Created' ? 'selected' : '' }}>Created</option>
-                        <option value="CNC" {{ request('status') == 'CNC' ? 'selected' : '' }}>CNC</option>
-                        <option value="Not Interested" {{ request('status') == 'Not Interested' ? 'selected' : '' }}>Not Interested</option>
-                        <option value="Not Responding" {{ request('status') == 'Not Responding' ? 'selected' : '' }}>Not Responding</option>
+                        @foreach($statuses as $status)
+                            <option value="{{ $status->name }}" {{ request('status') == $status->name ? 'selected' : '' }}>{{ $status->name }}</option>
+                        @endforeach
                     </select>
                 </div>
 
@@ -540,12 +538,9 @@
                     <label for="status">Status *</label>
                     <select id="status" name="status" class="form-select" required onchange="toggleCreatedFields()">
                         <option value="">Select Status</option>
-                        <option value="Created">Created</option>
-                        <option value="RNR">RNR</option>
-                        <option value="CNC">CNC</option>
-                        <option value="Pending">Pending</option>
-                        <option value="Not Interested">Not Interested</option>
-                        <option value="Interested">Interested</option>
+                        @foreach($statuses as $status)
+                            <option value="{{ $status->name }}">{{ $status->name }}</option>
+                        @endforeach
                     </select>
                 </div>
 

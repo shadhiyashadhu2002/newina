@@ -216,9 +216,26 @@
       background: #6c757d;
       color: white;
     }
-
     .btn-view-details:hover {
       background: #5a6268;
+      transform: translateY(-1px);
+    }
+
+    .btn-upload-screenshot {
+      background: #ffc107;
+      color: #000;
+    }
+
+    .btn-upload-screenshot:hover {
+      background: #e0a800;
+      transform: translateY(-1px);
+    }
+    .btn-view-screenshots {
+      background: #6f42c1;
+      color: white;
+    }
+    .btn-view-screenshots:hover {
+      background: #5a32a3;
       transform: translateY(-1px);
     }
 
@@ -491,10 +508,12 @@
                 <td><span class="date">{{ $s->expiry_date ? \Carbon\Carbon::parse($s->expiry_date)->format('d-M-Y') : '-' }}</span></td>
                 <td><span class="executive-name">{{ $s->service_executive }}</span></td>
                 <td>
-                  <a href="{{ route('shortlist.ina', $s->profile_id) }}" class="action-btn btn-shortlist-ina">📋 Shortlist from INA</a>
-                  <a href="{{ route('shortlist.others', $s->profile_id) }}" class="action-btn btn-shortlist-others">📋 Shortlist from Others</a>
-                  <a href="{{ route('view.prospects', $s->profile_id ?? $s->id) }}" class="action-btn btn-view-prospects">👀 View Prospects</a>
-                  <a href="{{ route('client.details', $s->profile_id) }}" class="action-btn btn-view-details">👤 View Client Details</a>
+                  <a href="{{ route('shortlist.ina', $s->profile_id) }}" class="action-btn btn-shortlist-ina">Shortlist INA</a>
+                  <a href="{{ route('shortlist.others', $s->profile_id) }}" class="action-btn btn-shortlist-others">Shortlist Others</a>
+                  <a href="{{ route('view.prospects', $s->profile_id ?? $s->id) }}" class="action-btn btn-view-prospects">Prospects</a>
+                  <a href="{{ route('client.details', $s->profile_id) }}" class="action-btn btn-view-details">Client Details</a>
+                  <a href="javascript:void(0)" onclick="openUploadModal('{{ $s->profile_id }}')" class="action-btn btn-upload-screenshot">Screenshot</a>
+                  <a href="javascript:void(0)" onclick="viewScreenshots('{{ $s->profile_id }}')" class="action-btn btn-view-screenshots">👁️</a>
                 </td>
               </tr>
             @endforeach
@@ -519,6 +538,321 @@
       </div>
     @endif
   </main>
+
+  <!-- Upload Screenshot Modal -->
+  <div id="uploadModal" class="upload-modal" style="display: none;">
+    <div class="upload-modal-content">
+      <div class="upload-modal-header">
+        <h2>📸 Upload Screenshot</h2>
+        <span class="upload-close" onclick="closeUploadModal()">&times;</span>
+      </div>
+      <div class="upload-modal-body">
+        <form id="uploadForm" enctype="multipart/form-data">
+          @csrf
+          <input type="hidden" id="upload_profile_id" name="profile_id">
+          
+          <div class="upload-form-group">
+            <label>Profile ID: <span id="modal_profile_id" style="color: #e91e63; font-weight: 600;"></span></label>
+          </div>
+          
+          <div class="upload-form-group">
+            <label for="screenshot">Select Screenshot *</label>
+            <input type="file" id="screenshot" name="screenshot" accept="image/*" required>
+            <small>Accepted formats: JPG, PNG, GIF (Max: 5MB)</small>
+          </div>
+          
+          <div class="upload-form-group">
+            <label for="description">Description (Optional)</label>
+            <textarea id="description" name="description" rows="3" placeholder="Add notes about this screenshot..."></textarea>
+          </div>
+          
+          <div id="uploadStatus" style="margin-top: 15px;"></div>
+          
+          <div class="upload-modal-footer">
+            <button type="button" onclick="closeUploadModal()" class="btn-cancel">Cancel</button>
+            <button type="submit" class="btn-upload">Upload</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- View Screenshots Modal -->
+  <div id="viewScreenshotsModal" class="upload-modal" style="display: none;">
+    <div class="upload-modal-content" style="max-width: 800px; max-height: 90vh; overflow-y: auto;">
+      <div class="upload-modal-header">
+        <h2>🖼️ Screenshots - <span id="view_modal_profile_id" style="color: #e91e63;"></span></h2>
+        <span class="upload-close" onclick="closeViewScreenshotsModal()">&times;</span>
+      </div>
+      <div class="upload-modal-body">
+        <div id="screenshotsContainer"></div>
+      </div>
+    </div>
+  </div>
+
+  <style>
+  .upload-modal {
+    position: fixed;
+    z-index: 9999;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0,0,0,0.6);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .upload-modal-content {
+    background: white;
+    border-radius: 12px;
+    width: 90%;
+    max-width: 500px;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+    animation: slideIn 0.3s ease;
+  }
+
+  @keyframes slideIn {
+    from { transform: translateY(-50px); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+  }
+
+  .upload-modal-header {
+    padding: 20px;
+    border-bottom: 1px solid #eee;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .upload-modal-header h2 {
+    margin: 0;
+    color: #333;
+    font-size: 24px;
+  }
+
+  .upload-close {
+    font-size: 32px;
+    color: #999;
+    cursor: pointer;
+    transition: color 0.3s;
+  }
+
+  .upload-close:hover {
+    color: #e91e63;
+  }
+
+  .upload-modal-body {
+    padding: 20px;
+  }
+
+  .upload-form-group {
+    margin-bottom: 20px;
+  }
+
+  .upload-form-group label {
+    display: block;
+    margin-bottom: 8px;
+    color: #555;
+    font-weight: 600;
+  }
+
+  .upload-form-group input[type="file"] {
+    width: 100%;
+    padding: 10px;
+    border: 2px dashed #ddd;
+    border-radius: 8px;
+    cursor: pointer;
+  }
+
+  .upload-form-group textarea {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    font-family: inherit;
+    resize: vertical;
+  }
+
+  .upload-form-group small {
+    color: #999;
+    font-size: 12px;
+  }
+
+  .upload-modal-footer {
+    display: flex;
+    gap: 10px;
+    justify-content: flex-end;
+    margin-top: 20px;
+  }
+
+  .btn-cancel, .btn-upload {
+    padding: 10px 24px;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 600;
+    transition: all 0.3s;
+  }
+
+  .btn-cancel {
+    background: #f5f5f5;
+    color: #666;
+  }
+
+  .btn-cancel:hover {
+    background: #e0e0e0;
+  }
+
+  .btn-upload {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+  }
+
+  .btn-upload:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+  }
+
+  .screenshot-item {
+    border: 1px solid #eee;
+    border-radius: 8px;
+    padding: 15px;
+    margin-bottom: 15px;
+    background: #f9f9f9;
+    display: flex;
+    gap: 15px;
+    align-items: flex-start;
+  }
+
+  .screenshot-item img {
+    max-width: 200px;
+    max-height: 200px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: transform 0.3s;
+    object-fit: cover;
+  }
+
+  .screenshot-item img:hover {
+    transform: scale(1.05);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+  }
+
+  .screenshot-info {
+    flex: 1;
+  }
+
+  .screenshot-info p {
+    margin: 5px 0;
+    color: #555;
+    font-size: 14px;
+  }
+  </style>
+
+  <script>
+  function openUploadModal(profileId) {
+    document.getElementById("uploadModal").style.display = "flex";
+    document.getElementById("upload_profile_id").value = profileId;
+    document.getElementById("modal_profile_id").textContent = profileId;
+    document.getElementById("uploadForm").reset();
+    document.getElementById("uploadStatus").innerHTML = "";
+  }
+
+  function closeUploadModal() {
+    document.getElementById("uploadModal").style.display = "none";
+  }
+
+  function viewScreenshots(profileId) {
+    document.getElementById("viewScreenshotsModal").style.display = "flex";
+    document.getElementById("view_modal_profile_id").textContent = profileId;
+    document.getElementById("screenshotsContainer").innerHTML = '<div style="text-align: center; padding: 20px;"><span style="color: #667eea;">⏳ Loading screenshots...</span></div>';
+    
+    fetch(`/get-screenshots/${profileId}`)
+      .then(response => response.json())
+      .then(data => {
+        const container = document.getElementById("screenshotsContainer");
+        
+        if (data.success && data.screenshots.length > 0) {
+          container.innerHTML = data.screenshots.map(ss => `
+            <div class="screenshot-item">
+             <img src="{{ url('storage') }}/${ss.filepath}" alt="Screenshot" onclick="window.open('{{ url('storage') }}/${ss.filepath}', '_blank')">
+              <div class="screenshot-info">
+                <p><strong>Uploaded:</strong> ${new Date(ss.created_at).toLocaleString()}</p>
+                <p><strong>By:</strong> ${ss.uploaded_by || "Unknown"}</p>
+                ${ss.description ? `<p><strong>Description:</strong> ${ss.description}</p>` : ""}
+              </div>
+            </div>
+          `).join("");
+        } else {
+          container.innerHTML = '<div style="text-align: center; padding: 40px; color: #999;"><p>📭 No screenshots uploaded yet</p></div>';
+        }
+      })
+      .catch(error => {
+        document.getElementById("screenshotsContainer").innerHTML = '<div style="text-align: center; padding: 20px; color: #f44336;">❌ Error loading screenshots</div>';
+        console.error("Error:", error);
+      });
+  }
+
+  function closeViewScreenshotsModal() {
+    document.getElementById("viewScreenshotsModal").style.display = "none";
+  }
+
+  // Close modal when clicking outside
+  window.addEventListener("click", function(event) {
+    const uploadModal = document.getElementById("uploadModal");
+    const viewModal = document.getElementById("viewScreenshotsModal");
+    if (event.target === uploadModal) {
+      closeUploadModal();
+    }
+    if (event.target === viewModal) {
+      closeViewScreenshotsModal();
+    }
+  });
+
+  // Handle form submission
+  document.addEventListener("DOMContentLoaded", function() {
+    const uploadForm = document.getElementById("uploadForm");
+    if (uploadForm) {
+      uploadForm.addEventListener("submit", async function(e) {
+        e.preventDefault();
+        
+        const formData = new FormData(this);
+        const statusDiv = document.getElementById("uploadStatus");
+        const submitBtn = this.querySelector(".btn-upload");
+        
+        submitBtn.disabled = true;
+        submitBtn.textContent = "Uploading...";
+        statusDiv.innerHTML = '<span style="color: #667eea;">⏳ Uploading screenshot...</span>';
+        
+        try {
+    const response = await fetch("/upload-screenshot", {
+  method: "POST",
+  body: formData
+});
+          
+          const result = await response.json();
+          
+          if (result.success) {
+            statusDiv.innerHTML = '<span style="color: #4CAF50;">✅ Screenshot uploaded successfully!</span>';
+            setTimeout(() => {
+              closeUploadModal();
+            }, 2000);
+          } else {
+            statusDiv.innerHTML = '<span style="color: #f44336;">❌ ' + (result.message || "Upload failed") + '</span>';
+          }
+        } catch (error) {
+          statusDiv.innerHTML = '<span style="color: #f44336;">❌ Error: ' + error.message + '</span>';
+          console.error("Upload error:", error);
+        } finally {
+          submitBtn.disabled = false;
+          submitBtn.textContent = "Upload";
+        }
+      });
+    }
+  });
+  </script>
 
   <script>
     function logout() {

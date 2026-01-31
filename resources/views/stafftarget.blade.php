@@ -1,63 +1,10 @@
 @extends('layouts.app')
 
-@section('scripts')
-<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
-<script>
-$(document).ready(function() {
-    console.log('jQuery and Select2 loaded');
-    
-    window.openAddTargetModal = function() {
-        document.getElementById('addTargetModal').style.display = 'flex';
-        setTimeout(function() {
-            if ($('#serviceExecutiveSelect').length && !$('#serviceExecutiveSelect').hasClass('select2-hidden-accessible')) {
-                $('#serviceExecutiveSelect').select2({
-                    placeholder: 'Type to search...',
-                    allowClear: true,
-                    width: '100%',
-                    dropdownParent: $('#addTargetModal')
-                });
-            }
-        }, 300);
-    };
-});
-@endsection
-
 @section('styles')
 <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
 @endsection
 
-@push('page-scripts')
-<script>
-$(document).ready(function() {
-    // Initialize Select2 when document is ready
-    console.log('Select2 initializing...');
-    
-    // This will initialize Select2 when the modal is opened
-    window.originalOpenAddTargetModal = window.openAddTargetModal || function() {};
-    
-    window.openAddTargetModal = function() {
-        document.getElementById('addTargetModal').style.display = 'flex';
-        
-        // Initialize Select2 after modal is visible
-        setTimeout(function() {
-            if ($('#serviceExecutiveSelect').length) {
-                $('#serviceExecutiveSelect').select2({
-                    placeholder: 'Type to search for a staff member...',
-                    allowClear: true,
-                    width: '100%',
-                    dropdownParent: $('#addTargetModal')
-                });
-                console.log('Select2 initialized!');
-            }
-        }, 200);
-    };
-});
-</script>
-@endpush
-
 @section('content')
-<meta name="csrf-token" content="{{ csrf_token() }}">
 <div class="dashboard-header">
     <div class="header-left">
         <h1 class="dashboard-title">INA</h1>
@@ -1144,8 +1091,10 @@ $(document).ready(function() {
 
 
 
+@endsection
+
+@section('scripts')
 <script>
-<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
 // Month filter functionality
 
 const monthFilter = document.getElementById('monthFilter');
@@ -1414,6 +1363,14 @@ window.submitEditForm = function() {
         console.error('Error:', error);
         alert('Failed to update target');
     });
+}
+
+window.openAddTargetModal = function() {
+    document.getElementById("addTargetModal").style.display = "flex";
+}
+
+window.closeAddTargetModal = function() {
+    document.getElementById("addTargetModal").style.display = "none";
 }
 
 function closeStatsModal() {

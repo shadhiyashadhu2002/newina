@@ -350,21 +350,27 @@
 document.addEventListener('DOMContentLoaded', function() {
     const profileField = document.getElementById('profile_id');
     if (!profileField) return;
-
     let debounceTimer = null;
-
     async function fetchProfile(code) {
         if (!code) return;
+        console.log('Fetching profile for code:', code);
         try {
-            const res = await fetch('/profile/fetch-by-code/' + encodeURIComponent(code));
+            const url = '/profile/fetch-by-code/' + encodeURIComponent(code);
+            console.log('Fetch URL:', url);
+            const res = await fetch(url);
+            console.log('Response status:', res.status);
             if (!res.ok) {
-                // not found or server error — ignore
+                console.log('Response not OK, status:', res.status);
                 return;
             }
             const data = await res.json();
-            if (!data.success) return;
+            console.log('Received data:', data);
+            if (!data.success) {
+                console.log('Data success is false');
+                return;
+            }
             const user = data.user;
-
+            console.log('Filling form with user data:', user);
             document.getElementById('name').value = user.first_name || '';
             // Normalize and set gender select (handle 'male','Male','M', etc.)
             if (user.gender) {
@@ -388,17 +394,16 @@ document.addEventListener('DOMContentLoaded', function() {
             document.getElementById('whatsapp_number').value = user.whatsapp_number || '';
             document.getElementById('status').value = user.status || '';
             if (user.created_at) document.getElementById('registration_date').value = user.created_at;
+            console.log('Form filled successfully');
         } catch (err) {
             console.error('Error fetching profile:', err);
         }
     }
-
     profileField.addEventListener('input', function() {
         const code = this.value.trim();
         clearTimeout(debounceTimer);
         debounceTimer = setTimeout(() => fetchProfile(code), 500);
     });
-
     profileField.addEventListener('blur', function() {
         const code = this.value.trim();
         fetchProfile(code);

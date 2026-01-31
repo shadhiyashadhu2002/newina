@@ -468,7 +468,9 @@
             <td class="actions">
               <button class="btn btn-sm btn-info" onclick="viewHistory({{ $user->id }})" title="History" style="margin-right: 5px;">📜</button>
               <button class="edit" onclick="editProfile({{ $user->id }})">✏️</button>
+              @if(Auth::check() && Auth::user()->is_admin)
               <button class="delete" onclick="deleteProfile({{ $user->id }})">🗑️</button>
+              @endif
             </td>
           </tr>
         @endforeach
@@ -574,20 +576,9 @@
                                 <label>Status <span class="text-danger">*</span></label>
                                 <select class="form-control" id="edit_status" required>
                                     <option value="">Select Status</option>
-                                    <option value="RNR">RNR</option>
-                                    <option value="Other State">Other State</option>
-                                    <option value="Pending">Pending</option>
-                                    <option value="Another Call">Another Call</option>
-                                    <option value="Busy">Busy</option>
-                                    <option value="Call Back">Call Back</option>
-                                    <option value="CNC">CNC</option>
-                                    <option value="Created">Created</option>
-                                    <option value="Marriage Fixed">Marriage Fixed</option>
-                                    <option value="NI">NI</option>
-                                    <option value="Switch Off">Switch Off</option>
-                                    <option value="Wrong Number">Wrong Number</option>
-                                    <option value="Duplicate">Duplicate</option>
-                                    <option value="Other">Other</option>
+                                    @foreach($statuses as $status)
+                                        <option value="{{ $status->name }}">{{ $status->name }}</option>
+                                    @endforeach
                                 </select>
                             </div>
                         </div>

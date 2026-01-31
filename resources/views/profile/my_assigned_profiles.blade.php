@@ -1051,16 +1051,9 @@
                     <label>Status *</label>
                     <select name="status" id="status" required onchange="toggleCreatedFields()">
                         <option value="">Select Status</option>
-                        <option value="Created">Created</option>
-                        <option value="Interested">Interested</option>
-                        <option value="Not Interested">Not Interested</option>
-                        <option value="Call Back">Call Back</option>
-                        <option value="Wrong Number">Wrong Number</option>
-                        <option value="Not Responding">Not Responding</option>
-                        <option value="RNR">RNR</option>
-                        <option value="CNC">CNC</option>
-                        <option value="Pending">Pending</option>
-                        <option value="Converted">Converted</option>
+                        @foreach($statuses as $status)
+                            <option value="{{ $status->name }}">{{ $status->name }}</option>
+                        @endforeach
                     </select>
                 </div>
 

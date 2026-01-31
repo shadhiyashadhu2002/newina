@@ -44,7 +44,7 @@ class FreshDataImport implements ToModel, WithHeadingRow, WithValidation, SkipsO
                 'mobile' => $row['mobile'],
                 'name' => 'Imported Lead',
                 'source' => $this->source,
-                'assigned_to' => Auth::id(),
+                'assigned_to' => null,
                 'welcome_call' => false,
                 'profile_created' => false,
                 'photo_uploaded' => false,

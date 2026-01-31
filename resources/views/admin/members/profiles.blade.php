@@ -19,6 +19,9 @@
                 <a href="#" class="nav-link">abc</a>
                 <div class="nav-dropdown">
                     <a href="#" class="nav-link">Services ▼</a>
+                    <div class="dropdown-content">
+                        <a href="{{ route('new.service') }}" class="dropdown-link">Registration Form</a>
+                    </div>
                 </div>
             </nav>
         </div>
@@ -168,6 +171,43 @@
         </div>
     </div>
 </div>
+
+/* Dropdown Menu Styles */
+.nav-dropdown {
+    position: relative;
+    display: inline-block;
+}
+
+.dropdown-content {
+    display: none;
+    position: absolute;
+    background-color: white;
+    min-width: 200px;
+    box-shadow: 0px 8px 16px rgba(0,0,0,0.2);
+    z-index: 1000;
+    border-radius: 8px;
+    overflow: hidden;
+    top: 100%;
+    left: 0;
+    margin-top: 5px;
+}
+
+.nav-dropdown:hover .dropdown-content {
+    display: block;
+}
+
+.dropdown-link {
+    color: #333;
+    padding: 12px 16px;
+    text-decoration: none;
+    display: block;
+    transition: background-color 0.3s;
+}
+
+.dropdown-link:hover {
+    background-color: #f1f1f1;
+    color: #ac0742;
+}
 
 <style>
 /* Inherit all existing styles from dashboard and add profiles-specific styles */

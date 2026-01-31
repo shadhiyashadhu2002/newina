@@ -1359,10 +1359,36 @@ Route::middleware(['auth'])->group(function () {
 });
 
 
-// Settings Routes
+// Settings routes (admin only)
 Route::middleware(['auth'])->group(function () {
     Route::get('/settings', [App\Http\Controllers\SettingsController::class, 'index'])->name('settings.index');
-    Route::post('/settings/add-staff', [App\Http\Controllers\SettingsController::class, 'addStaff'])->name('settings.add-staff');
-    Route::post('/settings/add-status', [App\Http\Controllers\SettingsController::class, 'addStatus'])->name('settings.add-status');
-    Route::post('/settings/add-department', [App\Http\Controllers\SettingsController::class, 'addDepartment'])->name('settings.add-department');
+    
+    // Staff routes
+    Route::get('/settings/staff', [App\Http\Controllers\SettingsController::class, 'getStaff']);
+    Route::post('/settings/staff', [App\Http\Controllers\SettingsController::class, 'addStaff']);
+    
+    // Status routes
+    Route::get('/settings/status', [App\Http\Controllers\SettingsController::class, 'getStatuses']);
+    Route::post('/settings/status', [App\Http\Controllers\SettingsController::class, 'addStatus']);
+    
+    // Department routes
+    Route::get('/settings/department', [App\Http\Controllers\SettingsController::class, 'getDepartments']);
+    Route::post('/settings/department', [App\Http\Controllers\SettingsController::class, 'addDepartment']);
 });
+
+// Staff Management Routes
+Route::middleware(['auth'])->group(function () {
+    Route::resource('staff', App\Http\Controllers\StaffController::class);
+});
+
+// Registration Form Route
+Route::get('/registration-form', function (Illuminate\Http\Request $request) {
+    $imid = $request->query('imid', '');
+    return view('registration-form', ['imid' => $imid]);
+})->name('registration.form');
+
+// Screenshot upload route
+Route::post('/upload-screenshot', [App\Http\Controllers\ServiceController::class, 'uploadScreenshot'])->name('screenshot.upload');
+Route::get('/get-screenshots/{profileId}', [App\Http\Controllers\ServiceController::class, 'getScreenshots'])->name('screenshots.get');
+
+

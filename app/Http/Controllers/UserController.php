@@ -55,58 +55,142 @@ class UserController extends Controller
 
     public function store(Request $request)
     {
-    // Validation and creation logic
-    $validated = $request->validate([
-        'code' => 'required|unique:users',
-        'first_name' => 'required|string|max:255',
-        'gender' => 'required|in:Male,Female,Other',
-        'phone' => 'required|string',
-        'phone2' => 'nullable|string',
-        'whatsapp_phone' => 'nullable|string',
-        'comments' => 'nullable|string',
-        'status' => 'nullable|string',
-    ]);
+        // First, check if profile already exists
+        $existingUser = User::where('code', $request->code)->first();
+        
+        if ($existingUser) {
+            // Check if this profile is already assigned to another executive
+            $existingFresh = \App\Models\FreshData::where(function($query) use ($request, $existingUser) {
+                    $query->where('profile_id', $request->code)
+                          ->orWhere('mobile', $existingUser->phone);
+                })
+                ->whereNotNull('assigned_to')
+                ->where('assigned_to', '!=', '')
+                ->first();
+            
+            if ($existingFresh && $existingFresh->assigned_to != Auth::id()) {
+                // Profile is assigned to another executive
+                $assignedExecutive = User::find($existingFresh->assigned_to);
+                $executiveName = $assignedExecutive ? $assignedExecutive->name : 'another executive';
+                
+                return back()->withInput()->with('error', 
+                    "This profile is already in {$executiveName}'s bucket. Please check with them before proceeding."
+                );
+            }
+            
+            // Profile exists - update only empty/null fields
+            $validated = $request->validate([
+                'code' => 'required',
+                'first_name' => 'nullable|string|max:255',
+                'gender' => 'nullable|in:Male,Female,Other',
+                'phone' => 'nullable|string',
+                'phone2' => 'nullable|string',
+                'whatsapp_phone' => 'nullable|string',
+                'comments' => 'nullable|string',
+                'status' => 'nullable|string',
+            ]);
 
-    $user = new User();
-    $user->code = $validated['code'];
-    $user->first_name = $validated['first_name'];
-    $user->name = $validated['first_name']; 
-    $user->phone = $validated['phone'];
-    $user->phone2 = $validated['phone2'] ?? null;
-    $user->whatsapp_number = $validated['whatsapp_phone'] ?? null;
-    $user->comments = $validated['comments'] ?? null;
-    $user->status = $validated['status'] ?? null;
+            // Update only if the field is currently empty/null
+            if (empty($existingUser->first_name) && !empty($validated['first_name'])) {
+                $existingUser->first_name = $validated['first_name'];
+                $existingUser->name = $validated['first_name'];
+            }
+            if (empty($existingUser->gender) && !empty($validated['gender'])) {
+                $existingUser->gender = $validated['gender'];
+            }
+            if (empty($existingUser->phone) && !empty($validated['phone'])) {
+                $existingUser->phone = $validated['phone'];
+            }
+            if (empty($existingUser->phone2) && !empty($validated['phone2'])) {
+                $existingUser->phone2 = $validated['phone2'];
+            }
+            if (empty($existingUser->whatsapp_number) && !empty($validated['whatsapp_phone'])) {
+                $existingUser->whatsapp_number = $validated['whatsapp_phone'];
+            }
+            if (empty($existingUser->comments) && !empty($validated['comments'])) {
+                $existingUser->comments = $validated['comments'];
+            }
+            if (empty($existingUser->status) && !empty($validated['status'])) {
+                $existingUser->status = $validated['status'];
+            }
 
-    // Save user and also create/update a corresponding fresh_data row so new profiles show up in the Profiles table
-    try {
-        $user->save();
+            try {
+                $existingUser->save();
 
-        // Prepare fresh_data payload
-        $freshPayload = [
-            'name' => $user->first_name,
-            'customer_name' => $user->first_name,
-            'mobile' => $user->phone,
-            'source' => 'Manual',
-            'status' => $user->status,
-            'profile_id' => $user->code,
-            'assigned_to' => (Auth::check() && !Auth::user()->is_admin) ? Auth::id() : null,
-        ];
+                // Update fresh_data if exists
+                $freshPayload = [
+                    'name' => $existingUser->first_name,
+                    'customer_name' => $existingUser->first_name,
+                    'mobile' => $existingUser->phone,
+                    'source' => 'Manual',
+                    'status' => $existingUser->status,
+                    'profile_id' => $existingUser->code,
+                    'assigned_to' => (Auth::check() && !Auth::user()->is_admin) ? Auth::id() : null,
+                ];
+                $existing = \App\Models\FreshData::where('profile_id', $existingUser->code)->first();
+                if ($existing) {
+                    $existing->update($freshPayload);
+                } else {
+                    $fresh = \App\Models\FreshData::create(array_merge($freshPayload, ['created_at' => now(), 'updated_at' => now()]));
+                    \Log::info('Created fresh_data for existing user during update', ['user_id' => $existingUser->id, 'fresh_id' => $fresh->id]);
+                }
 
-        // Update existing fresh_data with same mobile, or create a new one
-        $existing = \App\Models\FreshData::where('mobile', $user->phone)->first();
-        if ($existing) {
-            $existing->update($freshPayload);
-            \Log::info('Updated existing fresh_data for new user', ['user_id' => $user->id, 'fresh_id' => $existing->id]);
-        } else {
-            $fresh = \App\Models\FreshData::create(array_merge($freshPayload, ['created_at' => now(), 'updated_at' => now()]));
-            \Log::info('Created fresh_data for new user', ['user_id' => $user->id, 'fresh_id' => $fresh->id]);
+                return redirect()->route('profile.hellow')->with('success', 'Profile updated successfully!');
+            } catch (\Exception $e) {
+                \Log::error('Error updating profile: ' . $e->getMessage());
+                return back()->withInput()->with('error', 'Failed to update profile: ' . $e->getMessage());
+            }
         }
 
-        return redirect()->route('profile.hellow')->with('success', 'Profile created successfully!');
-    } catch (\Exception $e) {
-        \Log::error('Error creating profile or fresh_data: ' . $e->getMessage());
-        return back()->withInput()->with('error', 'Failed to create profile: ' . $e->getMessage());
-    }
+        // Profile doesn't exist - create new one
+        $validated = $request->validate([
+            'code' => 'required|unique:users',
+            'first_name' => 'required|string|max:255',
+            'gender' => 'required|in:Male,Female,Other',
+            'phone' => 'required|string',
+            'phone2' => 'nullable|string',
+            'whatsapp_phone' => 'nullable|string',
+            'comments' => 'nullable|string',
+            'status' => 'nullable|string',
+        ]);
+
+        $user = new User();
+        $user->code = $validated['code'];
+        $user->first_name = $validated['first_name'];
+        $user->name = $validated['first_name'];
+        $user->phone = $validated['phone'];
+        $user->phone2 = $validated['phone2'] ?? null;
+        $user->whatsapp_number = $validated['whatsapp_phone'] ?? null;
+        $user->comments = $validated['comments'] ?? null;
+        $user->status = $validated['status'] ?? null;
+
+        try {
+            $user->save();
+
+            $freshPayload = [
+                'name' => $user->first_name,
+                'customer_name' => $user->first_name,
+                'mobile' => $user->phone,
+                'source' => 'Manual',
+                'status' => $user->status,
+                'profile_id' => $user->code,
+                'assigned_to' => (Auth::check() && !Auth::user()->is_admin) ? Auth::id() : null,
+            ];
+
+            $existing = \App\Models\FreshData::where("profile_id", $user->code)->first();
+            if ($existing) {
+                $existing->update($freshPayload);
+                \Log::info('Updated existing fresh_data for new user', ['user_id' => $user->id, 'fresh_id' => $existing->id]);
+            } else {
+                $fresh = \App\Models\FreshData::create(array_merge($freshPayload, ['created_at' => now(), 'updated_at' => now()]));
+                \Log::info('Created fresh_data for new user', ['user_id' => $user->id, 'fresh_id' => $fresh->id]);
+            }
+
+            return redirect()->route('profile.hellow')->with('success', 'Profile created successfully!');
+        } catch (\Exception $e) {
+            \Log::error('Error creating profile or fresh_data: ' . $e->getMessage());
+            return back()->withInput()->with('error', 'Failed to create profile: ' . $e->getMessage());
+        }
     }
     // Fetch user by profile code (IMID) — returns JSON for auto-fill
     public function fetchByCode($code)
@@ -329,7 +413,10 @@ class UserController extends Controller
         // Get paginated results
         $profiles = $query->orderBy('follow_up_date', 'desc')->paginate($perPage);
 
-        return view('profile.followup_today', compact('profiles', 'executives', 'currentUser'));
+        // Get all statuses from the statuses table
+        $statuses = \App\Models\Status::orderBy('name')->get();
+
+        return view('profile.followup_today', compact('profiles', 'executives', 'currentUser', 'statuses'));
     }
 
     public function index(Request $request)
@@ -403,7 +490,8 @@ class UserController extends Controller
         Log::info("Query SQL", ["sql" => $query->toSql(), "bindings" => $query->getBindings()]);
         $profiles = $query->orderBy("created_at", "desc")->paginate($perPage);
         
-        return view("profile.profile", compact("profiles", "filter", "currentUser"));
+        $statuses = \App\Models\Status::all();
+        return view("profile.profile", compact("profiles", "filter", "currentUser", "statuses"));
     }
 
 

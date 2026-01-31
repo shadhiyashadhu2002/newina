@@ -113,11 +113,11 @@ class SalesDashboardController extends Controller
 
         // Get Target Amount from staff_targets table
         // Month is stored as string 'YYYY-MM', not a date field
-        $currentMonth = Carbon::now()->format('Y-m');
+        $currentMonth = Carbon::now()->format('Y-m-01');
         
         if ($currentUser->is_admin) {
             // Admin sees total of all staff targets for current month
-            $target = StaffTarget::where('month', $currentMonth)->sum('target_amount');
+         $target = StaffTarget::where('month', $currentMonth)->sum('target_amount');
         } else {
             // Staff sees only their total target for current month (sum of all their targets)
             $target = StaffTarget::where('staff_id', $currentUser->id)

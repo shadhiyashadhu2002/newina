@@ -31,17 +31,12 @@ class FreshDataController extends Controller
         if ($source === 'database') {
             // Show paginated users from users table - exclude users that already have an assigned fresh_data profile
             // Additionally: show only free members (exclude users with an active premium package)
-            $databaseUsers = \App\Models\User::select('users.id', 'users.first_name', 'users.last_name', 'users.name', 'users.email', 'users.phone', 'users.gender', 'members.current_package_id', 'members.package_validity')
+            $databaseUsers = \App\Models\User::select('users.id', 'users.code', 'users.first_name', 'users.last_name', 'users.name', 'users.email', 'users.phone', 'users.gender', 'members.current_package_id', 'members.package_validity')
                 ->leftJoin('members', 'members.user_id', '=', 'users.id')
-                // Show ALL free members (includes users even if they already have a fresh_data assigned)
-                ->where(function($q) {
-                    $q->whereNull('members.current_package_id')
-                      ->orWhere('members.current_package_id', 1)
-                      ->orWhereRaw('members.package_validity < NOW()');
-                })
-                // Oldest users first (created long back shown first) — qualify columns to avoid ambiguity when joining members
                 ->orderBy('users.created_at', 'asc')
-                ->orderBy('users.first_name')
+                ->leftJoin('fresh_data', 'fresh_data.mobile', '=', 'users.phone')
+                ->where('members.current_package_id', 1)
+                ->whereNull('fresh_data.assigned_to')
                 ->paginate(25)
                 ->withQueryString();
         } else {
@@ -472,7 +467,7 @@ class FreshDataController extends Controller
             'new_leads_count' => $newLeads->count(),
             'followup_today_count' => $followupToday->count(),
         ]);
-
+        // Get all statuses from the statuses table
         // Reassigned profiles for current month
         try {
             if ($user->is_admin) {
@@ -488,8 +483,8 @@ class FreshDataController extends Controller
         } catch (\Exception $e) {
             $reassigned = collect();
         }
-
-        return view('profile.my_assigned_profiles', compact('freshData', 'stats', 'newProfiles', 'newLeads', 'followupToday', 'reassigned'));
+        $statuses = \App\Models\Status::orderBy('name')->get();
+        return view('profile.my_assigned_profiles', compact('freshData', 'stats', 'newProfiles', 'newLeads', 'followupToday', 'reassigned', 'statuses'));
     }
 
     /**

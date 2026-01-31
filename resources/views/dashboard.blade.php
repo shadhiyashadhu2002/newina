@@ -41,8 +41,12 @@
                     <div class="nav-dropdown">
                         <a href="{{ route('sales.management') }}" class="nav-link">Sales ▼</a>
                     </div>
-                    <div class="nav-dropdown">
-                        <a href="{{ route('services.page') }}" class="nav-link">Services ▼</a>
+                    <div class="nav-dropdown services-dropdown">
+                        <a href="#" onclick="event.preventDefault();" class="nav-link">Services ▼</a>
+                        <div class="dropdown-content" style="overflow: visible !important;" aria-hidden="false">
+                            <a href="{{ route('services.page') }}" class="dropdown-item">Services</a>
+                            <a href="{{ route('registration.form') }}" class="dropdown-item">Registration Form</a>
+                        </div>
                     </div>
                     
                 @elseif($currentUser->team === 'helpline')
@@ -70,10 +74,12 @@
                             <a href="{{ route('fresh.data.index', ['source' => 'database']) }}" class="dropdown-item">Database</a>
                         </div>
                     </div>
-                    @endif
-                    <a href="#" class="nav-link">abc</a>
-                    <div class="nav-dropdown">
-                        <a href="{{ route('services.page') }}" class="nav-link">Services ▼</a>
+                    <div class="nav-dropdown services-dropdown">
+                        <a href="#" class="nav-link" tabindex="0" onclick="event.preventDefault();">Services ▼</a>
+                        <div class="dropdown-content" style="overflow: visible !important;" aria-hidden="false">
+                            <a href="{{ route('services.page') }}" class="dropdown-item">Services</a>
+                            <a href="{{ route('registration.form') }}" class="dropdown-item">Registration Form</a>
+                        </div>
                     </div>
                     <div class="nav-dropdown business-dropdown">
                         <a href="#" class="nav-link" tabindex="0" onclick="event.preventDefault();">Business ▼</a>
@@ -83,6 +89,7 @@
                             <a href="{{ route('staffproductivity.page') }}" class="dropdown-item">Staff Productivity</a>
                         </div>
                     </div>
+                    @endif
                     <div class="nav-dropdown accounts-dropdown">
                         <a href="#" class="nav-link" tabindex="0" onclick="event.preventDefault();">Accounts ▼</a>
                         <div class="dropdown-content" style="overflow: visible !important;" aria-hidden="false">
@@ -442,6 +449,15 @@
     .fresh-data-dropdown:focus-within .dropdown-content {
         display: block !important;
     }
+
+    .services-dropdown .dropdown-content {
+        left: 0;
+    }
+    .services-dropdown:hover .dropdown-content,
+    .services-dropdown:focus-within .dropdown-content {
+        display: block;
+    }
+
 
     .dropdown-item {
         color: #333;

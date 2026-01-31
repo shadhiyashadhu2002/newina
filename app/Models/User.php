@@ -34,6 +34,10 @@ class User extends Authenticatable
         'welcome_call_completed',
         'comments',
         'created_by',
+        'emp_id',
+        'designation',
+        'role',
+        'team',
     ];
 
     /**

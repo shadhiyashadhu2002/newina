@@ -349,6 +349,67 @@
                         <option value="christian">Christian</option>
                     </select>
                 </div>
+                <!-- Subcaste -->
+                <div class="form-group">
+                    <label class="form-label">Subcaste:</label>
+                    <select name="subcaste" class="form-select">
+                        <option value="">-- Select Subcaste --</option>
+                        <option value="ACHARI">ACHARI</option>
+                        <option value="Ahmadiyya">Ahmadiyya</option>
+                        <option value="Ambalavasi">Ambalavasi</option>
+                        <option value="AMBATTAN">AMBATTAN</option>
+                        <option value="ANGLO INDIAN">ANGLO INDIAN</option>
+                        <option value="ARAYAN">ARAYAN</option>
+                        <option value="BORN AGAIN">BORN AGAIN</option>
+                        <option value="BRAHMAN">BRAHMAN</option>
+                        <option value="BRETHEREN">BRETHEREN</option>
+                        <option value="CANANAYA CATHOLIC">CANANAYA CATHOLIC</option>
+                        <option value="CHALDEAN CHRISTIAN">CHALDEAN CHRISTIAN</option>
+                        <option value="chaliya">chaliya</option>
+                        <option value="CHERUMAN">CHERUMAN</option>
+                        <option value="CHETTIAR">CHETTIAR</option>
+                        <option value="CSI CHRISTIAN">CSI CHRISTIAN</option>
+                        <option value="Dheevara">Dheevara</option>
+                        <option value="EZHAVA">EZHAVA</option>
+                        <option value="EZHUTHACHAN">EZHUTHACHAN</option>
+                        <option value="GOUNDER">GOUNDER</option>
+                        <option value="Hanafi">Hanafi</option>
+                        <option value="HARIJAN">HARIJAN</option>
+                        <option value="INTER CAST">INTER CAST</option>
+                        <option value="JACOBITE">JACOBITE</option>
+                        <option value="Jamath Islami">Jamath Islami</option>
+                        <option value="KANAKKAN">KANAKKAN</option>
+                        <option value="KANIYAN">KANIYAN</option>
+                        <option value="KAVUTHIYA">KAVUTHIYA</option>
+                        <option value="LATIN CATHOLIC">LATIN CATHOLIC</option>
+                        <option value="LUTHERN">LUTHERN</option>
+                        <option value="Maniyani Nair">Maniyani Nair</option>
+                        <option value="MARTHOMITE">MARTHOMITE</option>
+                        <option value="Mujahid">Mujahid</option>
+                        <option value="Muslim">Muslim</option>
+                        <option value="NAIR">NAIR</option>
+                        <option value="NAMBUDHIRI">NAMBUDHIRI</option>
+                        <option value="ORTHADOX">ORTHADOX</option>
+                        <option value="ORTHODOX">ORTHODOX</option>
+                        <option value="OTHER">OTHER</option>
+                        <option value="PANICKAR">PANICKAR</option>
+                        <option value="PENTECOST">PENTECOST</option>
+                        <option value="Pillai/vellala pillai">Pillai/vellala pillai</option>
+                        <option value="PROTESTANT">PROTESTANT</option>
+                        <option value="ROMAN CATHOLIC">ROMAN CATHOLIC</option>
+                        <option value="Salafi">Salafi</option>
+                        <option value="SC">SC</option>
+                        <option value="Shia">Shia</option>
+                        <option value="Sunni">Sunni</option>
+                        <option value="SYRIAN">SYRIAN</option>
+                        <option value="SYRIAN CATHOLIC">SYRIAN CATHOLIC</option>
+                        <option value="Thelungu chetti">Thelungu chetti</option>
+                        <option value="THIYYA">THIYYA</option>
+                        <option value="VANNAN">VANNAN</option>
+                        <option value="Vishwakarma">Vishwakarma</option>
+                        <option value="YOGI">YOGI</option>
+                    </select>
+                </div>
 
                 <!-- Gender -->
                 <div class="form-group">

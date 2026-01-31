@@ -347,8 +347,10 @@ class ServiceController extends Controller
             ->get(['id', 'first_name', 'name']);
 
         $currentUser = auth()->user();
+        // Get all statuses from the statuses table
+        $statuses = \App\Models\Status::orderBy('name')->get();
 
-        return view('profile.newservice', compact('services', 'staffUsers', 'perPage', 'search', 'currentUser'));
+        return view('profile.newservice', compact('services', 'staffUsers', 'perPage', 'search', 'currentUser', 'statuses'));
     }
 
     // List all services (admin view)
@@ -393,13 +395,18 @@ class ServiceController extends Controller
         $services->appends(['per_page' => $perPage, 'search' => $search]);
 
         // Get all staff users for dropdown
+        $user = auth()->user();
         $staffUsers = \App\Models\User::where('user_type', 'staff')
             ->orderBy('first_name')
             ->get(['id', 'first_name', 'name']);
 
-        $currentUser = auth()->user();
+        // Set currentUser for the view
+        $currentUser = $user;
 
-        return view('profile.newservice', compact('services', 'staffUsers', 'perPage', 'search', 'currentUser'));
+        // Get all statuses from the statuses table
+        $statuses = \App\Models\Status::orderBy('name')->get();
+
+        return view('profile.newservice', compact('services', 'staffUsers', 'perPage', 'search', 'currentUser', 'statuses'));
     }
 
     // List active services (for admin show all, for staff show assigned)
@@ -1499,6 +1506,19 @@ class ServiceController extends Controller
                             ->orWhere('name', strtoupper($religion))
                             ->orWhere('name', ucfirst(strtolower($religion)));
                     }
+                });
+            }
+
+            // Apply subcaste filter
+            if ($request->filled('subcaste')) {
+                Log::info('Subcaste filter applied', ['subcaste' => $request->subcaste]);
+                $subcaste = $request->subcaste;
+
+                $query->whereHas('user.spiritualBackground.caste', function ($q) use ($subcaste) {
+                    $q->where('name', 'like', '%' . $subcaste . '%')
+                        ->orWhere('name', strtolower($subcaste))
+                        ->orWhere('name', strtoupper($subcaste))
+                        ->orWhere('name', ucfirst(strtolower($subcaste)));
                 });
             }
 

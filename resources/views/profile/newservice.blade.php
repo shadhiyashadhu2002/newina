@@ -536,6 +536,11 @@
       width: 140px; /* Actions - reduced */
     }
 
+    .services-table th:nth-child(8),
+    .services-table td:nth-child(8) {
+      width: 140px; /* Form column */
+    }
+
     /* Text handling for smaller columns */
     .services-table td:nth-child(4),
     .services-table td:nth-child(5),
@@ -1440,7 +1445,8 @@
             <th>Plan Name</th>
             <th>Payment Date</th>
             <th>RM Name</th>
-            <th>Actions</th>
+            <!-- <th>Actions</th> -->
+            <th>Form</th>
             @if(Auth::check() && Auth::user()->is_admin)
             <th>Edit</th>
             @endif
@@ -1480,8 +1486,11 @@
                     <span style="font-size: 16px; font-weight: bold;">{{ $service->service_executive }}</span>
                   @endif
                 </td>
+<!--                 <td> -->
+<!--                   <a href="{{ route('service.details', ['id' => $service->profile_id, 'name' => $service->name]) }}" class="action-link">Service Details</a> -->
+<!--                 </td> -->
                 <td>
-                  <a href="{{ route('service.details', ['id' => $service->profile_id, 'name' => $service->name]) }}" class="action-link">Service Details</a>
+                  <a href="{{ route('registration.form', ['imid' => $service->profile_id]) }}" class="action-link">Welcome Form</a>
                 </td>
                 @if(Auth::check() && Auth::user()->is_admin)
                 <td>

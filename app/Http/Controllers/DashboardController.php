@@ -98,11 +98,10 @@ class DashboardController extends Controller
 
         // Get Target Amount from staff_targets table
         // Month is stored as string 'YYYY-MM', not a date field
-        $currentMonth = Carbon::now()->format('Y-m');
+        $currentMonth = Carbon::now()->format('Y-m-01');
         
         if ($currentUser->is_admin) {
-            // Admin sees total of all staff targets for current month
-            $targetAmount = StaffTarget::where('month', $currentMonth)->sum('target_amount');
+           $targetAmount = StaffTarget::where('month', $currentMonth)->sum('target_amount');
         } else {
             // Staff sees only their total target for current month (sum of all their targets)
             $targetAmount = StaffTarget::where('staff_id', $currentUser->id)
@@ -112,7 +111,7 @@ class DashboardController extends Controller
 
         // If no target found, default to 50000
         if ($targetAmount == 0) {
-            $targetAmount = 50000;
+            $targetAmount = 0;
         }
 
         // Calculate achievement percentage
@@ -187,6 +186,9 @@ class DashboardController extends Controller
         $perPage = $request->input('per_page', 20);
         $profiles = $query->orderBy('follow_up_date', 'asc')->paginate($perPage);
 
-        return view('profile.followup_due', compact('profiles', 'currentUser', 'executives'));
+        // Get all statuses from the statuses table
+        $statuses = \App\Models\Status::orderBy('name')->get();
+
+        return view('profile.followup_due', compact('profiles', 'currentUser', 'executives', 'statuses'));
     }
 }
