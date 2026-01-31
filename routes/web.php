@@ -1365,15 +1365,15 @@ Route::middleware(['auth'])->group(function () {
     
     // Staff routes
     Route::get('/settings/staff', [App\Http\Controllers\SettingsController::class, 'getStaff']);
-    Route::post('/settings/staff', [App\Http\Controllers\SettingsController::class, 'addStaff']);
+    Route::post('/settings/staff', [App\Http\Controllers\SettingsController::class, 'addStaff'])->name('settings.add-staff');
     
     // Status routes
     Route::get('/settings/status', [App\Http\Controllers\SettingsController::class, 'getStatuses']);
-    Route::post('/settings/status', [App\Http\Controllers\SettingsController::class, 'addStatus']);
+    Route::post('/settings/status', [App\Http\Controllers\SettingsController::class, 'addStatus'])->name('settings.add-status');
     
     // Department routes
     Route::get('/settings/department', [App\Http\Controllers\SettingsController::class, 'getDepartments']);
-    Route::post('/settings/department', [App\Http\Controllers\SettingsController::class, 'addDepartment']);
+    Route::post('/settings/department', [App\Http\Controllers\SettingsController::class, 'addDepartment'])->name('settings.add-department');
 });
 
 // Staff Management Routes
