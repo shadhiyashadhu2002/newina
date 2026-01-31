@@ -527,6 +527,66 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
 
 
+
+                // Populate Physical Attributes
+                if (data.physical) {
+                    const heightInput = form.querySelector('input[name="height"]');
+                    if (heightInput && data.physical.height) {
+                        heightInput.value = data.physical.height;
+                    }
+                    const weightInput = form.querySelector('input[name="weight"]');
+                    if (weightInput && data.physical.weight) {
+                        weightInput.value = data.physical.weight;
+                    }
+                    const complexionInput = form.querySelector('input[name="complexion"]');
+                    if (complexionInput && data.physical.complexion) {
+                        complexionInput.value = data.physical.complexion;
+                    }
+                    const bodyTypeInput = form.querySelector('input[name="bodyType"]');
+                    if (bodyTypeInput && data.physical.body_type) {
+                        bodyTypeInput.value = data.physical.body_type;
+                    }
+                }
+
+                // Populate Spiritual Background
+                if (data.spiritual) {
+                    const religionInput = form.querySelector('input[name="religion"]');
+                    if (religionInput && data.spiritual.religion) {
+                        religionInput.value = data.spiritual.religion;
+                    }
+                    const casteInput = form.querySelector('input[name="caste"]');
+                    if (casteInput && data.spiritual.caste) {
+                        casteInput.value = data.spiritual.caste;
+                    }
+                    const subCasteInput = form.querySelector('input[name="subCaste"]');
+                    if (subCasteInput && data.spiritual.sub_caste) {
+                        subCasteInput.value = data.spiritual.sub_caste;
+                    }
+                }
+
+                // Populate Family Details
+                if (data.family) {
+                    const fatherNameInput = form.querySelector('input[name="fatherName"]');
+                    if (fatherNameInput && data.family.father_name) {
+                        fatherNameInput.value = data.family.father_name;
+                    }
+                    const motherNameInput = form.querySelector('input[name="motherName"]');
+                    if (motherNameInput && data.family.mother_name) {
+                        motherNameInput.value = data.family.mother_name;
+                    }
+                    const fatherOccupationInput = form.querySelector('input[name="fatherOccupation"]');
+                    if (fatherOccupationInput && data.family.father_occupation) {
+                        fatherOccupationInput.value = data.family.father_occupation;
+                    }
+                    const motherOccupationInput = form.querySelector('input[name="motherOccupation"]');
+                    if (motherOccupationInput && data.family.mother_occupation) {
+                        motherOccupationInput.value = data.family.mother_occupation;
+                    }
+                    const siblingsInput = form.querySelector('input[name="siblings"]');
+                    if (siblingsInput && data.family.no_of_siblings) {
+                        siblingsInput.value = data.family.no_of_siblings;
+                    }
+                }
                 // Populate Partner Preferences
                 if (!data.partner) { console.log("❌ NO PARTNER DATA IN RESPONSE"); }
                 if (data.partner) {
