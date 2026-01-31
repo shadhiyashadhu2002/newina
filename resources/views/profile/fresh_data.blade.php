@@ -740,8 +740,8 @@
                     </div>
 
                     <div class="form-group">
-                        <label>Next Follow-up Date</label>
-                        <input type="date" class="form-control" id="edit_next_follow_up_date">
+                        <label>Next Follow-up Date *</label>
+                        <input type="date" class="form-control" id="edit_next_follow_up_date" required>
                     </div>
 
                     <div class="form-group">

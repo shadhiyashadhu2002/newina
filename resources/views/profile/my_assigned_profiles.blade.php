@@ -518,6 +518,9 @@
             <button class="tab-btn" onclick="switchTab('followup-today')" id="tab-followup-today" style="flex: 1; padding: 15px; background: #f8f9fa; color: #333; border: none; cursor: pointer; font-weight: 600; border-radius: 10px 10px 0 0; margin-left: 5px;">
                 Follow-up Today ({{ $stats['followup_today'] ?? 0 }})
             </button>
+            <button class="tab-btn" onclick="openReassignedTab()" id="tab-reassigned" style="flex: 1; padding: 15px; background: #f8f9fa; color: #333; border: none; cursor: pointer; font-weight: 600; border-radius: 10px 10px 0 0; margin-left: 5px;">
+                Reassigned ({{ isset($reassigned) ? $reassigned->count() : 0 }})
+            </button>
         </div>
 
         <!-- New Leads Tab Content -->
@@ -713,6 +716,53 @@
             @endif
         </div>
 
+        <!-- Reassigned Tab Content -->
+        <div id="content-reassigned" class="tab-content" style="display: none;">
+            @if(isset($reassigned) && $reassigned->count() > 0)
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>NAME</th>
+                        <th>MOBILE</th>
+                        <th>ASSIGNED DATE</th>
+                        <th>FOLLOW-UP DATE</th>
+                        <th>STATUS</th>
+                        <th>ACTION</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach($reassigned as $profile)
+                    @php
+                        $assignedDate = isset($profile->created_at) ? (is_object($profile->created_at) && method_exists($profile->created_at, 'format') ? $profile->created_at->format('d-m-Y') : date('d-m-Y', strtotime($profile->created_at))) : '-';
+                        $followUpDate = isset($profile->follow_up_date) && $profile->follow_up_date ? (is_object($profile->follow_up_date) && method_exists($profile->follow_up_date, 'format') ? $profile->follow_up_date->format('d-m-Y') : date('d-m-Y', strtotime($profile->follow_up_date))) : '-';
+                    @endphp
+                    <tr>
+                        <td>{{ $profile->customer_name ?? $profile->name ?? '-' }}</td>
+                        <td>{{ $profile->mobile ?? '-' }}</td>
+                        <td>{{ $assignedDate }}</td>
+                        <td>{{ $followUpDate }}</td>
+                        <td>
+                            @if(empty($profile->status))
+                                <span class="status-badge blank">-</span>
+                            @else
+                                <span class="status-badge">{{ $profile->status }}</span>
+                            @endif
+                        </td>
+                        <td>
+                            <button class="action-btn update" onclick="openUpdateModal({{ $profile->id }}, '{{ $profile->customer_name ?? $profile->name }}', '{{ isset($profile->follow_up_date) ? (is_object($profile->follow_up_date) ? $profile->follow_up_date->format('Y-m-d') : date('Y-m-d', strtotime($profile->follow_up_date))) : '' }}', '{{ $profile->status ?? '' }}')">Update</button>
+                            <button class="action-btn history" onclick="showHistory({{ $profile->id }})" style="margin-left: 5px;">History</button>
+                        </td>
+                    </tr>
+                    @endforeach
+                </tbody>
+            </table>
+            @else
+            <div class="no-data">
+                <p>No reassigned profiles found for this month.</p>
+            </div>
+            @endif
+        </div>
+
         <script>
         function switchTab(tabName) {
             // Hide all tab contents
@@ -737,18 +787,38 @@
         }
 
         // On page load, respect ?tab= query param to open the requested tab
-        (function() {
-            const params = new URLSearchParams(window.location.search);
-            const tab = params.get('tab');
-            if (tab === 'new-profiles') {
-                switchTab('new-profiles');
-            } else if (tab === 'followup-today') {
-                switchTab('followup-today');
-            } else {
-                // default to new-leads
-                switchTab('new-leads');
+            (function() {
+                const params = new URLSearchParams(window.location.search);
+                const tab = params.get('tab');
+                if (tab === 'new-profiles') {
+                    switchTab && typeof switchTab === 'function' ? switchTab('new-profiles') : document.getElementById('tab-new-profiles').click();
+                } else if (tab === 'followup-today') {
+                    switchTab && typeof switchTab === 'function' ? switchTab('followup-today') : document.getElementById('tab-followup-today').click();
+                } else if (tab === 'reassigned') {
+                    // prefer existing switchTab if available
+                    if (typeof switchTab === 'function') {
+                        switchTab('reassigned');
+                    } else {
+                        openReassignedTab();
+                    }
+                } else {
+                    // default to new-leads
+                    switchTab && typeof switchTab === 'function' ? switchTab('new-leads') : document.getElementById('tab-new-leads').click();
+                }
+            })();
+
+            // Provide a simple handler for the new Reassigned tab if switchTab isn't present
+            function openReassignedTab() {
+                document.querySelectorAll('.tab-content').forEach(content => content.style.display = 'none');
+                document.querySelectorAll('.tab-btn').forEach(btn => { btn.style.background = '#f8f9fa'; btn.style.color = '#333'; });
+                const content = document.getElementById('content-reassigned');
+                const tabBtn = document.getElementById('tab-reassigned');
+                if (content && tabBtn) {
+                    content.style.display = 'block';
+                    tabBtn.style.background = '#ac0742';
+                    tabBtn.style.color = 'white';
+                }
             }
-        })();
         </script>
     </div>
 </div>
@@ -973,8 +1043,8 @@
                 </div>
 
                 <div class="form-group">
-                    <label>Follow-up Date</label>
-                    <input type="date" name="follow_up_date" id="follow_up_date">
+                    <label>Follow-up Date *</label>
+                    <input type="date" name="follow_up_date" id="follow_up_date" required>
                 </div>
 
                 <div class="form-group">

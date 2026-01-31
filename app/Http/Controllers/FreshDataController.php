@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\Auth;
 use App\Imports\FreshDataImport;
 use Maatwebsite\Excel\Facades\Excel;
 use Illuminate\Support\Facades\Log;
+use Carbon\Carbon;
 
 class FreshDataController extends Controller
 {
@@ -35,7 +36,7 @@ class FreshDataController extends Controller
                 // Show ALL free members (includes users even if they already have a fresh_data assigned)
                 ->where(function($q) {
                     $q->whereNull('members.current_package_id')
-                      ->orWhere('members.current_package_id', 0)
+                      ->orWhere('members.current_package_id', 1)
                       ->orWhereRaw('members.package_validity < NOW()');
                 })
                 // Oldest users first (created long back shown first) — qualify columns to avoid ambiguity when joining members
@@ -309,6 +310,9 @@ class FreshDataController extends Controller
             $freshData = FreshData::findOrFail($id);
             $freshData->assigned_to = $request->assigned_to;
 
+            // mark that this profile was touched/assigned now so reassigned counts include it
+            $freshData->last_touched_at = now();
+
             // If source is provided and equals 'database', mark as not a new lead; otherwise mark as new lead
             if ($request->input('source') === 'database') {
                 $freshData->is_new_lead = 'no';
@@ -362,6 +366,8 @@ class FreshDataController extends Controller
                     if ($existing) {
                         $existing->assigned_to = $assignedTo;
                         $existing->is_new_lead = 'no';
+                        $existing->last_touched_at = now();
+                        $existing->follow_up_date = null; // Clear old follow-up date when reassigning
                         $existing->save();
                         $updated++;
                     } else {
@@ -371,6 +377,7 @@ class FreshDataController extends Controller
                             'mobile' => $user->phone,
                             'source' => 'database',
                             'assigned_to' => $assignedTo,
+                            'last_touched_at' => now(),
                             'is_new_lead' => 'no'
                         ]);
                         $created++;
@@ -386,8 +393,9 @@ class FreshDataController extends Controller
             }
 
             // Default behaviour: update existing fresh_data records and mark as new lead
+            // Also clear follow_up_date so reassigned profiles don't appear in follow-up due anymore
             $updated = FreshData::whereIn('id', $recordIds)
-                ->update(['assigned_to' => $assignedTo, 'is_new_lead' => 'yes']);
+                ->update(['assigned_to' => $assignedTo, 'is_new_lead' => 'yes', 'last_touched_at' => now(), 'follow_up_date' => null]);
 
             return response()->json([
                 'success' => true,
@@ -465,7 +473,23 @@ class FreshDataController extends Controller
             'followup_today_count' => $followupToday->count(),
         ]);
 
-        return view('profile.my_assigned_profiles', compact('freshData', 'stats', 'newProfiles', 'newLeads', 'followupToday'));
+        // Reassigned profiles for current month
+        try {
+            if ($user->is_admin) {
+                $reassigned = \App\Models\FreshData::whereMonth('last_touched_at', Carbon::now()->month)
+                    ->whereYear('last_touched_at', Carbon::now()->year)
+                    ->get();
+            } else {
+                $reassigned = \App\Models\FreshData::where('assigned_to', $user->id)
+                    ->whereMonth('last_touched_at', Carbon::now()->month)
+                    ->whereYear('last_touched_at', Carbon::now()->year)
+                    ->get();
+            }
+        } catch (\Exception $e) {
+            $reassigned = collect();
+        }
+
+        return view('profile.my_assigned_profiles', compact('freshData', 'stats', 'newProfiles', 'newLeads', 'followupToday', 'reassigned'));
     }
 
     /**

@@ -459,12 +459,16 @@
                 </form>
                 <span>entries</span>
             </div>
+            <div style="display:flex; gap:10px; align-items:center;">
+                <button type="button" class="action-btn update" onclick="openBulkAssignModal()" style="background:#0069d9;">Assign Selected</button>
+            </div>
         </div>
 
         @if($profiles->count() > 0)
         <table class="data-table">
             <thead>
                 <tr>
+                    <th style="width:40px;"><input type="checkbox" id="selectAll" onchange="toggleSelectAll()"></th>
                     <th>NAME</th>
                     <th>MOBILE</th>
                     <th>EXECUTIVE</th>
@@ -503,6 +507,7 @@
                     }
                 @endphp
                 <tr>
+                    <td><input type="checkbox" class="record-checkbox" value="{{ $profile->id }}"></td>
                     <td>{{ $profile->customer_name ?? $profile->name ?? '-' }}</td>
                     <td>{{ $profile->mobile ?? '-' }}</td>
                     <td>{{ $profile->user ? ($profile->user->first_name . ' ' . ($profile->user->last_name ?? '')) : 'Unassigned' }}</td>
@@ -550,6 +555,93 @@
         @endif
     </div>
 </div>
+
+<!-- Assign Modal -->
+<div id="assignModal" class="modal" style="z-index:100001;">
+    <div class="modal-content" style="max-width:520px;">
+        <div class="modal-header">
+            <h2 class="modal-title">Assign Follow-up Profiles</h2>
+            <button class="close-btn" onclick="closeAssignModal()">&times;</button>
+        </div>
+        <div class="modal-body">
+            <form id="assignForm">
+                <div class="form-group">
+                    <label for="assignedTo">Assign To *</label>
+                    <select id="assignedTo" class="form-select" required>
+                        <option value="">-- Select Executive --</option>
+                        @foreach($executives as $executive)
+                            <option value="{{ $executive->id }}">{{ $executive->first_name }} {{ $executive->last_name ?? '' }}</option>
+                        @endforeach
+                    </select>
+                </div>
+            </form>
+        </div>
+        <div class="modal-footer">
+            <button type="button" class="cancel-btn" onclick="closeAssignModal()">Cancel</button>
+            <button type="button" class="submit-btn" onclick="submitAssignment()">Assign</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    const csrfTokenFollowup = document.querySelector('meta[name="csrf-token"]').content;
+
+    function toggleSelectAll() {
+        const selectAll = document.getElementById('selectAll');
+        const checkboxes = document.querySelectorAll('.record-checkbox');
+        checkboxes.forEach(cb => cb.checked = selectAll.checked);
+    }
+
+    function openBulkAssignModal() {
+        const selected = document.querySelectorAll('.record-checkbox:checked');
+        if (selected.length === 0) {
+            alert('Please select at least one record to assign');
+            return;
+        }
+        document.getElementById('assignModal').classList.add('active');
+    }
+
+    function closeAssignModal() {
+        document.getElementById('assignModal').classList.remove('active');
+        document.getElementById('assignForm').reset();
+    }
+
+    async function submitAssignment() {
+        const assignedTo = document.getElementById('assignedTo').value;
+        if (!assignedTo) { alert('Please select an executive'); return; }
+
+        const selected = Array.from(document.querySelectorAll('.record-checkbox:checked')).map(cb => cb.value);
+
+        try {
+            const response = await fetch('{{ route("fresh.data.bulk.assign") }}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': csrfTokenFollowup,
+                    'Accept': 'application/json'
+                },
+                body: JSON.stringify({ record_ids: selected, assigned_to: assignedTo, source: 'followup' })
+            });
+
+            const result = await response.json();
+            if (result.success) {
+                alert(result.message || 'Assigned successfully');
+                closeAssignModal();
+                window.location.reload();
+            } else {
+                alert('Error: ' + (result.message || 'Failed to assign'));
+            }
+        } catch (err) {
+            alert('Failed: ' + err.message);
+        }
+    }
+
+    // close modal when clicking outside
+    window.addEventListener('click', function(e) {
+        const assignModal = document.getElementById('assignModal');
+        if (e.target === assignModal) closeAssignModal();
+    });
+</script>
 
 <!-- Update Profile Modal -->
 <div id="updateModal" class="modal">

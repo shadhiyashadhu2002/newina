@@ -72,6 +72,18 @@ class DashboardController extends Controller
                 ->count();
         }
 
+        // Calculate Reassigned Profiles (profiles reassigned this month)
+        if ($currentUser->is_admin) {
+            $reassignedProfiles = \App\Models\FreshData::whereMonth('last_touched_at', Carbon::now()->month)
+                ->whereYear('last_touched_at', Carbon::now()->year)
+                ->count();
+        } else {
+            $reassignedProfiles = \App\Models\FreshData::where('assigned_to', $currentUser->id)
+                ->whereMonth('last_touched_at', Carbon::now()->month)
+                ->whereYear('last_touched_at', Carbon::now()->year)
+                ->count();
+        }
+
         // Calculate Total Sales for current month
         $startOfMonth = Carbon::now()->startOfMonth()->format('Y-m-d');
         $endOfMonth = Carbon::now()->endOfMonth()->format('Y-m-d');
@@ -113,6 +125,7 @@ class DashboardController extends Controller
             'new_leads' => $newLeadsCount ?? 0,
             'followup_today' => $followupTodayCount,
             'followup_due' => $followupDueCount,
+            'reassigned_profiles' => $reassignedProfiles ?? 0,
             'target_amount' => $targetAmount,
             'total_sales' => $totalSales,
             'achievement_percentage' => $achievementPercentage,

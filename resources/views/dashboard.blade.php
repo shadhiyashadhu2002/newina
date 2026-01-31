@@ -137,10 +137,12 @@
             </div>
         </a>
 
-        <div class="stat-card teal">
-            <h3>Reassigned Profiles</h3>
-            <div class="stat-number">0</div>
-        </div>
+        <a href="{{ route('assigned.profiles.view', ['tab' => 'reassigned']) }}" class="stat-card-link">
+            <div class="stat-card teal">
+                <h3>Reassigned Profiles</h3>
+                <div class="stat-number">{{ $stats['reassigned_profiles'] ?? 0 }}</div>
+            </div>
+        </a>
 
         <a href="{{ route('assigned.profiles.view', ['tab' => 'new-leads']) }}" class="stat-card-link">
             <div class="stat-card red">
