@@ -562,7 +562,7 @@
             @if(Auth::user()->is_admin)
             <li><a href="{{ route('fresh.data') }}" class="nav-link">Fresh Data <span class="dropdown-arrow">▼</span></a></li>
             @endif
-            <li><a href="#" class="nav-link">abc</a></li>
+            <li><a href="#" class="nav-link">Services <span class="dropdown-arrow">▼</span></a></li>
             <li class="nav-dropdown">
                 <a href="#" class="nav-link">Business <span class="dropdown-arrow">▼</span></a>
                 <ul class="dropdown-menu">
