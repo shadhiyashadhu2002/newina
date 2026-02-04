@@ -1391,4 +1391,10 @@ Route::get('/registration-form', function (Illuminate\Http\Request $request) {
 Route::post('/upload-screenshot', [App\Http\Controllers\ServiceController::class, 'uploadScreenshot'])->name('screenshot.upload');
 Route::get('/get-screenshots/{profileId}', [App\Http\Controllers\ServiceController::class, 'getScreenshots'])->name('screenshots.get');
 
+// Payroll upload routes
+Route::middleware(['auth'])->group(function () {
+    Route::get('/payroll', [App\Http\Controllers\PayrollController::class, 'index'])->name('payroll.index');
+    Route::post('/payroll/upload', [App\Http\Controllers\PayrollController::class, 'upload'])->name('payroll.upload');
+});
+
 
