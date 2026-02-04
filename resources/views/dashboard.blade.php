@@ -33,7 +33,13 @@
                         </div>
                     </div>
                     @endif
-                    <a href="#" class="nav-link">Services ▼</a>
+                    <div class="nav-dropdown services-dropdown">
+                        <a href="#" onclick="event.preventDefault();" class="nav-link">Services ▼</a>
+                        <div class="dropdown-content" style="overflow: visible !important;" aria-hidden="false">
+                            <a href="{{ route('services.page') }}" class="dropdown-item">Services</a>
+                            <a href="{{ route('registration.form') }}" class="dropdown-item">Registration Form</a>
+                        </div>
+                    </div>
                     
                 @elseif($currentUser->team === 'service')
                     {{-- SERVICE Team - Profiles, Sales, Services --}}
