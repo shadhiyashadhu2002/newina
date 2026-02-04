@@ -22,7 +22,7 @@
                     <a href="{{ route('fresh.data.index', ['source' => 'database']) }}" class="dropdown-item">Database</a>
                 </div>
             </div>
-            <a href="#" class="nav-link">abc</a>
+            <a href="#" class="nav-link">Services ▼</a>
             <div class="nav-dropdown">
                 <a href="{{ route('services.page') }}" class="nav-link">Services ▼</a>
             </div>

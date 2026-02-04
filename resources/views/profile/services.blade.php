@@ -391,7 +391,7 @@
         <li><a href="{{ route('sales.management') }}" class="nav-link">Sales <span class="dropdown-arrow">▼</span></a></li>
         <li><a href="#" class="nav-link">HelpLine</a></li>
         <li><a href="{{ route('fresh.data') }}" class="nav-link">Fresh Data <span class="dropdown-arrow">▼</span></a></li>
-        <li><a href="#" class="nav-link">abc</a></li>
+        <li><a href="#" class="nav-link">Services <span class="dropdown-arrow">▼</span></a></li>
         <li><a href="{{ route('services.page') }}" class="nav-link active">Services <span class="dropdown-arrow">▼</span></a></li>
       </ul>
     </nav>
