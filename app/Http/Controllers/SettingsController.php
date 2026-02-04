@@ -67,3 +67,40 @@ class SettingsController extends Controller
         return redirect()->back()->with('success', 'Department added successfully!');
     }
 }
+
+    public function getStaff()
+    {
+        $staff = \App\Models\User::where('user_type', 'staff')->get();
+        return response()->json($staff);
+    }
+
+    public function getStatuses()
+    {
+        $statuses = \App\Models\Status::all();
+        return response()->json($statuses);
+    }
+
+    public function getDepartments()
+    {
+        $departments = \App\Models\Department::all();
+        return response()->json($departments);
+    }
+
+    public function getStaff()
+    {
+        $staff = \App\Models\User::where('user_type', 'staff')->get();
+        return response()->json($staff);
+    }
+
+    public function getStatuses()
+    {
+        $statuses = \App\Models\Status::all();
+        return response()->json($statuses);
+    }
+
+    public function getDepartments()
+    {
+        $departments = \App\Models\Department::all();
+        return response()->json($departments);
+    }
+}

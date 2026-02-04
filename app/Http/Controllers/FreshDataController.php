@@ -67,8 +67,15 @@ class FreshDataController extends Controller
             'AKSHARA', 'MIYA', 'DIVYA', 'FIDHA', 'JANNA', 'ZARA', 
             'NEHA', 'FARHA', 'RIYA'
         ])
-            ->orderBy('name')
-            ->get(['id', 'name']);
+                ->orderBy('name')
+                ->get(['id', 'name']);
+        
+            // Add Rahna and Lamiya (new executives)
+            $rahnLamiya = \App\Models\User::whereIn('name', ['Rahna', 'Lamiya'])
+                ->orderBy('name')
+                ->get(['id', 'name']);
+        
+            $salesExecutives = $salesExecutives->merge($rahnLamiya)->sortBy('name');
         
         return view('profile.fresh_data', compact('serviceExecutives', 'salesExecutives', 'source', 'freshData', 'databaseUsers'));
     }

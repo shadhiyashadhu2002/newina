@@ -233,7 +233,14 @@ class RegistrationFormController extends Controller
                 }
             }
 
-            $pdf = PDF::loadView('pdf.registration_form', [
+            // Configure Dompdf options for Unicode/Malayalam support
+            $pdf = PDF::setOptions([
+                'isHtml5ParserEnabled' => true,
+                'isRemoteEnabled' => true,
+                'chroot' => storage_path('fonts'),
+                'defaultFont' => 'Noto Sans Malayalam',
+                'isFontSubsettingEnabled' => false
+            ])->loadView('pdf.registration_form', [
                 'data' => $formattedData,
                 'imid' => $data['imid'] ?? 'N/A'
             ]);

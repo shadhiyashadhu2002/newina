@@ -13,7 +13,7 @@ class StaffTargetController extends Controller
 {
     public function index(Request $request)
     {
-        $staffUsers = User::where('is_admin', 0)->get();
+        $staffUsers = User::where('user_type', 'staff')->whereNull('deleted_at')->orderBy('first_name')->get();
         $targetsQuery = StaffTarget::with('staff');
 
         // Apply filters
