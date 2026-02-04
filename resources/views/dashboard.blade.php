@@ -313,6 +313,58 @@
             });
         }
     });
+
+    // Dropdown functionality
+    document.addEventListener('DOMContentLoaded', function() {
+        // Handle all dropdown toggles
+        const dropdownToggles = document.querySelectorAll('.nav-dropdown > a, .accounts-dropdown > a, .staff-management-dropdown > a, .business-dropdown > a, .fresh-data-dropdown > a, .services-dropdown > a');
+        
+        dropdownToggles.forEach(function(toggle) {
+            toggle.addEventListener('click', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                
+                const parent = this.parentElement;
+                const dropdownContent = parent.querySelector('.dropdown-content');
+                
+                if (dropdownContent) {
+                    // Toggle current dropdown
+                    const isCurrentlyVisible = dropdownContent.style.display === 'block';
+                    
+                    // Close all dropdowns first
+                    document.querySelectorAll('.dropdown-content').forEach(function(content) {
+                        content.style.display = 'none';
+                    });
+                    
+                    // Toggle the clicked dropdown
+                    if (!isCurrentlyVisible) {
+                        dropdownContent.style.display = 'block';
+                    }
+                }
+            });
+        });
+        
+        // Close dropdowns when clicking outside
+        document.addEventListener('click', function(e) {
+            if (!e.target.closest('.nav-dropdown') && 
+                !e.target.closest('.accounts-dropdown') && 
+                !e.target.closest('.staff-management-dropdown') &&
+                !e.target.closest('.business-dropdown') &&
+                !e.target.closest('.fresh-data-dropdown') &&
+                !e.target.closest('.services-dropdown')) {
+                document.querySelectorAll('.dropdown-content').forEach(function(content) {
+                    content.style.display = 'none';
+                });
+            }
+        });
+        
+        // Keep dropdown open when clicking inside it
+        document.querySelectorAll('.dropdown-content').forEach(function(content) {
+            content.addEventListener('click', function(e) {
+                e.stopPropagation();
+            });
+        });
+    });
 </script>
 
 <style>
