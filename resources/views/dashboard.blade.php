@@ -13,6 +13,7 @@
                         <a href="#" class="nav-link" tabindex="0" onclick="event.preventDefault();">Staff Management ▼</a>
                         <div class="dropdown-content" style="overflow: visible !important;" aria-hidden="false">
                             <a href="{{ route('employee.sheet') }}" class="dropdown-item">Employee Sheet</a>
+                            <a href="{{ route('payroll.index') }}" class="dropdown-item">Payroll</a>
                         </div>
                     </div>
                     <a href="#" class="nav-link">Asset</a>
@@ -106,6 +107,7 @@
                         <a href="#" class="nav-link" tabindex="0" onclick="event.preventDefault();">Staff Management ▼</a>
                         <div class="dropdown-content" style="overflow: visible !important;" aria-hidden="false">
                             <a href="{{ route('employee.sheet') }}" class="dropdown-item">Employee Sheet</a>
+                            <a href="{{ route('payroll.index') }}" class="dropdown-item">Payroll</a>
                         </div>
                     </div>
                     <a href="#" class="nav-link">Asset</a>

@@ -10,31 +10,6 @@
 </head>
 <body>
     <header>
-        <div class="dashboard-header">
-            <div class="header-left">
-                <h1 class="dashboard-title">INA</h1>
-                <nav class="main-nav">
-                    <a href="{{ route('dashboard') }}" class="nav-link active">Home</a>
-                    <a href="{{ route('profile.hellow') }}" class="nav-link">Profiles</a>
-                    <div class="nav-dropdown">
-                        <a href="{{ route('sales.management') }}" class="nav-link">Sales ▼</a>
-                    </div>
-                    <a href="{{ route('helpline.index') }}" class="nav-link">HelpLine</a>
-                    <div class="nav-dropdown services-dropdown">
-                        <a href="#" class="nav-link" onclick="event.preventDefault();">Services ▼</a>
-                        <div class="dropdown-content" style="overflow: visible !important;">
-                            <a href="{{ route('services.page') }}" class="dropdown-item">Services</a>
-                            <a href="{{ route('registration.form') }}" class="dropdown-item">Registration Form</a>
-                        </div>
-                    </div>
-                    <a href="{{ route('expense.page') }}" class="nav-link">Expenses</a>
-                </nav>
-            </div>
-            <div class="header-right">
-                <form id="logout-form" action="{{ route('logout') }}" method="POST" style="display:none;">@csrf</form>
-                <button class="logout-btn" id="logout-btn">Logout</button>
-            </div>
-        </div>
     </header>
     <style>
         .dashboard-header { background: linear-gradient(135deg, #ac0742 0%, #9d1955 100%); padding: 15px 30px; display:flex; justify-content:space-between; align-items:center; color:white; border-bottom: 1px solid rgba(255,255,255,0.3); }
