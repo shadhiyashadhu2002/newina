@@ -45,13 +45,13 @@ class FreshDataController extends Controller
                 $freshData = FreshData::with('user')
                     ->whereNull('assigned_to')
                     ->latest()
-                    ->get();
+                    ->paginate(15);
             } else {
                 // Service/Sales executives see profiles ASSIGNED TO THEM (their work)
                 $freshData = FreshData::with('user')
                     ->where('assigned_to', $user->id)
                     ->latest()
-                    ->get();
+                    ->paginate(15);
             }
         }
 

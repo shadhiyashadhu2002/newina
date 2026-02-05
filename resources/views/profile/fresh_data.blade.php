@@ -411,6 +411,16 @@
                         @endif
                     </tbody>
                 </table>
+
+                @if($source === 'database')
+                    <div class="pagination-wrapper" style="margin-top: 20px; display: flex; justify-content: center;">
+                        {{ $databaseUsers->links() }}
+                    </div>
+                @else
+                    <div class="pagination-wrapper" style="margin-top: 20px; display: flex; justify-content: center;">
+                        {{ $freshData->links() }}
+                    </div>
+                @endif
             </div>
         </div>
     </main>
