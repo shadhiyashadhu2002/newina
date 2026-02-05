@@ -1395,6 +1395,7 @@ Route::get('/get-screenshots/{profileId}', [App\Http\Controllers\ServiceControll
 Route::middleware(['auth'])->group(function () {
     Route::get('/payroll', [App\Http\Controllers\PayrollController::class, 'index'])->name('payroll.index');
     Route::post('/payroll/upload', [App\Http\Controllers\PayrollController::class, 'upload'])->name('payroll.upload');
+    Route::post('/payroll/export', [App\Http\Controllers\PayrollController::class, 'export'])->name('payroll.export');
 });
 
 
